@@ -1,0 +1,81 @@
+<div id="imagesData">
+    <div class="card-body">
+        <div class="row" id="galleryOne-container-<?= esc($uuid); ?>">
+            <?php if ( ! empty($images) && is_array($images)): ?>
+                <?php foreach ($images as $img): ?>
+                    <div class="col-6 col-lg-3 mb-3 text-center">
+
+                        <div class="position-relative preview-item overflow-visible"
+                             data-id="<?= esc($img['id']); ?>"
+                             data-uuid="<?= esc($uuid); ?>"
+                             data-entity="<?= esc($entity); ?>"
+                             data-context="<?= esc($context); ?>" 
+                             data-filename="<?= esc($img['filename']); ?>">
+                            
+                            <?php if ($context === 'edit'): ?>
+                                <img src="<?= base_url('images/backend/' . $entity . '/' . esc($uuid) . '/medium/' . esc($img['filename'])); ?>"
+                                     alt="Image"
+                                     class="img-polaroid img-fluid w-100 d-block">
+
+                                     <?php if ((int) $img['is_cover'] === 1): ?>
+                                         <!-- Usiamo direttamente l'icona con un'ombra nativa per massima pulizia grafica -->
+                                         <i class="fa-solid fa-circle-check fa-2x position-absolute top-0 start-0 m-2 app-text gallery-one-cover-badge z-1 pe-none"></i>
+                                     <?php endif; ?>
+                                
+                                <div class="gallery-one-overlay d-flex justify-content-center align-items-center">
+                                    <?php if ((int) $img['is_cover'] === 1): ?>
+                                        <i <?= ui_binding('backend/components/galleryOne.labels.removeCover', 'title', [], false); ?> <?= ui_binding('backend/components/galleryOne.messages.areYouSureRemoveCover', 'data-message', [], false); ?> class="fa-solid fa-minus galleryOneAction app-text-inverse mx-2 fs-5"
+                                           title="<?= lang('backend/components/galleryOne.labels.removeCover'); ?>"
+                                           data-action="removeCover"
+                                           data-message="<?= lang('backend/components/galleryOne.messages.areYouSureRemoveCover'); ?>">
+                                        </i>
+                                    <?php else: ?>
+                                        <i <?= ui_binding('backend/components/galleryOne.labels.setCover', 'title', [], false); ?> <?= ui_binding('backend/components/galleryOne.messages.areYouSureSetCover', 'data-message', [], false); ?> class="fa-solid fa-check galleryOneAction app-text-inverse mx-2 fs-5"
+                                           title="<?= lang('backend/components/galleryOne.labels.setCover'); ?>"
+                                           data-action="setCover"
+                                           data-message="<?= lang('backend/components/galleryOne.messages.areYouSureSetCover'); ?>">
+                                        </i>
+                                    <?php endif; ?>
+                                    
+                                    <i <?= ui_binding('backend/components/galleryOne.labels.delete', 'title', [], false); ?> <?= ui_binding('backend/components/galleryOne.messages.areYouSureDeleteImage', 'data-message', [], false); ?> class="fa-solid fa-trash galleryOneAction app-text-inverse mx-2 fs-5"
+                                       title="<?= lang('backend/components/galleryOne.labels.delete'); ?>"
+                                       data-action="deleteImage"
+                                       data-message="<?= lang('backend/components/galleryOne.messages.areYouSureDeleteImage'); ?>">
+                                    </i>
+                                    
+                                    <a <?= ui_binding('backend/components/galleryOne.labels.viewImage', 'title', [], false); ?> href="<?= base_url('images/backend/' . $entity . '/' . esc($uuid) . '/large/' . esc($img['filename'])); ?>"
+                                       target="_blank"
+                                       class="app-text-inverse mx-2 fs-5"
+                                       title="<?= lang('backend/components/galleryOne.labels.viewImage'); ?>">
+                                        <i class="fa-solid fa-image"></i>
+                                    </a>
+                                </div>
+                                
+                            <?php elseif ($context === 'show'): ?>
+                                <a href="<?= base_url('images/backend/' . $entity . '/' . esc($uuid) . '/large/' . esc($img['filename'])); ?>"
+                                   target="_blank"
+                                   class="gallery-one-link d-block">
+                                    
+                                    <img src="<?= base_url('images/backend/' . $entity . '/' . esc($uuid) . '/medium/' . esc($img['filename'])); ?>"
+                                         alt="Image"
+                                         class="img-polaroid img-fluid w-100 d-block">
+
+                                    <?php if ((int) $img['is_cover'] === 1) : ?>
+                                        <!-- C'è solo questa icona nell'angolo. Quella centrale è stata eliminata definitivamente -->
+                                        <i class="fa-solid fa-circle-check fa-2x position-absolute top-0 start-0 m-2 app-text gallery-one-cover-badge z-1 pe-none"></i>
+                                    <?php endif; ?>
+
+                                </a>
+                            <?php endif; ?>
+                            
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="col-12 text-center fw-bold">
+                    <?= ui_text('backend/components/galleryOne.labels.noImagesFound', [], false); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>

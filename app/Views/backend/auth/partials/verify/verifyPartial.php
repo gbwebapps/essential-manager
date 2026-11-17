@@ -1,0 +1,41 @@
+<?php $otpDigits = (int) setting('Backend\Auth')->twoFactorDigits; ?>
+<div class="row">
+    <!-- col-12 per mobile, col-sm-8 per tablet portrait piccolo, col-md-6 per tablet, col-lg-4 per desktop -->
+    <div class="col-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3 col-lg-4 offset-lg-4">
+
+        <form id="verify_form">
+
+            <!-- Campo code -->
+            <div class="mb-2">
+                <label for="code" class="form-label required-field"><i class="fa-solid fa-circle-arrow-down"></i><?= lang('backend/auth.labels.code'); ?></label>
+                <div class="input-group">
+                    <input type="text" id="code" name="code" class="form-control" placeholder="<?= lang('backend/auth.placeholders.code'); ?>" inputmode="numeric" pattern="[0-9]{<?= $otpDigits; ?>}" minlength="<?= $otpDigits; ?>" maxlength="<?= $otpDigits; ?>" autocomplete="one-time-code" aria-describedby="error-code" aria-required="true">
+                    <span class="input-group-text font-monospace"
+                          data-otp-countdown
+                          data-otp-countdown-mode="<?= esc($otpCountdownMode, 'attr'); ?>"
+                          data-server-time="<?= esc((string) $otpCountdownServerTime, 'attr'); ?>"
+                          data-expires-at="<?= esc((string) $otpCountdownExpiresAt, 'attr'); ?>"
+                          data-period="<?= esc((string) $otpCountdownPeriod, 'attr'); ?>"
+                          role="timer"
+                          aria-label="<?= esc(lang('backend/auth.labels.code'), 'attr'); ?>">--s</span>
+                </div>
+                <div id="error-code" class="error_code app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>
+            </div>
+            <!-- End Campo code -->
+
+            <div class="d-flex justify-content-end align-items-center">
+
+                <!-- Pulsante invio dati -->
+                <button type="submit" class="btn btn-sm app-btn-secondary"><i class="fa-solid fa-floppy-disk"></i><?= lang('backend/auth.buttons.verify'); ?></button>
+                <!-- End Pulsante invio dati -->
+
+            </div>
+
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="<?= base_url('backend/auth/login'); ?>"><i class="fa-solid fa-right-to-bracket"></i><?= lang('backend/auth.links.login'); ?></a>
+        </div>
+
+    </div>
+</div>

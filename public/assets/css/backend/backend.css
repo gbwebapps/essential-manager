@@ -1,0 +1,1170 @@
+/* Fonts */
+@font-face {
+    font-family: Comfortaa;
+    src: url("../../fonts/Comfortaa/Comfortaa-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Comfortaa;
+    src: url("../../fonts/Comfortaa/Comfortaa-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url("../../fonts/Montserrat/Montserrat-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url("../../fonts/Montserrat/Montserrat-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url("../../fonts/Montserrat/Montserrat-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url("../../fonts/Montserrat/Montserrat-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Raleway;
+    src: url("../../fonts/Raleway/Raleway-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Raleway;
+    src: url("../../fonts/Raleway/Raleway-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Raleway;
+    src: url("../../fonts/Raleway/Raleway-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Raleway;
+    src: url("../../fonts/Raleway/Raleway-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Inter;
+    src: url("../../fonts/Inter/Inter-VariableFont_opsz,wght.ttf") format("truetype");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Inter;
+    src: url("../../fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf") format("truetype");
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+/* Il carattere scelto si estende anche ai componenti Bootstrap, mantenendo i font delle icone. */
+:root {
+    --bs-font-sans-serif: var(--backend-font, Comfortaa), sans-serif;
+}
+
+/* Tags */
+body {
+    font-family: var(--backend-font, Comfortaa), sans-serif;
+    font-weight: 400;
+    padding: 4.5rem 0 6rem 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    color: var(--app-text);
+    background: var(--app-page-bg);
+    background-attachment: fixed;
+    box-shadow: var(--app-page-shadow, none);
+}
+
+label {
+    cursor: pointer;
+    /* font-weight: 700; */
+}
+
+a {
+    color: var(--app-text) !important;
+    text-decoration: none;
+}
+
+a:hover, button.btn-link:hover {
+    text-shadow: .25px 0 currentColor, -.25px 0 currentColor;
+}
+
+textarea {
+    resize: none;
+}
+
+.brand-logo {
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    vertical-align: middle;
+}
+
+.brand-logo-essential {
+    width: 8.5rem;
+    height: 1.75rem;
+    background-image: var(--app-logo-essential);
+}
+
+.brand-logo-gbwebapps {
+    width: 12.45rem;
+    height: 1.875rem;
+    background-image: var(--app-logo-gbwebapps);
+}
+
+/* Mostra il cursore pointer sull'icona nativa degli input date e time */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+}
+
+/* Bootstrap's override */
+.dropdown-menu, .btn, .navbar, .card {
+    /* border-radius: 0!Important; */
+    box-shadow: 0 0 0 rgb(0 0 0 / 10%), 0 0 .15rem rgb(0 0 0 / 10%);
+}
+
+.card > .card-header:first-child {
+    border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0 !important;
+}
+
+.btn-link {
+    text-decoration: none;
+}
+
+.dropdown-menu {
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    border-radius: .25rem;
+}
+
+.dropdown-divider {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.dropdown-item {
+    padding-top: .5rem;
+    padding-bottom: .5rem;
+}
+
+.dropdown-item:hover {
+    color: var(--app-text-inverse) !important;
+    background-color: var(--app-surface-inverse) !important;
+    /* niente radius qui */
+}
+
+.dropdown-item.active {
+    color: var(--app-text-inverse) !important;
+    background-color: var(--app-surface-inverse) !important;
+}
+
+.page-item:last-child .page-link {
+    /* border-top-right-radius: 0;
+    border-bottom-right-radius: 0; */
+}
+
+.page-item:first-child .page-link {
+    /* border-top-left-radius: 0;
+    border-bottom-left-radius: 0; */
+}
+
+.active > .page-link, .page-link.active {
+    color: var(--app-text-inverse);
+    background-color: var(--app-surface-inverse);
+    border-color: var(--app-border-strong);
+}
+
+.page-link {
+    color: var(--app-text);
+}
+
+.page-link:hover,
+.page-link:focus {
+    color: var(--app-text-inverse) !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 0 0 rgb(0 0 0 / 10%), 0 0 .15rem rgb(0 0 0 / 10%) !important;
+}
+
+.modal-xl {
+    max-width: 80%!Important;
+}
+
+/* ==========================================================================
+    Gestione Alert Globali (JS e Sessioni)
+   ========================================================================== */
+
+/* Proprietà grafiche comuni e condivise */
+#alert-container .alert,
+.alert-session {
+    width: 51.25rem;
+    max-width: 90vw;
+    box-shadow: 0 0 0 rgb(0 0 0 / 30%), 0 0 .20rem rgb(0 0 0 / 30%);
+}
+
+/* Contenitore per gli Alert generati da JavaScript */
+#alert-container {
+    margin-top: 3.21rem;
+    position: relative; /* Questa riga attiva lo z-index */
+    z-index: 1080;
+}
+
+/* Alert generato da PHP (Sessione): ancorato fisso in alto nello stesso identico punto */
+.alert-session {
+    position: fixed;
+    top: 4.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1080; /* Stesso z-index dell'alert-container */
+}
+
+/* Correzione pulsante di chiusura per l'alert con d-flex */
+.alert-session .btn-close {
+    position: relative !important;
+    top: auto;
+    right: auto;
+    padding: 0;
+}
+
+/* Font Awesome override */
+.fa-solid {
+    padding-right: .40rem;
+}
+
+/* Custom style */
+.backend-nav-avatar-slot {
+    position: relative;
+    display: inline-block;
+    width: 25px;
+    height: 0;
+    vertical-align: middle;
+}
+
+.backend-nav-avatar {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 25px;
+    height: 25px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    object-fit: cover;
+    font-size: 25px;
+    line-height: 25px;
+}
+
+/* I selettori di presentazione restano accessibili con il pannello offcanvas aperto. */
+body:has(.offcanvas.show) #navbar-top-view .navbar {
+    z-index: 1060;
+    pointer-events: none;
+}
+
+body:has(.offcanvas.show) #interface-preferences,
+body:has(.offcanvas.show) #navbar-top-view .navbar-toggler {
+    pointer-events: auto;
+}
+
+body:not(:has(.modal.show)) #navbar-top-view:has(#interface-preferences .dropdown-menu.show) .navbar,
+body:not(:has(.modal.show)) #navbar-top-view:has(#navbarSupportedContent.show) .navbar {
+    z-index: 1090;
+}
+
+#globalConfirmModal .error_currentPassword {
+    min-height: calc(1lh + .25rem);
+}
+
+/* I modali coprono entrambe le navbar; lo scorrimento resta sull'intero dialogo. */
+body:has(.modal.show) #navbar-top-view .navbar,
+body:has(.modal.show) #navbar-bottom-view .navbar {
+    z-index: 1030;
+    pointer-events: none;
+}
+
+body:has(.modal.show) #interface-preferences,
+body:has(.modal.show) #navbar-top-view .navbar-toggler {
+    pointer-events: none;
+}
+
+#interface-preferences .dropdown-menu {
+    max-height: calc(100dvh - 7rem);
+    overflow-y: auto;
+}
+
+#customBackdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--app-backdrop);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#customBackdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.disabled-link {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* Command bar */
+.bar {
+    background: var(--app-surface);
+    border: 0.0625rem solid var(--app-border);
+    padding: .5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 0 rgb(0 0 0 / 10%), 0 0 .15rem rgb(0 0 0 / 10%);
+    border-radius: .25rem;
+}
+
+.bar-item {
+    text-align: left;
+}
+
+/* Account left menu */
+.left-menu .list-group-item-action:hover,
+.left-menu .list-group-item-action:focus {
+    color: var(--app-text-inverse) !important;
+    background-color: var(--app-surface-inverse) !important;
+}
+
+.left-menu .list-group-item.active {
+    background: var(--app-surface-inverse);
+    border: none;
+    color: var(--app-text-inverse) !important;
+}
+
+#dropdownAdmins .btn-select-admin:hover,
+#dropdownAdmins .btn-select-admin:focus {
+    color: var(--app-text-inverse) !important;
+    background-color: var(--app-surface-inverse) !important;
+}
+
+#dropdownAdmins .btn-select-admin:hover i,
+#dropdownAdmins .btn-select-admin:focus i {
+    color: var(--app-text-inverse) !important;
+}
+
+.left-menu .list-group-item:first-child {
+    /* border-top-left-radius: 0;
+    border-top-right-radius: 0; */
+}
+
+.left-menu .list-group-item:last-child {
+    /* border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0; */
+}
+
+/* Loader */
+#show-loader {
+    position: fixed;
+    top: 9%;
+    left: 50%;
+    transform: translateX(-50%);
+    /* padding: .2rem .5rem; */
+    color: var(--app-text);
+    background: transparent;
+    display: none;
+    /* border: var(--app-border) solid 0.0625rem;
+    box-shadow: 0 0 0 rgb(0 0 0 / 10%), 0 0 .15rem rgb(0 0 0 / 10%); */
+    z-index: 9999;
+}
+
+/* Scrollup */
+.scrollup {
+    position: fixed;
+    bottom: 3.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    box-shadow: 0 0 0 rgb(0 0 0 / 10%), 0 0 .15rem rgb(0 0 0 / 10%);
+    cursor: pointer;
+}
+
+.reset-search-field {
+    display: none;
+    cursor: pointer;
+}
+
+.img-polaroid {
+    -webkit-box-shadow: 0 0 0 rgb(0 0 0 / 50%), 0 0 .15rem rgb(0 0 0 / 50%);
+    -moz-box-shadow: 0 0 0 rgb(0 0 0 / 50%), 0 0 .15rem rgb(0 0 0 / 50%);
+    -o-box-shadow: 0 0 0 rgb(0 0 0 / 50%), 0 0 .15rem rgb(0 0 0 / 50%);
+    box-shadow: 0 0 0 rgb(0 0 0 / 50%), 0 0 .15rem rgb(0 0 0 / 50%);
+    padding: .125rem;
+    border-radius: var(--bs-border-radius);
+    width: 100%;
+    min-width: 6rem;
+    max-width: 100%;
+    height: auto;
+}
+
+.pagination-left,
+.pagination-right {
+    padding: 1.2rem .75rem .75rem .75rem
+}
+
+.pagination-center {
+    padding: 1rem 0 0 0;
+}
+
+.pagination-left {
+    text-align: left;
+}
+
+.pagination-right {
+    text-align: right;
+}
+
+/* transizione base */
+.fade-out,
+.fade-in {
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+/* uscita */
+.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* entrata */
+.fade-in {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Container dell'immagine */
+.preview-item {
+    position: relative;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   Componente UploadPreviewImg
+   ========================================================================== */
+
+/* Overlay nero in fade, nascosto di default */
+.preview-item .preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: none; /* Evita di bloccare il cursore */
+}
+
+/* ==========================================================================
+   Componente GalleryOne
+   ========================================================================== */
+
+/* Overlay della galleria: nascosto di default */
+.preview-item .gallery-one-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Sfondo scuro trasparente */
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    gap: 1rem;
+}
+
+/* Mostra l'overlay all'hover sul riquadro */
+.preview-item:hover .gallery-one-overlay {
+    opacity: 1;
+}
+
+/* Stile per le icone cliccabili della galleria */
+.galleryOneAction {
+    cursor: pointer;
+}
+
+.gallery-one-overlay > .galleryOneAction,
+.gallery-one-overlay > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff !important;
+    margin: 0 !important;
+    text-decoration: none;
+    transition: transform 0.15s ease;
+}
+
+/* Effetto ingrandimento all'hover sulle singole icone */
+.gallery-one-overlay > .galleryOneAction:hover,
+.gallery-one-overlay > .galleryOneAction:focus,
+.gallery-one-overlay > a:hover,
+.gallery-one-overlay > a:focus {
+    color: #ffffff !important;
+    transform: scale(1.2);
+}
+
+/* Mostra l'overlay al passaggio del mouse */
+.preview-item:hover .preview-overlay {
+    opacity: 1;
+    pointer-events: auto; /* Attiva i click sui pulsanti interni */
+}
+
+/* Spazio fisso per l'errore sotto la miniatura per evitare scatti di layout */
+.error-msg {
+    min-height: 21px;
+}
+
+.action {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--app-text-inverse) !important;
+    background-color: var(--app-surface-inverse) !important;
+}
+
+/* Forza l'altezza minima uguale per tutte le righe della tabella */
+.table-row-110 {
+    height: 110px; 
+}
+
+/* Forza l'altezza minima uguale per tutte le righe della tabella */
+.table-row-60 {
+    height: 60px; 
+}
+
+.table-bg-superadmin {
+    /* Diciamo a tutti i <td> di questa riga di usare questo colore di sfondo */
+    --bs-table-bg: var(--app-surface-muted);
+    
+    /* Manteniamo il colore dei bordi standard della tabella, prevenendo l'ispessimento */
+    --bs-table-border-color: inherit; 
+}
+
+/* Gestione animazione ruotazione Chevron */
+.toggle-meta-btn i {
+    transition: transform 0.3s ease-in-out;
+}
+/* Quando Bootstrap apre il collapse, ruota l'icona di 90 gradi verso il basso */
+.toggle-meta-btn[aria-expanded="true"] i {
+    transform: rotate(90deg);
+}
+
+/* Comandi: link su desktop, pulsanti solidi su mobile */
+.cmd-link {
+    text-decoration: none;
+    color: var(--app-text);
+    transition: all 0.2s ease-in-out;
+}
+
+.cmd-link:hover {
+    color: var(--app-text-muted);
+}
+
+#interface-preferences .dropdown-menu > li:not(:last-child) {
+    border-bottom: var(--bs-dropdown-border-width) solid var(--bs-dropdown-divider-bg);
+}
+
+@media (max-width: 991px) {
+    .pagination-left, .pagination-right {
+        display: none;
+    }
+
+    .pagination-center {
+        margin: 0 0 0 0;
+        padding: .75rem 0;
+    }
+
+    /* Loader */
+    #show-loader {
+        top: 10.5%;
+    }
+}
+
+@media (max-width: 767px) {
+
+    /* Altezza del canvas applicata SOLO su mobile */
+    .offcanvas-bottom {
+        height: 75vh !important; 
+    }
+
+    .bar {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 1rem;
+        border: 0;
+        box-shadow: none;
+    }
+
+    .bar-item {
+        background: var(--app-surface);
+        text-align: center;
+        padding: .5rem 0;
+        border: .0625rem solid var(--app-border);
+        border-radius: .25rem;
+    }
+
+    /* solo le bar_item che NON sono l’ultima hanno margin-bottom */
+    .bar .row > div:not(:last-child) .bar-item {
+        margin-bottom: .25rem;
+    }
+
+    .bar-item a {
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .dropdown-mobile-center {
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        top: 100% !important; 
+    }
+
+    .cmd-link {
+        display: block;
+        padding: 0.6rem 1rem;
+        background-color: var(--app-surface);
+        color: var(--app-text);
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+        text-align: center;
+        border: 1px solid var(--app-border);
+    }
+
+    #dynamic_actions .btn-sm {
+        font-size: 0.75rem !important;
+        padding: 0.35rem 0.4rem !important;
+        white-space: nowrap; /* Impedisce che il testo vada a capo */
+    }
+    
+    #dynamic_actions .btn-sm i {
+        font-size: 0.7rem; /* Ridimensiona anche l'icona */
+    }
+
+    .modal-xl {
+        max-width: 95% !important;
+        margin: 0.5rem auto !important;
+    }
+}
+
+@media print {
+    /* Nasconde tutto il contenuto della pagina */
+    body * {
+        visibility: hidden;
+    }
+    
+    /* Rende visibile solo il div del dettaglio e i suoi elementi interni */
+    #show-wrapper, #show-wrapper * {
+        visibility: visible;
+    }
+    
+    /* Riposiziona il div in alto a sinistra nel foglio di carta */
+    #show-wrapper {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    /* Nasconde la classe indesiderata all'interno del wrapper */
+    #show-wrapper .btn-secondary, 
+    #show-wrapper .scrollup {
+        display: none !important;
+    }
+}
+/* Indicatore uniforme dei campi obbligatori in tutti i temi. */
+.required-field::after {
+    content: "*";
+    margin-left: .1em;
+    font-size: 1.25em;
+    line-height: 0;
+    vertical-align: baseline;
+    font-weight: 700;
+    color: #dc3545;
+}
+
+/* Import/export: impaginazione condivisa, senza contenitori di scorrimento interni. */
+#importModal.transfer-modal .transfer-import-dialog {
+    max-width: min(72rem, calc(100% - 2rem)) !important;
+}
+
+#exportModal.transfer-modal .transfer-export-dialog {
+    max-width: min(56rem, calc(100% - 2rem)) !important;
+}
+
+.transfer-modal .modal-dialog {
+    margin: 1rem auto !important;
+    max-height: none;
+}
+
+#importModal.transfer-modal .modal-content,
+#exportModal.transfer-modal .modal-content {
+    background: var(--app-surface) !important;
+    color: var(--app-text) !important;
+    border: 1px solid var(--app-border) !important;
+    border-radius: .75rem;
+}
+
+.transfer-modal .modal-content,
+.transfer-modal .modal-body,
+.transfer-modal .transfer-disclosure-body {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+}
+
+.transfer-modal .modal-header,
+.transfer-modal .modal-body,
+.transfer-modal .modal-footer {
+    padding: 1.25rem;
+}
+
+.transfer-modal .modal-header {
+    align-items: flex-start;
+    gap: 1rem;
+    border-bottom: 1px solid var(--app-border);
+}
+
+.transfer-modal .modal-header > div,
+.transfer-modal .transfer-table-name,
+.transfer-modal .transfer-cell-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.transfer-modal .modal-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.transfer-modal .modal-body {
+    font-size: .9rem;
+    line-height: 1.55;
+}
+
+.transfer-modal .modal-footer {
+    gap: .5rem;
+    border-top: 1px solid var(--app-border);
+}
+
+.transfer-modal .fa-solid {
+    padding-right: 0;
+}
+
+.transfer-modal .transfer-intro,
+.transfer-modal .transfer-preview-notice,
+.transfer-modal .transfer-key-legend {
+    color: var(--app-text-muted);
+    font-size: .875rem;
+    line-height: 1.6;
+}
+
+.transfer-modal .transfer-intro {
+    margin-top: .5rem;
+}
+
+.transfer-modal .transfer-modal-close {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+}
+
+.transfer-modal .transfer-disclosure > summary:hover,
+.transfer-modal .transfer-disclosure[open] > summary {
+    background: var(--app-surface-muted);
+}
+
+.transfer-modal .transfer-modal-close:focus-visible,
+.transfer-modal summary:focus-visible {
+    outline: 2px solid var(--app-border-strong);
+    outline-offset: 3px;
+}
+
+.transfer-modal .transfer-section,
+.transfer-modal .transfer-disclosure,
+.transfer-modal .transfer-help,
+.transfer-modal .transfer-stat {
+    background: var(--app-surface-elevated);
+    border: 1px solid var(--app-border);
+    border-radius: .5rem;
+}
+
+.transfer-modal .transfer-section {
+    padding: 1rem;
+}
+
+.transfer-modal .transfer-section-title {
+    margin: 0 0 .75rem;
+    font-size: .95rem;
+    font-weight: 600;
+}
+
+.transfer-modal .transfer-upload-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: .75rem;
+}
+
+.transfer-modal .transfer-upload-heading > * {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+}
+
+.transfer-modal .transfer-help,
+.transfer-modal .transfer-structures,
+.transfer-modal .transfer-authorization,
+.transfer-modal .transfer-preview-notice {
+    margin-top: 1rem;
+}
+
+.transfer-modal .transfer-help > summary {
+    padding: .75rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.transfer-modal .transfer-help > p,
+.transfer-modal .transfer-error-list {
+    padding: 0 1rem 1rem;
+    overflow-wrap: anywhere;
+}
+
+.transfer-modal .transfer-key-legend,
+.transfer-modal .transfer-sheet-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1rem;
+}
+
+.transfer-modal .transfer-key-legend {
+    margin-bottom: .75rem;
+}
+
+.transfer-modal .transfer-accordion {
+    display: grid;
+    gap: .75rem;
+    min-width: 0;
+}
+
+.transfer-modal .transfer-disclosure {
+    min-width: 0;
+}
+
+.transfer-modal .transfer-disclosure > summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: .75rem;
+    padding: .875rem 1rem;
+    list-style: none;
+    cursor: pointer;
+    border-radius: .5rem;
+}
+
+.transfer-modal .transfer-disclosure > summary::-webkit-details-marker {
+    display: none;
+}
+
+.transfer-modal .transfer-table-name {
+    font-weight: 600;
+}
+
+.transfer-modal .transfer-summary-meta,
+.transfer-modal .transfer-sheet-counts {
+    font-size: .8rem;
+    color: var(--app-text-muted);
+}
+
+.transfer-modal .transfer-disclosure-icon {
+    transition: transform .28s ease;
+}
+
+.transfer-modal .transfer-disclosure[open] > summary {
+    border-bottom: 1px solid var(--app-border);
+    border-radius: .5rem .5rem 0 0;
+}
+
+.transfer-modal .transfer-disclosure[open] > summary .transfer-disclosure-icon {
+    transform: rotate(90deg);
+}
+
+.transfer-modal .transfer-disclosure.transfer-closing > summary .transfer-disclosure-icon {
+    transform: rotate(0);
+}
+
+.transfer-modal .transfer-disclosure-body {
+    min-width: 0;
+    padding: 1rem;
+}
+
+.transfer-modal .transfer-structure-table,
+.transfer-modal .transfer-data-table {
+    width: 100%;
+    table-layout: fixed;
+    --bs-table-color: var(--app-text);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--app-border);
+}
+
+.transfer-modal .transfer-structure-table th,
+.transfer-modal .transfer-structure-table td,
+.transfer-modal .transfer-data-table th,
+.transfer-modal .transfer-data-table td {
+    padding: .625rem .75rem;
+    color: var(--app-text) !important;
+    border-color: var(--app-border) !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+}
+
+.transfer-modal .transfer-structure-table thead th,
+.transfer-modal .transfer-data-table thead th {
+    background: var(--app-surface-muted) !important;
+    font-weight: 600;
+}
+
+.transfer-modal .transfer-structure-table tbody th {
+    font-weight: 500;
+}
+
+.transfer-modal .transfer-schema-name { width: 30%; }
+.transfer-modal .transfer-schema-type { width: 20%; }
+.transfer-modal .transfer-schema-length { width: 15%; }
+.transfer-modal .transfer-schema-key { width: 35%; }
+
+.transfer-modal .transfer-plan,
+.transfer-modal .transfer-package-list,
+.transfer-modal .transfer-column-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+}
+
+.transfer-modal .transfer-plan {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 1rem;
+}
+
+.transfer-modal .transfer-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .875rem 1rem;
+}
+
+.transfer-modal .transfer-stat > strong {
+    font-size: 1.25rem;
+}
+
+.transfer-modal .transfer-package-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.transfer-modal .transfer-package-list > li,
+.transfer-modal .transfer-column-item {
+    min-width: 0;
+    padding: .75rem;
+    border: 1px solid var(--app-border);
+    border-radius: .375rem;
+    overflow-wrap: anywhere;
+}
+
+.transfer-modal .transfer-package-list > li {
+    display: flex;
+    align-items: baseline;
+}
+
+.transfer-modal .transfer-select-all {
+    padding-bottom: .75rem;
+    margin-bottom: .75rem;
+    border-bottom: 1px solid var(--app-border);
+}
+
+.transfer-modal .transfer-authorization {
+    padding-top: 1rem;
+    border-top: 1px solid var(--app-border);
+}
+
+.transfer-modal .transfer-authorization > .row {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.transfer-modal .transfer-progress {
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.transfer-modal .transfer-error-list {
+    margin: 0;
+    list-style-position: inside;
+}
+
+.transfer-modal .transfer-error-list > li + li {
+    margin-top: .5rem;
+}
+
+@media (max-width: 61.99rem) {
+    .transfer-modal .transfer-data-table thead {
+        display: none;
+    }
+
+    .transfer-modal .transfer-data-table tbody,
+    .transfer-modal .transfer-data-table tr {
+        display: block;
+    }
+
+    .transfer-modal .transfer-data-table tr + tr {
+        margin-top: .75rem;
+    }
+
+    .transfer-modal .transfer-data-table td {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+        gap: .75rem;
+    }
+
+    .transfer-modal .transfer-data-table td::before {
+        content: attr(data-column);
+        font-weight: 600;
+    }
+
+    .transfer-modal .transfer-data-table .transfer-empty-preview {
+        display: block;
+    }
+
+    .transfer-modal .transfer-data-table .transfer-empty-preview::before {
+        content: none;
+    }
+}
+
+@media (max-width: 47.99rem) {
+    .transfer-modal .modal-header,
+    .transfer-modal .modal-body,
+    .transfer-modal .modal-footer,
+    .transfer-modal .transfer-disclosure-body {
+        padding: 1rem;
+    }
+
+    .transfer-modal .transfer-plan,
+    .transfer-modal .transfer-package-list,
+    .transfer-modal .transfer-column-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .transfer-modal .transfer-disclosure > summary {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .transfer-modal .transfer-summary-meta,
+    .transfer-modal .transfer-sheet-counts {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .transfer-modal .transfer-disclosure-icon {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .transfer-modal .transfer-structure-table th,
+    .transfer-modal .transfer-structure-table td {
+        padding: .5rem .375rem;
+        font-size: .8rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .transfer-modal .transfer-disclosure-icon {
+        transition: none;
+    }
+}
+
+/* Evidenza delle modifiche e contenimento dei riepiloghi nelle lingue piu lunghe. */
+.transfer-modal .transfer-data-table tr.app-table-success > td:first-child {
+    border-inline-start: .2rem solid var(--app-success) !important;
+}
+
+.transfer-modal .transfer-data-table td.app-table-warning {
+    --bs-table-bg: var(--app-surface-muted);
+    border-bottom: 2px solid var(--app-text-warning-color, var(--app-text)) !important;
+}
+
+.transfer-modal .transfer-stat,
+.transfer-modal .transfer-stat > span,
+.transfer-modal .transfer-stat > strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+
+[data-menu-counts="messages"] [data-menu-count="read"] {
+    color: #fff !important;
+    background-color: var(--bs-green, #198754) !important;
+}
+
+[data-menu-counts="messages"] [data-menu-count="unread"] {
+    color: #000 !important;
+    background-color: var(--bs-yellow, #ffc107) !important;
+}
+
+.messages-status-archived {
+    color: #fff;
+    background-color: var(--bs-red, #dc3545);
+}

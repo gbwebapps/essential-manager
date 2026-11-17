@@ -1,0 +1,52 @@
+<div class="row">
+    <!-- Aggiunto col-sm-8 e offset-sm-2 per coprire i tablet in portrait sotto i 768px. Su md passa a 6 colonne. -->
+    <div class="col-12 col-sm-8 offset-sm-2 col-md-6 offset-md-3 col-lg-4 offset-lg-4">
+
+        <form id="login_form">
+
+            <!-- Campo email -->
+            <div class="mb-2">
+                <label for="email" class="form-label required-field"><i class="fa-solid fa-circle-arrow-down"></i><?= lang('backend/auth.labels.email'); ?></label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="<?= lang('backend/auth.placeholders.email'); ?>" autocomplete="username" aria-describedby="error-email" aria-required="true">
+                <div id="error-email" class="error_email app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>
+            </div>
+            <!-- End Campo email -->
+
+            <!-- Campo password -->
+            <div class="mb-2">
+                <label for="password" class="form-label required-field"><i class="fa-solid fa-circle-arrow-down"></i><?= lang('backend/auth.labels.password'); ?></label>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="<?= lang('backend/auth.placeholders.password'); ?>" autocomplete="current-password" aria-describedby="error-password" aria-required="true">
+                    <button class="btn app-btn-secondary app-bg-surface-elevated border toggle-password-visibility" type="button" aria-label="Mostra password" aria-pressed="false">
+                        <i class="fa-solid fa-eye app-text-muted"></i>
+                    </button>
+                </div>
+                <div id="error-password" class="error_password app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>
+            </div>
+            <!-- End Campo password -->
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+
+                <!-- Checkbox remember me -->
+                <div class="form-check text-start mb-0">
+                    <input class="form-check-input" type="checkbox" name="rememberMe" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">
+                        <?= lang('backend/auth.labels.rememberMe'); ?>
+                    </label>
+                </div>
+                <!-- End Checkbox remember me -->
+
+                <!-- Pulsante invio dati -->
+                <button type="submit" class="btn btn-sm app-btn-secondary"><i class="fa-solid fa-floppy-disk"></i><?= lang('backend/auth.buttons.login'); ?></button>
+                <!-- End Pulsante invio dati -->
+
+            </div>
+
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="<?= base_url('backend/auth/resetPassword'); ?>"><i class="fa-solid fa-unlock"></i><?= lang('backend/auth.links.resetPassword'); ?></a>
+        </div>
+
+    </div>
+</div>

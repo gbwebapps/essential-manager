@@ -1,0 +1,16 @@
+/* Righe Users scadute: evidenza rossa anche nei temi monocromatici. */
+#users-list .user-removal-due > td {
+    color: #fff;
+    background-color: #742832 !important;
+}
+
+#users-list .user-removal-due > td a,
+#users-list .user-removal-due > td .btn-link {
+    color: #fff !important;
+}
+
+#users-list .user-removal-due-label {
+    color: #fff;
+    background-color: #a52e3c;
+    white-space: normal;
+}

@@ -1,0 +1,105 @@
+<?php declare(strict_types = 1);
+
+return [
+    'interface' => [
+        'showPassword' => 'Mostra password',
+        'hidePassword' => 'Nascondi password',
+        'themes' => 'Temi',
+        'changeError' => 'Impossibile cambiare la preferenza. Riprova.',
+    ],
+    'menu' => [
+        'topRight' => [
+            'admins' => 'Amministratori',
+            'groups' => 'Gruppi',
+            'audits' => 'Registro attività', 
+            'tokens' => 'Tokens', 
+            'logs' => 'Accessi', 
+            'account' => 'Profilo',
+            'logout' => 'Esci'
+        ],
+        'bottomLeft' => [
+            'dashboard' => 'Dashboard',
+        ],
+        'bottomRight' => [
+            'settings' => 'Impostazioni',
+            'tools' => 'Strumenti', 
+        ],
+    ],
+    'menuCounts' => [
+        'active' => 'Attivi',
+        'trashed' => 'Eliminati',
+        'suspended' => 'Sospesi',
+    ],
+    'links' => [
+        'selectAll' => 'Seleziona tutti'
+    ], 
+    'labels' => [
+        'select' => 'Seleziona'
+    ], 
+    'formats' => [
+        'conversationalDate' => "EEEE d MMMM yyyy 'alle' HH:mm:ss",
+    ], 
+    'buttons' => [
+        'modules' => 'Moduli',
+        'services' => 'Servizi',
+        'backToTop' => 'Torna in alto', 
+        'expandScreen' => 'Espandi schermo',
+        'reduceScreen' => 'Riduci schermo',
+        'options' => 'Opzioni', 
+        'undo' => 'Annulla', 
+        'export' => 'Esporta', 
+        'yes' => 'Si', 
+        'no' => 'No', 
+        'close' => 'Chiudi', 
+        'exportPdf' => 'Esporta Pdf', 
+        'remove' => 'Rimuovi', 
+    ],
+    'errors' => [
+        'err403' => 'Accesso negato. Non sei autorizzato a eseguire questa operazione.',
+        'err404' => 'La risorsa richiesta non è stata trovata o è stata rimossa.',
+        'err500' => 'Si è verificato un errore critico durante l\'elaborazione della richiesta.',
+        'err504' => 'Il server non ha risposto in tempo. Controlla lo stato dell’operazione prima di riprovare.',
+        'errNetwork' => 'Impossibile comunicare con il server. Verifica la connessione o riprova più tardi.',
+        'errResponse' => 'Il server ha restituito una risposta non valida. L’operazione potrebbe essere già stata eseguita.',
+        'errClient' => 'Si è verificato un errore nell’interfaccia. Controlla lo stato dell’operazione prima di riprovare.',
+        'errRequest' => 'Non è stato possibile avviare la richiesta.',
+        'errCsrf' => 'Verifica di sicurezza non riuscita. Ricarica la pagina prima di riprovare.',
+        'errHttp' => 'Il server non ha potuto completare la richiesta.',
+        'fullscreenError' => 'Impossibile modificare la modalità schermo intero.',
+    ], 
+    'modals' => [
+        'exportPdfTitle' => 'Impostazioni Esportazione PDF', 
+        'exportPdfOrientation' => 'Orientamento', 
+        'exportPdfOrientationVert' => 'Verticale', 
+        'exportPdfOrientationHoriz' => 'Orizzontale', 
+        'exportPdfFormat' => 'Formato', 
+        'exportPdfMargin' => 'Margini', 
+        'exportPdfMarginSup' => 'Superiore', 
+        'exportPdfMarginRgt' => 'Destro', 
+        'exportPdfMarginInf' => 'Inferiore', 
+        'exportPdfMarginLft' => 'Sinistro', 
+        'exportPdfCompression' => 'Compressione', 
+        'exportPdfImgQuality' => 'Qualità immagine', 
+        'globalTitle' => 'Richiesta di conferma'
+    ], 
+    'pagination' => [
+        'messageLeft' => 'Pagina %d di %d',
+        'messageRight' => 'Da %d a %d di %d',
+        'first' => 'Primo',
+        'last' => 'Ultimo',
+        'next' => 'Prossimo',
+        'previous' => 'Precedente',
+    ],
+    'audits' => [
+        'importData' => 'Importazione dati nella tabella %s. Inseriti %d records, aggiornati %d records.',
+    ], 
+    'messages' => [
+        'confirmSensitiveAction' => 'Conferma questa operazione con la password del tuo account.',
+        'currentPasswordInfo' => 'Inserisci la password del tuo account per confermare questa operazione.',
+        'getDataError' => 'Errore durante operazione di recupero lista.',
+        'getUUIDError' => 'Errore durante operazione di recupero dettaglio.', 
+        'UUIDNotFound' => 'Record non trovato.', 
+        'permissionDenied' => 'Accesso negato.',
+        'unsavedChanges' => 'Sono presenti modifiche non salvate. Vuoi uscire senza salvare?'
+    ]
+];

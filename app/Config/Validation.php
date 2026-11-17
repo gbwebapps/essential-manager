@@ -1,0 +1,58 @@
+<?php
+
+namespace Config;
+
+use CodeIgniter\Config\BaseConfig;
+use CodeIgniter\Validation\StrictRules\CreditCardRules;
+use CodeIgniter\Validation\StrictRules\FileRules;
+use CodeIgniter\Validation\StrictRules\FormatRules;
+use CodeIgniter\Validation\StrictRules\Rules;
+
+use App\Validation\Backend\AuthRules;
+use App\Validation\Backend\AdminsRules;
+use App\Validation\Backend\ImagesRules;
+use App\Validation\Backend\SettingsRules;
+use App\Validation\Backend\CustomRules;
+use App\Validation\Backend\GroupsRules;
+
+class Validation extends BaseConfig
+{
+    // --------------------------------------------------------------------
+    // Setup
+    // --------------------------------------------------------------------
+
+    /**
+     * Stores the classes that contain the
+     * rules that are available.
+     *
+     * @var list<string>
+     */
+    public array $ruleSets = [
+        CustomRules::class,
+        Rules::class,
+        FormatRules::class,
+        FileRules::class,
+        CreditCardRules::class, 
+        AuthRules::class,
+        \App\Validation\Frontend\AuthRules::class, 
+        AdminsRules::class, 
+        ImagesRules::class, 
+        SettingsRules::class, 
+        GroupsRules::class, 
+    ];
+
+    /**
+     * Specifies the views that are used to display the
+     * errors.
+     *
+     * @var array<string, string>
+     */
+    public array $templates = [
+        'list'   => 'CodeIgniter\Validation\Views\list',
+        'single' => 'CodeIgniter\Validation\Views\single',
+    ];
+
+    // --------------------------------------------------------------------
+    // Rules
+    // --------------------------------------------------------------------
+}

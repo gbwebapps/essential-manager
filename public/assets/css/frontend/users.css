@@ -1,0 +1,277 @@
+/* La pagina usa sfondo, carattere e struttura della home, senza i temi del backend. */
+body.frontend-users-layout {
+    --app-text: #fff;
+    --app-text-muted: rgba(255, 255, 255, .7);
+    --app-text-inverse: #222;
+    --app-surface: rgba(0, 0, 0, .12);
+    --app-surface-elevated: #494949;
+    --app-border: rgba(255, 255, 255, .25);
+    --app-backdrop: rgba(0, 0, 0, .4);
+    --bs-body-color: #fff;
+    --bs-body-bg: #555;
+    --bs-secondary-color: rgba(255, 255, 255, .7);
+    --bs-border-color: rgba(255, 255, 255, .25);
+    min-height: 100dvh;
+    height: auto;
+    padding: 0;
+}
+
+.frontend-users-layout .cover-container {
+    min-height: 100dvh;
+}
+
+.frontend-users-main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.frontend-auth-content {
+    max-width: 27rem;
+}
+
+/* I link conservano le dimensioni al passaggio del mouse. */
+.frontend-users-layout a:hover,
+.frontend-users-layout a:focus-visible,
+.frontend-users-layout button.nav-link:hover,
+.frontend-users-layout button.nav-link:focus-visible {
+    color: #fff;
+    text-decoration: none;
+    text-shadow: inherit;
+}
+
+.frontend-users-layout .nav-masthead .nav-link {
+    color: rgba(255, 255, 255, .5) !important;
+}
+
+.frontend-users-layout .nav-masthead .active,
+.frontend-users-layout .nav-masthead .nav-link:hover,
+.frontend-users-layout .nav-masthead .nav-link:focus-visible {
+    color: #fff !important;
+}
+
+/* Le sezioni del profilo condividono la stessa linea superiore. */
+.frontend-account-main {
+    justify-content: flex-start;
+}
+
+.account-layout {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    align-items: start;
+    gap: 2.5rem;
+}
+
+/* Menu laterale essenziale: nessun riquadro, solo il separatore sotto ogni link. */
+.account-navigation {
+    position: sticky;
+    top: 1.5rem;
+}
+
+.account-navigation a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--app-border);
+    color: rgba(255, 255, 255, .7) !important;
+    font-size: .85rem;
+}
+
+.account-navigation .fa-solid {
+    width: 1.5rem;
+    text-align: center;
+}
+
+.account-navigation .active,
+.account-navigation a:hover,
+.account-navigation a:focus-visible {
+    border-bottom-color: rgba(255, 255, 255, .75);
+    color: #fff !important;
+}
+
+.account-navigation .active {
+    border-bottom-width: 2px;
+}
+
+.account-navigation .account-removal-link {
+    color: #ffb4b4 !important;
+}
+
+.account-section {
+    min-width: 0;
+}
+
+/* I titoli riprendono il separatore del menu senza spostare i pulsanti della sezione. */
+.account-section-heading {
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--app-border);
+}
+
+/* Distanza tra comandi, area di caricamento e galleria del solo profilo frontend. */
+.frontend-users-layout #images-account-container #uploadPreview > .card-header {
+    margin-bottom: 1rem;
+}
+
+.frontend-users-layout #images-account-container #uploadPreview {
+    margin-bottom: 1.5rem;
+}
+
+.frontend-users-layout #images-account-container > .card-header {
+    margin-bottom: .75rem;
+}
+
+/* Ogni token rimane un elemento distinto anche dopo il refresh asincrono. */
+.frontend-users-layout #tokens-account-container .list-group {
+    gap: 1rem;
+}
+
+.frontend-users-layout #tokens-account-container .list-group-item {
+    border-radius: var(--bs-list-group-border-radius);
+}
+
+.frontend-users-layout #tokens-account-container .list-group-item + .list-group-item {
+    border-top-width: var(--bs-list-group-border-width);
+}
+
+@media (max-width: 767.98px) {
+    .account-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.5rem;
+    }
+
+    .account-navigation {
+        position: static;
+    }
+}
+
+/* I componenti riusati mantengono selettori e comportamento, con superfici frontend. */
+.frontend-users-layout .card,
+.frontend-users-layout .list-group {
+    --bs-card-bg: transparent;
+    --bs-card-color: #fff;
+    --bs-list-group-bg: transparent;
+    --bs-list-group-color: #fff;
+    --bs-list-group-border-color: var(--app-border);
+    text-shadow: none;
+}
+
+.frontend-users-layout .form-control,
+.frontend-users-layout .form-select:not(.frontend-language-select) {
+    color: #fff;
+    background-color: rgba(0, 0, 0, .2);
+    border-color: var(--app-border);
+    text-shadow: none;
+}
+
+.frontend-users-layout .form-control::placeholder {
+    color: rgba(255, 255, 255, .6);
+}
+
+.frontend-users-layout .form-control:focus,
+.frontend-users-layout .form-select:not(.frontend-language-select):focus {
+    border-color: rgba(255, 255, 255, .65);
+    box-shadow: 0 0 0 .2rem rgba(255, 255, 255, .12);
+}
+
+.frontend-users-layout .input-group-text,
+.frontend-users-layout .modal-content {
+    color: #fff;
+    background-color: #494949;
+    border-color: var(--app-border);
+    text-shadow: none;
+}
+
+/* Il testo dei modali non eredita l'allineamento centrato della pagina. */
+.frontend-users-layout .modal-content {
+    text-align: left;
+}
+
+.frontend-users-layout .app-bg-surface {
+    background-color: var(--app-surface) !important;
+}
+
+.frontend-users-layout .app-bg-surface-elevated,
+.frontend-users-layout .app-bg-muted-subtle {
+    background-color: var(--app-surface-elevated) !important;
+}
+
+.frontend-users-layout .app-text,
+.frontend-users-layout .app-text-inverse {
+    color: #fff !important;
+}
+
+.frontend-users-layout .app-text-muted {
+    color: var(--app-text-muted) !important;
+}
+
+.frontend-users-layout .app-text-success {
+    color: #98d9b0 !important;
+}
+
+.frontend-users-layout .app-text-danger {
+    color: #ffaca7 !important;
+}
+
+.frontend-users-layout .app-text-warning {
+    color: #ffe3a3 !important;
+}
+
+.frontend-users-layout .app-border-accent {
+    border-color: rgba(255, 255, 255, .75) !important;
+}
+
+.frontend-users-layout .app-bg-success,
+.frontend-users-layout .app-btn-success {
+    --frontend-button-bg: #236543;
+    background-color: #236543;
+    color: #fff;
+}
+
+.frontend-users-layout .app-btn-danger {
+    --frontend-button-bg: #8b343c;
+}
+
+.frontend-users-layout .app-btn-warning {
+    --frontend-button-bg: #715722;
+}
+
+.frontend-users-layout .app-btn-primary,
+.frontend-users-layout .app-btn-info {
+    --frontend-button-bg: #305875;
+}
+
+.frontend-users-layout .btn[class*="app-btn-"] {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--frontend-button-bg, #494949);
+    --bs-btn-border-color: rgba(255, 255, 255, .3);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--frontend-button-bg, #3d3d3d);
+    --bs-btn-hover-border-color: rgba(255, 255, 255, .7);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--frontend-button-bg, #3d3d3d);
+    --bs-btn-active-border-color: #fff;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--frontend-button-bg, #494949);
+    --bs-btn-disabled-border-color: rgba(255, 255, 255, .3);
+    text-shadow: none;
+}
+
+.frontend-users-layout .app-alert-success {
+    color: #fff;
+    background-color: #236543;
+}
+
+.frontend-users-layout .app-alert-danger,
+.frontend-users-layout .app-bg-danger {
+    color: #fff;
+    background-color: #8b343c;
+}
+
+.frontend-users-layout .app-alert-info,
+.frontend-users-layout .app-alert {
+    color: #fff;
+    background-color: #305875;
+}

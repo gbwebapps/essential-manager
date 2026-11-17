@@ -1,0 +1,15 @@
+<?= $this->extend('backend/template/mainView') ?>
+
+<?= $this->section('content') ?>
+
+    <div class="row">
+        <div class="col-12">
+            <div id="index-auth-container">
+                <?= $this->include('backend/auth/partials/index/indexPartial'); ?>
+            </div>
+        </div>
+    </div>
+
+    <script>localStorage.clear();</script>
+
+<?= $this->endSection() ?>

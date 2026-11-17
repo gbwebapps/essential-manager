@@ -1,0 +1,73 @@
+<?php declare(strict_types = 1); 
+
+return [
+	'titles' => [
+		'index' => 'Willkommen', 
+		'login' => 'Anmelden', 
+		'resetPassword' => 'Passwort zurücksetzen', 
+		'setPassword' => 'Passwort festlegen', 
+		'verify' => 'OTP verifizieren'
+	],
+	'labels' => [
+		'email' => 'E-Mail', 
+		'username' => 'Benutzername', 
+		'password' => 'Passwort', 
+		'rememberMe' => 'Angemeldet bleiben', 
+		'newPassword' => 'Passwort eingeben', 
+		'confirmNewPassword' => 'Passwort bestätigen', 
+		'code' => 'OTP-Code'
+	], 
+	'placeholders' => [
+		'email' => 'E-Mail-Adresse hier eingeben...', 
+		'username' => 'Benutzername hier eingeben...', 
+		'password' => 'Passwort hier eingeben...', 
+		'newPassword' => 'Passwort hier eingeben...', 
+		'confirmNewPassword' => 'Passwort bestätigen', 
+		'code' => 'OTP-Code hier eingeben...', 
+	], 
+	'buttons' => [
+		'login' => 'Anmelden', 
+		'resetPassword' => 'Passwort zurücksetzen', 
+		'setPassword' => 'Passwort festlegen', 
+		'verify' => 'OTP verifizieren'
+
+	], 
+	'links' => [
+		'login' => 'Anmelden', 
+		'resetPassword' => 'Passwort zurücksetzen'
+	], 
+	'errors' => [
+	    'passwordFormatNotValid' => 'Das Passwort erfüllt nicht die Sicherheitsanforderungen.',
+	],
+	'audits' => [
+	    'loginRefused'      => 'Anmeldeversuch mit nicht existierendem Konto',
+	    'loginBlocked'      => 'Zugriff wegen des Versuchslimits verweigert',
+	    'loginFailed'       => 'Fehlgeschlagener Anmeldeversuch %s %s',
+	    '2faRequired'       => '2FA-Bestätigungscode erforderlich %s %s %s',
+	    'loginSuccess'      => 'Anmeldung erfolgreich %s %s',
+	    'resetPasswordAuth' => 'Passwort zurücksetzen %s %s',
+	    'setPassword'       => 'Passwort festlegen %s %s',
+	    'verifyFailed'      => 'Anmeldeversuch mit nicht existierendem Konto',
+	    '2faBlocked'        => '2FA-Sperre %s %s',
+	    '2faFailed'         => 'Falscher oder abgelaufener 2FA-Code %s %s',
+	],
+	'messages' => [
+		'goodbye' => 'Auf Wiedersehen %s %s.', 
+		'welcome' => 'Guten Tag %s %s.', 
+		'loginFailed' => 'Anmeldeversuch fehlgeschlagen.', 
+	    'loginNeeded' => 'Bitte melden Sie sich an, um fortzufahren.', 
+	    'resetPasswordFailed' => 'Fehler beim Zurücksetzen des Passworts.', 
+		'setPasswordSuccess' => 'Passwort festgelegt. <a class="fw-bold text-white" href="' . base_url('backend/auth/login') . '"><i class="fa-solid fa-right-to-bracket"></i> Anmelden.</a>', 
+		'setPasswordFailed' => 'Fehler beim Festlegen des Passworts.', 
+		'setPasswordError' => 'Fehler beim Festlegen des Passworts.', 
+		'checkAuthError' => 'Ungültiger oder abgelaufener Authentifizierungscode.', 
+		'tooManyAttempts' => 'Versuchslimit erreicht. Bitte versuchen Sie es später erneut.',
+	    'currentSessionOn' => 'Sitzung von %s %s läuft noch.', 
+		'validationErrors' => 'Validierungsfehler.', 
+		'resetPasswordSuccess' => 'Wenn die Adresse zu einem aktiven Konto gehört, erhalten Sie eine E-Mail mit Anweisungen zum Zurücksetzen des Passworts.',
+		'resetPasswordSuccessNoEmail' => 'Passwort-Reset-Prozess eingerichtet, aber die E-Mail konnte nicht gesendet werden. Bitte kontaktieren Sie den Administrator.', 
+		'expiredCode' => 'OTP-Code abgelaufen.',
+		'wrongCode' => 'Falscher OTP-Code.', 
+		'twoFactorEmailSendError' => 'Der Bestätigungscode konnte nicht per E-Mail gesendet werden. Bitte versuchen Sie es in wenigen Augenblicken erneut.',
+	]
+];

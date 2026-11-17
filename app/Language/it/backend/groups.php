@@ -1,0 +1,74 @@
+<?php declare(strict_types = 1); 
+
+return [
+	'titles' => [
+		'index' => 'Gruppi', 
+	],
+	'panels' => [
+		'addGroup' => 'Aggiungi gruppo', 
+		'listGroup' => 'Lista gruppi', 
+		'exceptionsPerms' => 'Eccezioni permessi'
+	], 
+	'options' => [
+		'first' => 'Prima opzione', 
+		'second' => 'Seconda opzione', 
+		'thirst' => 'Terza opzione', 
+	], 
+	'labels' => [
+		'id' => 'ID', 
+		'uuid' => 'UUID',
+		'groupName' => 'Nome gruppo', 
+		'groupDescription' => 'Descrizione gruppo', 
+		'assignedToGroup' => 'Assegnato al GRUPPO', 
+		'notAssignedToGroup' => 'Non assegnato al GRUPPO', 
+		'admins' => 'Cerca amministratore', 
+		'name' => 'Nome gruppo',
+		'description' => 'Descrizione gruppo',
+		'permissions' => 'Permessi', 
+		'query' => 'Campo ricerca', 
+		'groupNameBar' => 'Gruppo %s', 
+	], 
+	'placeholders' => [
+		'groupName' => 'Inserisci nome gruppo...', 
+		'groupDescription' => 'Inserisci descrizione gruppo...', 
+		'admins' => 'Digita le prime tre lettere...'
+	], 
+	'buttons' => [
+		'delete' => 'Elimina', 
+		'refreshData' => 'Ricarica dati', 
+		'resetData' => 'Resetta dati', 
+		'sendData' => 'Salva dati', 
+	], 
+	'errors' => [
+		'permission' => 'Permesso non conforme.', 
+		'wrongUUID' => 'Formato UUID non corretto.', 
+		'wrongID' => 'Formato ID non corretto', 
+	],
+	'audits' => [
+		'addGroup' => 'Aggiunta gruppo %s', 
+		'editGroup' => 'Aggiornamento gruppo %s', 
+		'deleteGroup' => 'Eliminazione gruppo %s', 
+		'saveExceptions' => 'Inserimento eccezione %s %s', 
+	], 
+	'messages' => [
+		'areYouSureDeleteGroup' => 'Sei sicuro di voler eliminare il gruppo <b>%s</b>?', 
+		'areYouSureToReload' => 'Sei sicuro di voler ricaricare i dati?', 
+		'areYouSureToResetData' => 'Sei sicuro di voler azzerare i dati?', 
+		'noAdminFound' => 'Nessun amministratore trovato.', 
+		'noGroupFound' => 'Nessun gruppo trovato.', 
+		'noDataChanged' => 'Non sono state effettuate modifiche.', 
+		'validationErrors' => 'Errori di validazione.', 
+		'validateToastErrors' => '%s', 
+		'addError' => 'Aggiunta gruppo non andata a buon fine.', 
+		'addSuccess' => 'Gruppo aggiunto con successo.', 
+		'editError' => 'Aggiornamento gruppo non andato a buon fine.',
+		'editSuccess' => 'Gruppo aggiornato con successo.',
+		'delError' => 'Eliminazione gruppo non andata a buon fine.', 
+		'delSuccess' => 'Gruppo eliminato con successo.', 
+		'saveExceptionsSuccess' => 'Eccezione aggiunta con successo a %s %s.', 
+		'saveExceptionsError' => 'Aggiunta eccezione non andata a buon fine.', 
+		'protectedAdmin' => 'Protetto da modifiche.', 
+		'cannotModifyDeleted' => 'Non è possibile modificare un admin eliminato.', 
+		'hasAdminsAttached' => 'Non è possibile eliminare un gruppo al quale sono associati amministratori.'
+	]
+];

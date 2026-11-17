@@ -1,0 +1,235 @@
+/* Import delle costanti e utility da backend.js */
+import { urlbase, action, smoothReplace, initOffcanvasAutoClose, initRangeDatePicker } from './backend.js';
+
+/* Import dei componenti dalla sottocartella */
+import { ListManager, AddManager, EditManager, DeleteManager, ChangeStatusManager, GeneralDataManager, MetaDataManager } from './modules/Crud.js';
+import { ChangeGroupManager, GetPermissionsManager, ChangePermissionManager, GetTokensManager, DeleteTokenManager, ResetPasswordManager } from './modules/Admins.js';
+import { ExportCsvManager } from './components/ExportCsv.js';
+import { ImportCsvManager } from './components/ImportCsv.js';
+
+import { UploadPreviewImgManager } from './components/UploadPreview.js';
+import { GalleryOneManager } from './components/GalleryOne.js';
+
+const actions = {
+    index: function(){},
+    showAll: function() {
+
+        const adminsManager = new ListManager({
+            controller: 'admins',
+            url: urlbase + 'backend/admins/showAll',
+            rootId: 'admins-list',
+            containerId: 'showAll-admins-container',
+            searchFields: ['firstname', 'lastname', 'email', 'phone'],
+            searchDates: ['created_at', 'updated_at']
+        }, {
+            /* Aggiorna i tre totali solo dopo un caricamento riuscito della lista. */
+            onShowAfter: data => {
+                const counts = data.trashCounts;
+                const filters = ['active', 'suspended', 'trashed', 'all'];
+
+                if ( ! counts || ! filters.every(filter => Number.isSafeInteger(counts[filter]) && counts[filter] >= 0)
+                    || counts.active + counts.suspended + counts.trashed !== counts.all) return;
+
+                adminsManager.root.querySelectorAll('[data-trash-count]').forEach(badge => {
+                    const filter = badge.dataset.trashCount;
+                    if ( ! filters.includes(filter)) return;
+
+                    badge.textContent = String(counts[filter]);
+                    badge.hidden = false;
+                });
+            }
+        });
+        adminsManager.init();
+
+        /* Inizializzazione picker per created_at con alias */
+        const { pickerFrom: createdFrom, pickerTo: createdTo } = initRangeDatePicker('#wrapper-admins-created_at-from', '#wrapper-admins-created_at-to');
+
+        /* Inizializzazione picker per updated_at con alias */
+        const { pickerFrom: updatedFrom, pickerTo: updatedTo } = initRangeDatePicker('#wrapper-admins-updated_at-from', '#wrapper-admins-updated_at-to');
+
+        const deleteManager = new DeleteManager({
+            requirePassword: true,
+            passwordActions: ['deleteRecord', 'restoreRecord', 'hardDeleteRecord'],
+            controller: 'admins',
+            urls: {
+                softDelete: urlbase + 'backend/admins/softDelete',
+                restoreDelete: urlbase + 'backend/admins/restoreDelete',
+                hardDelete: urlbase + 'backend/admins/hardDelete'
+            },
+            listManager: adminsManager
+        });
+        deleteManager.init();
+
+        const changeStatusManager = new ChangeStatusManager({
+            controller: 'admins',
+            requirePassword: true,
+            url: urlbase + 'backend/admins/changeStatus'
+        }, {
+            onStatusAfter: data => {
+                if (typeof adminsManager !== 'undefined' && typeof adminsManager.showAll === 'function') {
+                    adminsManager.showAll();
+                }
+            }
+        });
+        changeStatusManager.init();
+
+        const adminResetManager = new ResetPasswordManager({
+            onResetAfter: data => {
+                adminsManager.showAll();
+            }
+        });
+        adminResetManager.init();
+
+        const exportManager = new ExportCsvManager({ controller: 'admins' });
+        exportManager.init();
+
+        const importManager = new ImportCsvManager({
+            controller: 'admins' 
+        }, {
+            onImportAfter: data => {
+                if (typeof adminsManager !== 'undefined' && typeof adminsManager.showAll === 'function') {
+                    adminsManager.showAll();
+                }
+            }
+        });
+        importManager.init();
+
+        initOffcanvasAutoClose('actionsOffcanvas');
+
+    },
+    add: function() {
+
+        const imagePreviewManager = new UploadPreviewImgManager();
+
+        const addManager = new AddManager({
+            url: urlbase + 'backend/admins/add',
+            formSelector: '#admins-add',
+            resetSelector: '#add-reset', 
+            containerId: 'add-admins-container', 
+            imagePreviewManager: imagePreviewManager
+        });
+        addManager.init();
+
+    },
+    edit: function() {
+
+        const imagePreviewManager = new UploadPreviewImgManager();
+        const galleryOneManager = new GalleryOneManager();
+
+        const editManager = new EditManager({
+            formSelector: '#admins-edit',
+            url: urlbase + 'backend/admins/edit',
+            refreshSelector: '#edit-refresh',
+            containerId: 'edit-admins-container', 
+            imagePreviewManager: imagePreviewManager,
+            galleryOneManager: galleryOneManager
+        });
+        editManager.init();
+
+        const generalDataManager = new GeneralDataManager({
+            url: urlbase + 'backend/admins/getGeneralData', 
+            formSelector: '#getGeneralData'
+        }, {
+            onGeneralDataAfter: (data) => {
+                /* Se il server restituisce la doppia vista dell'anagrafica, sincronizziamo il pannello */
+                if (data.permissions_output) {
+                    const permissionsEl = document.getElementById('permissions');
+                    if (permissionsEl) {
+                        smoothReplace(permissionsEl, data.permissions_output);
+                    }
+                }
+            }
+        });
+        generalDataManager.init();
+
+        const changeGroupManager = new ChangeGroupManager();
+        changeGroupManager.init();
+
+        const permissionsManager = new GetPermissionsManager({
+            onPermissionsAfter: (data) => {
+                /* Se il server restituisce il group_id reale, riallineiamo la select dell'anagrafica */
+                if (data.group_id !== undefined) {
+                    const selectGroup = document.getElementById('group_id');
+                    if (selectGroup) {
+                        selectGroup.value = data.group_id;
+                    }
+                }
+            }
+        });
+        permissionsManager.init();
+
+        const metaDataManager = new MetaDataManager({
+            url: urlbase + 'backend/admins/getMetaData', 
+            formSelector: '#getMetaData'
+        });
+        metaDataManager.init();
+    },
+
+    show: function() {
+
+        const generalDataManager = new GeneralDataManager({
+            url: urlbase + 'backend/admins/getGeneralData', 
+            formSelector: '#getGeneralData'
+        });
+        generalDataManager.init();
+
+        const galleryOneManager = new GalleryOneManager();
+
+        const metaDataManager = new MetaDataManager({
+            url: urlbase + 'backend/admins/getMetaData', 
+            formSelector: '#getMetaData'
+        });
+        metaDataManager.init();
+
+        const changeStatusManager = new ChangeStatusManager({
+            controller: 'admins', 
+            requirePassword: true,
+            url: urlbase + 'backend/admins/changeStatus'
+        }, {
+            onStatusAfter: data => {
+                const el = document.getElementById('changeStatusPartial');
+                if (el) el.innerHTML = data.statusView;
+
+                const meta = document.getElementById('metaData');
+                if (meta) meta.innerHTML = data.metaView;
+            }
+        });
+        changeStatusManager.init();
+
+        const changePermissionManager = new ChangePermissionManager();
+        changePermissionManager.init();
+
+        const permissionsManager = new GetPermissionsManager();
+        permissionsManager.init();
+
+        const tokensManager = new GetTokensManager();
+        tokensManager.init();
+
+        const deleteTokenManager = new DeleteTokenManager();
+        deleteTokenManager.init();
+    }
+};
+
+/* Listener per il link select all nei form add ed edit per selezionare tutti i check box dei permessi */
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('.select-all');
+    if (!link) return;
+
+    e.preventDefault();
+    const controller = link.dataset.controller;
+    const form = link.closest('form');
+    if (!controller || !form) return;
+
+    /* Il click su testo o icona agisce soltanto sui permessi di questo form. */
+    const checkboxes = form.querySelectorAll(`input[type="checkbox"].${CSS.escape(controller)}:not(:disabled)`);
+    const anyChecked = Array.from(checkboxes).some(el => el.checked);
+    const newState = !anyChecked;
+    checkboxes.forEach(el => el.checked = newState);
+});
+
+/* Se esiste una funzione per l'azione corrente, eseguila */
+if (actions[action]) {
+    actions[action]();
+} else {
+    console.error("Azione non definita:", action);
+}

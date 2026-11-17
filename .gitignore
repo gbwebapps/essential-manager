@@ -1,0 +1,34 @@
+# Dipendenze installate e credenziali locali.
+/vendor/
+/node_modules/
+/auth.json
+/.env
+/.env.*
+!/.env.example
+!/.env.playwright.example
+
+# Risultati generati; il codice e i test dell'applicazione restano versionabili.
+/output/
+/build/
+/builds
+/.doctum_cache/
+/public/guide/
+/playwright-report/
+/test-results/
+/e2e/.auth/
+/.phpunit.result.cache
+/.phpunit.cache/
+/tests/coverage-report/
+/debug.log
+
+# Dati runtime: conservare soltanto le protezioni e i segnaposto iniziali.
+/writable/**
+!/writable/**/
+!/writable/**/index.html
+!/writable/.htaccess
+
+# Upload dell'applicazione; le immagini statiche vanno in public/assets.
+/public/images/*
+!/public/images/.gitkeep
+!/public/images/index.html
+!/public/images/.htaccess

@@ -1,0 +1,104 @@
+<div class="card-body tools-card-body-dark">
+    <form <?= ui_binding('backend/tools.labels.totalSpace', 'data-lang-total-space', [], true); ?> <?= ui_binding('backend/tools.labels.rows', 'data-lang-rows', [], true); ?> <?= ui_binding('backend/tools.labels.overhead', 'data-lang-overhead', [], true); ?> id="dbMaintenance-tools-form" autocomplete="off"
+      data-lang-total-space="<?= esc(lang('backend/tools.labels.totalSpace'), 'attr'); ?>"
+      data-lang-rows="<?= esc(lang('backend/tools.labels.rows'), 'attr'); ?>"
+      data-lang-overhead="<?= esc(lang('backend/tools.labels.overhead'), 'attr'); ?>">
+        <div class="row">
+            <div class="col-12">
+
+                <?php
+                    /* Inizializzazione variabili per i totali */
+                    $totalSize = 0;
+                    $totalOverhead = 0;
+                    $allTableNames = [];
+
+                    /* Calcoliamo i totali e popoliamo l'array dei nomi */
+                    foreach ($tables as $t):
+                        $totalSize += $t['size'];
+                        $totalOverhead += $t['overhead'];
+                        $allTableNames[] = $t['name'];
+                    endforeach;
+                ?>
+
+                <!-- Contenitore principale della lista -->
+                <ul class="list-group">
+
+                    <!-- Header riassuntivo del Database -->
+                    <li class="list-group-item app-list-group-item py-3">
+                        <!-- Impostato text-start su tutto il blocco -->
+                        <div class="row text-start align-items-lg-center">
+                            
+                            <!-- Blocco Sinistra: Nome Database e Dettagli Tecnici -->
+                            <div class="col-12 col-lg-3 mb-3 mb-lg-0">
+                                <!-- Rimossi i bordi e i margini dal div -->
+                                <div>
+                                    <h5 class="mb-1 fw-bold"><i class="fa-solid fa-database me-2"></i><?= esc($database['dbName']); ?></h5>
+                                    <div class="app-text-muted">
+                                        <span><i class="fa-solid fa-microchip me-1"></i><?= esc($database['dbDriver']); ?> <?= esc($database['dbVersion']); ?></span>
+                                    </div>
+                                </div>
+                                <!-- Inserita la linea visibile solo su mobile e tablet portrait -->
+                                <hr class="d-lg-none my-3 app-text-muted">
+                            </div>
+
+                            <!-- Blocco Centrale: Totali Spazio e Overhead -->
+                            <div class="col-12 col-lg-7 mb-3 mb-lg-0">
+                                <!-- Rimosso justify-content-center e modificato l'allineamento verticale per mobile -->
+                                <div class="app-text-muted infoDb d-flex flex-column flex-lg-row align-items-start align-items-lg-center text-center">
+                                    <span class="mb-2 mb-lg-0 me-lg-4"><i class="fa-solid fa-hard-drive me-2"></i><?= ui_text('backend/tools.labels.totalSpace', [number_format($totalSize, 2)], false); ?></span>
+                                    <span class="app-text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i><?= ui_text('backend/tools.labels.overhead', [number_format($totalOverhead, 2)], false); ?></span>
+                                </div>
+                            </div>
+
+                            <!-- Blocco Destra: Azione Globale -->
+                            <div class="col-12 col-lg-2">
+                                <!-- Passiamo l'intero array di tabelle codificato in JSON al dataset -->
+                                <button type="button" class="btn btn-sm app-btn-primary btn-optimize-all w-100" data-tables="<?= esc(json_encode($allTableNames, JSON_THROW_ON_ERROR), 'attr'); ?>">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-2"></i><?= ui_text('backend/tools.buttons.dbOptimize', [], false); ?>
+                                </button>
+                            </div>
+
+                        </div>
+                    </li>
+
+                    <?php foreach($tables as $table): ?>
+
+                        <li class="list-group-item py-3" data-table="<?= esc($table['name'], 'attr'); ?>">
+                            
+                            <div class="row text-start align-items-lg-center">
+                                
+                                <!-- Blocco Sinistra: Nome Tabella -->
+                                <div class="col-12 col-lg-3 mb-3 mb-lg-0">
+                                    <div class="fw-bold">
+                                        <i class="fa-solid fa-table me-2"></i><?= esc($table['name']); ?>
+                                    </div>
+                                    <!-- Linea visibile solo su mobile e tablet portrait -->
+                                    <hr class="d-lg-none my-3 app-text-muted">
+                                </div>
+                                
+                                <!-- Blocco Centrale: Statistiche -->
+                                <div class="col-12 col-lg-7 mb-3 mb-lg-0">
+                                    <div class="app-text-muted d-flex flex-column flex-lg-row justify-content-lg-around align-items-start align-items-lg-center">
+                                        <span class="mb-2 mb-lg-0"><i class="fa-solid fa-list me-2"></i><?= ui_text('backend/tools.labels.rows', [$table['rows']], false); ?></span>
+                                        <span class="mb-2 mb-lg-0"><i class="fa-solid fa-hard-drive me-2"></i><?= ui_text('backend/tools.labels.totalSpace', [number_format($table['size'], 2)], false); ?></span>
+                                        <span class="app-text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i><?= ui_text('backend/tools.labels.overhead', [number_format($table['overhead'], 2)], false); ?></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Blocco Destra: Azioni -->
+                                <div class="col-12 col-lg-2">
+                                    <a href="#" class="btn-optimize-table d-block text-decoration-none" data-table="<?= esc($table['name'], 'attr'); ?>">
+                                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> <?= ui_text('backend/tools.buttons.tableOptimize', [], false); ?>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </li>
+
+                    <?php endforeach; ?>
+
+                </ul>
+            </div>
+        </div>
+    </form>
+</div>

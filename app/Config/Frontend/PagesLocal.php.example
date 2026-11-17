@@ -1,0 +1,17 @@
+<?php declare(strict_types = 1);
+
+/**
+ * Example application-specific page list.
+ *
+ * Copy this file to PagesLocal.php and set pages.enabled = true in the application's .env.
+ * The list replaces the framework examples. Add custom views under frontend/pages
+ * and provide their translation keys in the corresponding language catalogs.
+ */
+return [
+    'about-us' => [
+        'view' => 'frontend/pages/aboutView',
+        'title' => 'frontend/pages/examples.about.title',
+        'description' => 'frontend/pages/examples.about.description',
+        'menu' => true,
+    ],
+];

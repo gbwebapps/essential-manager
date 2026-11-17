@@ -1,0 +1,46 @@
+<?= $this->extend('backend/template/mainView') ?>
+
+<?= $this->section('content') ?>
+
+    <div class="container-fluid container-lg px-0">
+        <div class="row g-0">
+            <div class="col-12">
+                
+                <div class="accordion" id="mainSettingsDashboard" data-reopen-general="<?= session()->getFlashdata('settingsReopenGeneral') ? '1' : '0'; ?>">
+
+                    <?php foreach(['general', 'auth', 'upload', 'email'] as $env): ?>
+
+                        <?php 
+                            /* Assegnazione icona specifica per ciascun pannello */
+                            $icon = match($env) {
+                                'auth' => 'fa-shield-halved',
+                                'upload' => 'fa-upload',
+                                'email' => 'fa-envelope',
+                                'general' => 'fa-gear',
+                                default => 'fa-gear'
+                            }; 
+                        ?>
+
+                        <div class="accordion-item mb-3 border shadow-sm">
+                            <h2 class="accordion-header" id="main_heading_<?= $env; ?>">
+                                <button class="accordion-button collapsed shadow-none app-bg-surface app-text-muted py-3 btn-trigger-<?= $env; ?>-settings" data-env="<?= $env; ?>" type="button" aria-expanded="false" aria-controls="main_collapse_<?= $env; ?>">
+                                    <h2 class="card-title mb-0 fs-5">
+                                        <i class="fa-solid <?= $icon; ?> me-2"></i>
+                                        <span id="lang_<?= $env; ?>"><?= ui_text('backend/settingsBackend.panels.' . $env . 'Setting', [], false); ?></span>
+                                    </h2>
+                                </button>
+                            </h2>
+                            <div id="main_collapse_<?= $env; ?>" class="accordion-collapse collapse" aria-labelledby="main_heading_<?= $env; ?>" data-bs-parent="#mainSettingsDashboard">
+                                <div id="<?= $env; ?>-settings-container" class="accordion-body app-bg-surface-elevated border-top mb-0"></div>
+                            </div>
+                        </div>
+
+                    <?php endforeach; ?>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+<?= $this->endSection() ?>

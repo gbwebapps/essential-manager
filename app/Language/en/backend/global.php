@@ -1,0 +1,105 @@
+<?php declare(strict_types = 1);
+
+return [
+    'interface' => [
+        'showPassword' => 'Show password',
+        'hidePassword' => 'Hide password',
+        'themes' => 'Themes',
+        'changeError' => 'Unable to change the preference. Please try again.',
+    ],
+    'menu' => [
+        'topRight' => [
+            'admins' => 'Administrators',
+            'groups' => 'Groups',
+            'audits' => 'Activity Log', 
+            'tokens' => 'Tokens', 
+            'logs' => 'Logs',
+            'account' => 'Profile',
+            'logout' => 'Logout'
+        ],
+        'bottomLeft' => [
+            'dashboard' => 'Dashboards',
+        ],
+        'bottomRight' => [
+            'settings' => 'Settings',
+            'tools' => 'Tools', 
+        ],
+    ],
+    'menuCounts' => [
+        'active' => 'Active',
+        'trashed' => 'Deleted',
+        'suspended' => 'Disabled',
+    ],
+    'links' => [
+        'selectAll' => 'Select All'
+    ],
+    'labels' => [
+        'select' => 'Select'
+    ],  
+    'formats' => [
+        'conversationalDate' => "EEEE d MMMM yyyy 'at' HH:mm:ss",
+    ], 
+    'buttons' => [
+        'modules' => 'Modules',
+        'services' => 'Services',
+        'backToTop' => 'Back to Top', 
+        'expandScreen' => 'Enter Full Screen',
+        'reduceScreen' => 'Exit Full Screen',
+        'options' => 'Options', 
+        'undo' => 'Undo', 
+        'export' => 'Export', 
+        'yes' => 'Yes', 
+        'no' => 'No', 
+        'close' => 'Close', 
+        'exportPdf' => 'Export PDF', 
+        'remove' => 'Remove', 
+    ],
+    'errors' => [
+        'err403' => 'Access denied. You are not authorized to perform this operation.',
+        'err404' => 'The requested resource was not found or has been removed.',
+        'err500' => 'A critical error occurred while processing the request.',
+        'err504' => 'The server did not respond in time. Check the operation status before trying again.',
+        'errNetwork' => 'Unable to communicate with the server. Check your connection or try again later.',
+        'errResponse' => 'The server returned an invalid response. The operation may already have been performed.',
+        'errClient' => 'An interface error occurred. Check the operation status before trying again.',
+        'errRequest' => 'The request could not be started.',
+        'errCsrf' => 'Security verification failed. Reload the page before trying again.',
+        'errHttp' => 'The server could not complete the request.',
+        'fullscreenError' => 'Unable to change fullscreen mode.',
+    ], 
+    'modals' => [
+        'exportPdfTitle' => 'PDF Export Settings', 
+        'exportPdfOrientation' => 'Orientation', 
+        'exportPdfOrientationVert' => 'Vertical', 
+        'exportPdfOrientationHoriz' => 'Horizontal', 
+        'exportPdfFormat' => 'Format', 
+        'exportPdfMargin' => 'Margins', 
+        'exportPdfMarginSup' => 'Top', 
+        'exportPdfMarginRgt' => 'Right', 
+        'exportPdfMarginInf' => 'Bottom', 
+        'exportPdfMarginLft' => 'Left', 
+        'exportPdfCompression' => 'Compression', 
+        'exportPdfImgQuality' => 'Image Quality', 
+        'globalTitle' => 'Confirmation Request'
+    ], 
+    'pagination' => [
+        'messageLeft' => 'Page %d of %d',
+        'messageRight' => 'From %d to %d of %d',
+        'first' => 'First',
+        'last' => 'Last',
+        'next' => 'Next',
+        'previous' => 'Previous',
+    ],
+    'audits' => [
+        'importData' => 'Data import into table %s. Inserted %d records, updated %d records.',
+    ],
+    'messages' => [
+        'confirmSensitiveAction' => 'Confirm this operation with your account password.',
+        'currentPasswordInfo' => 'Enter your account password to confirm this operation.',
+        'getDataError' => 'Error during list retrieval operation.',
+        'getUUIDError' => 'Error during detail retrieval operation.', 
+        'UUIDNotFound' => 'Record not found.', 
+        'permissionDenied' => 'Access denied.',
+        'unsavedChanges' => 'There are unsaved changes. Do you want to leave without saving?'
+    ]
+];

@@ -1,0 +1,15 @@
+<?php declare(strict_types = 1);
+
+return [
+    'tasks' => [
+        'title' => 'Task',
+        'showAll' => 'Visualizza elenco',
+        'show' => 'Visualizza dettaglio',
+        'add' => 'Aggiungi task',
+        'edit' => 'Modifica task e passaggi',
+        'delete' => 'Elimina task',
+        'restore' => 'Ripristina task',
+        'complete' => 'Completa task',
+        'setCurrent' => 'Imposta lavoro corrente',
+    ],
+];

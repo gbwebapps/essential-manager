@@ -414,6 +414,238 @@ create table if not exists `essential_manager`.`settings` (
     index `idx_class` (`class`)
 ) engine = InnoDB default charset = utf8mb4 collate = utf8mb4_general_ci;
 
+-- TABELLE APPLICATIVE MANAGER
+
+-- TABELLA projects
+-- PERMESSI projects
+-- projects_show_all
+-- projects_show
+-- projects_add
+-- projects_edit
+-- projects_delete
+-- projects_restore
+-- L'identita e la protezione dei progetti di sistema sono verificate anche dal modulo Projects.
+create table if not exists `essential_manager`.`projects` (
+    `id` int unsigned auto_increment unique,
+    `uuid` char(36) not null unique,
+    `name` varchar(255) not null unique,
+    `description` text null,
+    `parent_project_uuid` char(36) null default null,
+    `system_key` varchar(50) null default null unique,
+    `is_protected` tinyint(1) not null default 0,
+    `local_path` varchar(1024) null default null,
+    `local_url` varchar(2048) null default null,
+    `production_url` varchar(2048) null default null,
+    `execute_name` varchar(100) null default null unique,
+    `created_by_admin_uuid` char(36) null default null,
+    `created_at` datetime not null,
+    `updated_at` datetime null default null,
+    `deleted_at` datetime null default null,
+    `restored_at` datetime null default null,
+    primary key (`uuid`),
+    index (`id`),
+    index (`parent_project_uuid`),
+    index (`created_by_admin_uuid`),
+    index `idx_projects_created_at` (`created_at`),
+    index `idx_projects_updated_at` (`updated_at`),
+    index `idx_projects_deleted_at` (`deleted_at`),
+    constraint `chk_projects_parent`
+        check (`parent_project_uuid` is null or `parent_project_uuid` <> `uuid`),
+    constraint `chk_projects_is_protected`
+        check (`is_protected` in (0, 1))
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA tasks
+-- PERMESSI tasks (comprendono la gestione dei passaggi)
+-- tasks_show_all
+-- tasks_show
+-- tasks_add
+-- tasks_edit
+-- tasks_delete
+-- tasks_restore
+-- tasks_complete
+-- tasks_set_current
+create table if not exists `essential_manager`.`tasks` (
+    `id` int unsigned auto_increment unique,
+    `uuid` char(36) not null unique,
+    `project_uuid` char(36) not null,
+    `title` varchar(255) not null,
+    `description` text null,
+    `status` enum('todo', 'in_progress', 'completed') not null default 'todo',
+    `created_by_admin_uuid` char(36) null default null,
+    `created_at` datetime not null,
+    `updated_at` datetime null default null,
+    `completed_at` datetime null default null,
+    `deleted_at` datetime null default null,
+    `restored_at` datetime null default null,
+    primary key (`uuid`),
+    index (`id`),
+    index (`created_by_admin_uuid`),
+    index `idx_tasks_project_status` (`project_uuid`, `status`, `created_at`),
+    index `idx_tasks_status_created_at` (`status`, `created_at`),
+    index `idx_tasks_updated_at` (`updated_at`),
+    index `idx_tasks_deleted_at` (`deleted_at`),
+    constraint `chk_tasks_completed_at`
+        check ((`status` = 'completed' and `completed_at` is not null) or (`status` <> 'completed' and `completed_at` is null))
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA checklists
+-- PERMESSI checklists
+-- checklists_show_all
+-- checklists_show
+-- checklists_add
+-- checklists_edit
+-- checklists_delete
+-- checklists_restore
+-- checklists_apply
+create table if not exists `essential_manager`.`checklists` (
+    `id` int unsigned auto_increment unique,
+    `uuid` char(36) not null unique,
+    `name` varchar(255) not null unique,
+    `description` text null,
+    `created_by_admin_uuid` char(36) null default null,
+    `created_at` datetime not null,
+    `updated_at` datetime null default null,
+    `deleted_at` datetime null default null,
+    `restored_at` datetime null default null,
+    primary key (`uuid`),
+    index (`id`),
+    index (`created_by_admin_uuid`),
+    index `idx_checklists_created_at` (`created_at`),
+    index `idx_checklists_updated_at` (`updated_at`),
+    index `idx_checklists_deleted_at` (`deleted_at`)
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA checklist_items
+-- I passaggi del modello usano i permessi del modulo checklists.
+create table if not exists `essential_manager`.`checklist_items` (
+    `id` int unsigned auto_increment unique,
+    `uuid` char(36) not null unique,
+    `checklist_uuid` char(36) not null,
+    `title` varchar(255) not null,
+    `position` int unsigned not null,
+    `created_at` datetime not null,
+    `updated_at` datetime null default null,
+    primary key (`uuid`),
+    index (`id`),
+    unique key `unique_checklist_items_position` (`checklist_uuid`, `position`),
+    constraint `chk_checklist_items_position`
+        check (`position` > 0)
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA task_steps
+-- I passaggi del task usano i permessi del modulo tasks.
+-- Il titolo viene copiato dal modello e resta indipendente dalle modifiche alla checklist.
+create table if not exists `essential_manager`.`task_steps` (
+    `id` int unsigned auto_increment unique,
+    `uuid` char(36) not null unique,
+    `task_uuid` char(36) not null,
+    `checklist_item_uuid` char(36) null default null,
+    `title` varchar(255) not null,
+    `position` int unsigned not null,
+    `completed_by_admin_uuid` char(36) null default null,
+    `created_at` datetime not null,
+    `updated_at` datetime null default null,
+    `completed_at` datetime null default null,
+    primary key (`uuid`),
+    index (`id`),
+    index (`checklist_item_uuid`),
+    index (`completed_by_admin_uuid`),
+    unique key `unique_task_steps_position` (`task_uuid`, `position`),
+    unique key `unique_task_steps_task_uuid` (`task_uuid`, `uuid`),
+    constraint `chk_task_steps_position`
+        check (`position` > 0)
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA notes
+-- PERMESSI notes
+-- notes_show_all
+-- notes_show
+-- notes_add
+-- notes_edit
+-- notes_delete
+-- notes_restore
+-- Ogni nota appartiene a un solo progetto, task oppure passaggio.
+create table if not exists `essential_manager`.`notes` (
+    `id` int unsigned auto_increment unique,
+    `uuid` char(36) not null unique,
+    `project_uuid` char(36) null default null,
+    `task_uuid` char(36) null default null,
+    `step_uuid` char(36) null default null,
+    `content` text not null,
+    `created_by_admin_uuid` char(36) null default null,
+    `created_at` datetime not null,
+    `updated_at` datetime null default null,
+    `deleted_at` datetime null default null,
+    `restored_at` datetime null default null,
+    primary key (`uuid`),
+    index (`id`),
+    index (`created_by_admin_uuid`),
+    index `idx_notes_project_created_at` (`project_uuid`, `created_at`),
+    index `idx_notes_task_created_at` (`task_uuid`, `created_at`),
+    index `idx_notes_step_created_at` (`step_uuid`, `created_at`),
+    index `idx_notes_deleted_at` (`deleted_at`),
+    constraint `chk_notes_context`
+        check ((`project_uuid` is not null) + (`task_uuid` is not null) + (`step_uuid` is not null) = 1)
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA admin_work_state
+-- Usa tasks_set_current; ogni amministratore ha un solo task corrente.
+-- Il prossimo passaggio si ricava dai passaggi non completati del task, ordinati per position.
+-- Il modulo Tasks esclude dalla selezione i task completati o eliminati.
+create table if not exists `essential_manager`.`admin_work_state` (
+    `admin_uuid` char(36) not null,
+    `task_uuid` char(36) null default null,
+    `paused_at` datetime null default null,
+    `created_at` datetime not null,
+    `updated_at` datetime null default null,
+    primary key (`admin_uuid`),
+    index (`task_uuid`)
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA operation_runs
+-- PERMESSI operations
+-- operations_show_all
+-- operations_show
+-- operations_check
+-- operations_tests
+-- operations_update
+-- operations_commit
+-- operations_push
+-- operations_clone
+-- I comandi ammessi e i relativi argomenti vengono controllati dal modulo Operations.
+-- execute_name conserva il nome della destinazione usato da execute/installations.php.
+create table if not exists `essential_manager`.`operation_runs` (
+    `id` int unsigned auto_increment unique,
+    `uuid` char(36) not null unique,
+    `project_uuid` char(36) not null,
+    `task_uuid` char(36) null default null,
+    `step_uuid` char(36) null default null,
+    `operation` varchar(50) not null,
+    `execute_name` varchar(100) not null,
+    `parameters` json null,
+    `status` enum('pending', 'running', 'succeeded', 'failed', 'cancelled') not null default 'pending',
+    `admin_uuid` char(36) null default null,
+    `admin_name` varchar(255) not null,
+    `created_at` datetime not null,
+    `started_at` datetime null default null,
+    `finished_at` datetime null default null,
+    `exit_code` int null default null,
+    `report_path` varchar(1024) null default null,
+    `error_message` text null,
+    primary key (`uuid`),
+    index (`id`),
+    index (`admin_uuid`),
+    index `idx_operation_runs_project_created_at` (`project_uuid`, `created_at`),
+    index `idx_operation_runs_task_step` (`task_uuid`, `step_uuid`),
+    index (`step_uuid`),
+    index `idx_operation_runs_status_created_at` (`status`, `created_at`),
+    constraint `chk_operation_runs_task_step`
+        check (`step_uuid` is null or `task_uuid` is not null),
+    constraint `chk_operation_runs_dates`
+        check (`finished_at` is null or `started_at` is null or `finished_at` >= `started_at`)
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
 -- VINCOLI foreign key ESTERNI (Puntati su essential_manager)
 alter table `essential_manager`.`admins_permissions`
 add constraint `fk_admins_permissions_admin_uuid`
@@ -459,8 +691,83 @@ alter table `essential_manager`.`users_2fa_attempts`
 add constraint `fk_users_2fa_attempts_user_uuid`
 foreign key (`user_uuid`) references `essential_manager`.`users`(`uuid`) on update cascade on delete cascade;
 
--- GRUPPI INIZIALI
-insert into `essential_manager`.`admins_groups` (`id`, `uuid`, `name`, `description`, `created_at`) values
-(1, '94b47851-6667-4bb1-930a-87a2e9507b68', 'Administrator', 'Administrator', now()),
-(2, 'ffaccc6b-134e-4fa8-95e6-d9e4881a9064', 'Editor Manager', 'Editor Manager', now()),
-(3, 'd9293970-9189-4576-88e8-484161137840', 'Operator / Support', 'Operator / Support', now());
+
+-- VINCOLI foreign key MANAGER
+-- restrict conserva le relazioni e impedisce cancellazioni automatiche dei dati di lavoro.
+-- I riferimenti coinvolti nei check usano on update restrict, come richiesto da MySQL.
+
+alter table `essential_manager`.`projects`
+add constraint `fk_projects_parent_project_uuid`
+foreign key (`parent_project_uuid`) references `essential_manager`.`projects`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`projects`
+add constraint `fk_projects_created_by_admin_uuid`
+foreign key (`created_by_admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`tasks`
+add constraint `fk_tasks_project_uuid`
+foreign key (`project_uuid`) references `essential_manager`.`projects`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`tasks`
+add constraint `fk_tasks_created_by_admin_uuid`
+foreign key (`created_by_admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`checklists`
+add constraint `fk_checklists_created_by_admin_uuid`
+foreign key (`created_by_admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`checklist_items`
+add constraint `fk_checklist_items_checklist_uuid`
+foreign key (`checklist_uuid`) references `essential_manager`.`checklists`(`uuid`) on update cascade on delete restrict;
+
+alter table `essential_manager`.`task_steps`
+add constraint `fk_task_steps_task_uuid`
+foreign key (`task_uuid`) references `essential_manager`.`tasks`(`uuid`) on update cascade on delete restrict;
+
+alter table `essential_manager`.`task_steps`
+add constraint `fk_task_steps_checklist_item_uuid`
+foreign key (`checklist_item_uuid`) references `essential_manager`.`checklist_items`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`task_steps`
+add constraint `fk_task_steps_completed_by_admin_uuid`
+foreign key (`completed_by_admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`notes`
+add constraint `fk_notes_project_uuid`
+foreign key (`project_uuid`) references `essential_manager`.`projects`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`notes`
+add constraint `fk_notes_task_uuid`
+foreign key (`task_uuid`) references `essential_manager`.`tasks`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`notes`
+add constraint `fk_notes_step_uuid`
+foreign key (`step_uuid`) references `essential_manager`.`task_steps`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`notes`
+add constraint `fk_notes_created_by_admin_uuid`
+foreign key (`created_by_admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`admin_work_state`
+add constraint `fk_admin_work_state_admin_uuid`
+foreign key (`admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete cascade;
+
+alter table `essential_manager`.`admin_work_state`
+add constraint `fk_admin_work_state_task_uuid`
+foreign key (`task_uuid`) references `essential_manager`.`tasks`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`operation_runs`
+add constraint `fk_operation_runs_project_uuid`
+foreign key (`project_uuid`) references `essential_manager`.`projects`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`operation_runs`
+add constraint `fk_operation_runs_task_uuid`
+foreign key (`task_uuid`) references `essential_manager`.`tasks`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`operation_runs`
+add constraint `fk_operation_runs_task_step`
+foreign key (`task_uuid`, `step_uuid`) references `essential_manager`.`task_steps`(`task_uuid`, `uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`operation_runs`
+add constraint `fk_operation_runs_admin_uuid`
+foreign key (`admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;

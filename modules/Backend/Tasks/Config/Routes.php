@@ -1,0 +1,37 @@
+<?php declare(strict_types = 1);
+
+/**
+ * Rotte previste del modulo Tasks.
+ * Il registrar carica questo file; tutte le rotte appartengono al backend autorizzato.
+ * I metodi del controller sono ancora da implementare.
+ *
+ * @var \CodeIgniter\Router\RouteCollection $routes
+ */
+$routes->group('backend', ['filter' => 'authorization'], function($routes) {
+    $routes->group('tasks', function($routes) {
+        $routes->get('/', '\Modules\Backend\Tasks\Controllers\TasksController::index', ['filter' => 'permission:tasks_show_all']);
+        $routes->match(['GET', 'POST'], 'showAll', '\Modules\Backend\Tasks\Controllers\TasksController::showAll', ['filter' => 'permission:tasks_show_all']);
+        $routes->match(['GET', 'POST'], 'add', '\Modules\Backend\Tasks\Controllers\TasksController::add', ['filter' => 'permission:tasks_add']);
+        $routes->get('edit/(:uuid)', '\Modules\Backend\Tasks\Controllers\TasksController::edit/$1', ['filter' => 'permission:tasks_edit']);
+        $routes->post('edit', '\Modules\Backend\Tasks\Controllers\TasksController::edit', ['filter' => 'permission:tasks_edit']);
+        $routes->get('show/(:uuid)', '\Modules\Backend\Tasks\Controllers\TasksController::show/$1', ['filter' => 'permission:tasks_show']);
+        $routes->post('hardDelete', '\Modules\Backend\Tasks\Controllers\TasksController::hardDelete', ['filter' => 'permission:tasks_delete']);
+        $routes->post('softDelete', '\Modules\Backend\Tasks\Controllers\TasksController::softDelete', ['filter' => 'permission:tasks_delete']);
+        $routes->post('restoreDelete', '\Modules\Backend\Tasks\Controllers\TasksController::restoreDelete', ['filter' => 'permission:tasks_restore']);
+        $routes->post('getGeneralData', '\Modules\Backend\Tasks\Controllers\TasksController::getGeneralData', ['filter' => 'permission:tasks_show']);
+        $routes->post('getMetaData', '\Modules\Backend\Tasks\Controllers\TasksController::getMetaData', ['filter' => 'permission:tasks_show']);
+        $routes->post('complete', '\Modules\Backend\Tasks\Controllers\TasksController::complete', ['filter' => 'permission:tasks_complete']);
+        $routes->post('reopen', '\Modules\Backend\Tasks\Controllers\TasksController::reopen', ['filter' => 'permission:tasks_complete']);
+        $routes->post('getSteps', '\Modules\Backend\Tasks\Controllers\TasksController::getSteps', ['filter' => 'permission:tasks_show']);
+        $routes->post('addStep', '\Modules\Backend\Tasks\Controllers\TasksController::addStep', ['filter' => 'permission:tasks_edit']);
+        $routes->post('editStep', '\Modules\Backend\Tasks\Controllers\TasksController::editStep', ['filter' => 'permission:tasks_edit']);
+        $routes->post('deleteStep', '\Modules\Backend\Tasks\Controllers\TasksController::deleteStep', ['filter' => 'permission:tasks_edit']);
+        $routes->post('reorderSteps', '\Modules\Backend\Tasks\Controllers\TasksController::reorderSteps', ['filter' => 'permission:tasks_edit']);
+        $routes->post('completeStep', '\Modules\Backend\Tasks\Controllers\TasksController::completeStep', ['filter' => 'permission:tasks_complete']);
+        $routes->post('reopenStep', '\Modules\Backend\Tasks\Controllers\TasksController::reopenStep', ['filter' => 'permission:tasks_complete']);
+        $routes->post('getCurrent', '\Modules\Backend\Tasks\Controllers\TasksController::getCurrent', ['filter' => 'permission:tasks_show']);
+        $routes->post('setCurrent', '\Modules\Backend\Tasks\Controllers\TasksController::setCurrent', ['filter' => 'permission:tasks_set_current']);
+        $routes->post('pauseCurrent', '\Modules\Backend\Tasks\Controllers\TasksController::pauseCurrent', ['filter' => 'permission:tasks_set_current']);
+        $routes->post('resumeCurrent', '\Modules\Backend\Tasks\Controllers\TasksController::resumeCurrent', ['filter' => 'permission:tasks_set_current']);
+    });
+});

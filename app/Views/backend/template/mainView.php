@@ -25,6 +25,9 @@
         <?= $this->include('backend/template/navbarTopView'); ?>
     </div>
 
+    <!-- Hook dopo la navbar superiore, fuori dal blocco centrale -->
+    <?= $this->renderSection('afterNavbarTopView'); ?>
+
     <!-- Contenitore per il loader di caricamento AJAX -->
     <div id="show-loader"></div>
 
@@ -36,29 +39,40 @@
             <!-- Colonna principale Mobile First -->
             <div class="col-12"> 
 
-                <!-- Punto di estensione per la navigazione dell'applicazione -->
-                <?= $this->renderSection('applicationNavigation'); ?>
+                <!-- Hook prima della testata della sezione -->
+                <?= $this->renderSection('beforeSectionView'); ?>
 
                 <!-- Inclusione testata della sezione corrente -->
                 <div id="section-view">
                     <?= $this->include('backend/template/sectionView'); ?>
                 </div>
 
+                <?= $this->renderSection('afterSectionView'); ?>
+
+                <?= $this->renderSection('beforeLinksBarView'); ?>
+
                 <!-- Inclusione barra dei link di navigazione interna -->
                 <div id="links-bar-view">
                     <?= $this->include('backend/template/linksBarView'); ?>
                 </div>
 
+                <?= $this->renderSection('afterLinksBarView'); ?>
+
                 <!-- Punto di iniezione del contenuto specifico della vista -->
                 <div id="content-body-wrapper" 
                     class="<?= (isset($centerContent) && $centerContent) ? 'd-flex flex-column justify-content-center w-100' : ''; ?>" 
                     style="<?= (isset($centerContent) && $centerContent) ? 'min-height: 65dvh;' : ''; ?>">
+                    <?= $this->renderSection('beforeContent'); ?>
                     <?= $this->renderSection('content'); ?>
+                    <?= $this->renderSection('afterContent'); ?>
                 </div>
                 
             </div>
         </div>
     </main>
+
+    <!-- Hook prima della navbar inferiore, fuori dal blocco centrale -->
+    <?= $this->renderSection('beforeNavbarBottomView'); ?>
 
     <!-- Sezione Navbar Inferiore -->
     <div id="navbar-bottom-view">

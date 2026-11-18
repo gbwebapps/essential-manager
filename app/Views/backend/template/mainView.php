@@ -36,6 +36,9 @@
             <!-- Colonna principale Mobile First -->
             <div class="col-12"> 
 
+                <!-- Punto di estensione per la navigazione dell'applicazione -->
+                <?= $this->renderSection('applicationNavigation'); ?>
+
                 <!-- Inclusione testata della sezione corrente -->
                 <div id="section-view">
                     <?= $this->include('backend/template/sectionView'); ?>

@@ -1,4 +1,4 @@
-<?= $this->extend('backend/template/mainView') ?>
+<?= $this->extend(\Modules\Backend\Template\Config\Views::MAIN_VIEW) ?>
 
 <?= $this->section('content') ?>
 
@@ -9,5 +9,7 @@
             </div>
         </div>
     </div>
+
+    <?= $this->include(\Modules\Backend\Projects\Config\Views::PROJECT_ACTIONS_PARTIAL); ?>
 
 <?= $this->endSection() ?>

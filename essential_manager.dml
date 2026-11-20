@@ -1,0 +1,73 @@
+-- DATI LOCALI DI FRAMEWORK - NON VERSIONARE E NON DISTRIBUIRE
+-- Per ricreare il laboratorio: importare prima il DDL, poi questo DML.
+-- Contiene gli account e la configurazione 2FA originali.
+
+-- GRUPPI
+insert into `essential_manager`.`admins_groups` (`id`, `uuid`, `name`, `description`, `created_at`) values
+(1, '94b47851-6667-4bb1-930a-87a2e9507b68', 'Administrator', 'Administrator', now()),
+(2, 'ffaccc6b-134e-4fa8-95e6-d9e4881a9064', 'Editor Manager', 'Editor Manager', now()),
+(3, 'd9293970-9189-4576-88e8-484161137840', 'Operator / Support', 'Operator / Support', now());
+
+-- ACCOUNT E 2FA ORIGINALI
+insert into `essential_manager`.`admins` (
+    `id`, `uuid`, `firstname`, `lastname`, `email`, `phone`, `status`, `superadmin`, `group_id`, `password_hash`, `created_at`
+) values (
+    null, 
+    'e4eaaaf2-d142-4f8b-8cf6-4d8a1fc27b31',
+    'giorgio',
+    'barone',
+    'gbwebapps@gmail.com',
+    '+393519081161',
+    1,
+    1,
+    1,
+    '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62',
+    NOW()
+);
+
+insert into `essential_manager`.`admins` (
+    `id`, `uuid`, `firstname`, `lastname`, `email`, `phone`, `status`, `superadmin`, `group_id`, `password_hash`, `created_at`
+) values 
+(null, '7c4d5b92-f1a8-4e36-9b54-cf210a48b3e9', 'Mario', 'Rossi', 'mario.rossi@example.com', '+393001234561', 1, 0, 3, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'a83f9e1c-5d2b-4681-ad4e-72bf05c1d63a', 'Giuseppe', 'Verdi', 'giuseppe.verdi@example.com', '+393001234562', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '3d6b2f8a-9c4e-4172-8b1a-d0f3c5e7b649', 'Francesca', 'Bianchi', 'francesca.bianchi@example.com', '+393001234563', 1, 0, 2, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'f2c5a1e8-73b9-4d62-9a4f-1c8b5d3e76fa', 'Alessandro', 'Ferrari', 'alessandro.ferrari@example.com', '+393001234564', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'b0e3f7d1-c6a4-4893-bc2e-51da9f8b4c72', 'Anna', 'Russo', 'anna.russo@example.com', '+393001234565', 1, 0, 2, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '6d2a8f4c-1e9b-4375-ae82-93b5c1d6f47a', 'Roberto', 'Esposito', 'roberto.esposito@example.com', '+393001234566', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'c1f5b9d3-e2a7-4b61-8d4f-5c9a2e8b637d', 'Elena', 'Romano', 'elena.romano@example.com', '+393001234567', 1, 0, 2, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '4e8b3c1d-fa62-4935-bc71-2e5a9f4b8d63', 'Stefano', 'Colombo', 'stefano.colombo@example.com', '+393001234568', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '9a5f2c8b-d3e1-4674-bf9e-1c7d5a3b62f4', 'Laura', 'Ricci', 'laura.ricci@example.com', '+393001234569', 1, 0, 3, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '1b7d6e4a-c5f9-4283-9b4e-8d2a1c5f3b76', 'Giovanni', 'Marini', 'giovanni.marini@example.com', '+393001234570', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'e3c9a5b7-2f1d-4862-ad7e-6b4c1f9e2a5d', 'Silvia', 'Greco', 'silvia.greco@example.com', '+393001234571', 1, 0, 3, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '5f2a1d7c-e9b4-4361-8c5f-9d3a7b6e84fa', 'Fabio', 'Bruno', 'fabio.bruno@example.com', '+393001234572', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'a6d4e2b8-f1c5-4973-bc8a-4d2e1f5b937c', 'Chiara', 'Gallo', 'chiara.gallo@example.com', '+393001234573', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '2b8c5e9f-7a4d-4162-9b3f-e8c5a1d7f642', 'Marco', 'Conti', 'marco.conti@example.com', '+393001234574', 1, 0, 3, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'fd3a7c1e-9b5f-4628-ad12-5e4c8a7b3f91', 'Giulia', 'De Luca', 'giulia.deluca@example.com', '+393001234575', 1, 0, 3, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '7e1b5d9c-3a6f-4275-8b9e-c4a2f8d1e3b6', 'Davide', 'Costa', 'davide.costa@example.com', '+393001234576', 1, 0, 3, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'c4a2f8d1-e3b6-4927-bc5f-9e1b5d9c3a6f', 'Sara', 'Giordano', 'sara.giordano@example.com', '+393001234577', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '8b9e1c7d-5a3b-462f-ad4c-1e9b5f2a7c1e', 'Luca', 'Rizzo', 'luca.rizzo@example.com', '+393001234578', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, '3a6f4275-8b9e-41c4-bc2f-d3e1b7d6e4a5', 'Martina', 'Moretti', 'martina.moretti@example.com', '+393001234579', 1, 0, 1, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW()),
+(null, 'bc5f9e1b-5d9c-43a6-8f42-758b9e1c7d5a', 'Andrea', 'Mancini', 'andrea.mancini@example.com', '+393001234580', 1, 0, 2, '$2y$10$gFNsG60FJ6rJhdlMtd0h6.gX.rSbYfjf7oxLpKqgcP5v6M/c6Ud62', NOW());
+
+insert into `essential_manager`.`admins_2fa` (
+    `admin_uuid`, `method`, `secret`, `enabled`
+) values
+('7c4d5b92-f1a8-4e36-9b54-cf210a48b3e9', 'email', null, 1),
+('a83f9e1c-5d2b-4681-ad4e-72bf05c1d63a', 'email', null, 1),
+('3d6b2f8a-9c4e-4172-8b1a-d0f3c5e7b649', 'email', null, 1),
+('f2c5a1e8-73b9-4d62-9a4f-1c8b5d3e76fa', 'email', null, 1),
+('b0e3f7d1-c6a4-4893-bc2e-51da9f8b4c72', 'email', null, 1),
+('6d2a8f4c-1e9b-4375-ae82-93b5c1d6f47a', 'email', null, 1),
+('c1f5b9d3-e2a7-4b61-8d4f-5c9a2e8b637d', 'email', null, 1),
+('4e8b3c1d-fa62-4935-bc71-2e5a9f4b8d63', 'email', null, 1),
+('9a5f2c8b-d3e1-4674-bf9e-1c7d5a3b62f4', 'email', null, 1),
+('1b7d6e4a-c5f9-4283-9b4e-8d2a1c5f3b76', 'email', null, 1),
+('e3c9a5b7-2f1d-4862-ad7e-6b4c1f9e2a5d', 'email', null, 1),
+('5f2a1d7c-e9b4-4361-8c5f-9d3a7b6e84fa', 'email', null, 1),
+('a6d4e2b8-f1c5-4973-bc8a-4d2e1f5b937c', 'email', null, 1),
+('2b8c5e9f-7a4d-4162-9b3f-e8c5a1d7f642', 'email', null, 1),
+('fd3a7c1e-9b5f-4628-ad12-5e4c8a7b3f91', 'email', null, 1),
+('7e1b5d9c-3a6f-4275-8b9e-c4a2f8d1e3b6', 'email', null, 1),
+('c4a2f8d1-e3b6-4927-bc5f-9e1b5d9c3a6f', 'email', null, 1),
+('8b9e1c7d-5a3b-462f-ad4c-1e9b5f2a7c1e', 'email', null, 1),
+('3a6f4275-8b9e-41c4-bc2f-d3e1b7d6e4a5', 'email', null, 1);

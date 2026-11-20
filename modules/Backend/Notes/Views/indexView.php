@@ -1,4 +1,4 @@
-<?= $this->extend('backend/template/mainView') ?>
+<?= $this->extend(\Modules\Backend\Template\Config\Views::MAIN_VIEW) ?>
 
 <?= $this->section('content') ?>
 

@@ -23,5 +23,7 @@ class Views extends BaseConfig
     public const SHOW_PARTIAL = 'Modules\\Backend\\Notes\\Views\\partials\\show\\showPartial';
     public const SHOW_GENERAL_DATA_PARTIAL = 'Modules\\Backend\\Notes\\Views\\partials\\show\\generalDataPartial';
     public const CHANGE_STATUS_PARTIAL = 'Modules\\Backend\\Notes\\Views\\partials\\show\\changeStatusPartial';
+    public const FORM_FIELDS_PARTIAL = 'Modules\\Backend\\Notes\\Views\\partials\\common\\formFieldsPartial';
+    public const DETAIL_PARTIAL = 'Modules\\Backend\\Notes\\Views\\partials\\common\\detailPartial';
     public const META_DATA_PARTIAL = 'Modules\\Backend\\Notes\\Views\\partials\\common\\metaDataPartial';
 }

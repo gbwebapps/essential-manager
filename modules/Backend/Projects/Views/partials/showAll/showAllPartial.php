@@ -1,3 +1,10 @@
+<?php
+    $canEditProjects = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'projects_edit');
+    $canShowProjects = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'projects_show');
+    $canDeleteProjects = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'projects_delete');
+    $canRestoreProjects = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'projects_restore');
+?>
+
 <div class="card-body py-0">
     <div class="row">
         <div class="col-md-12">
@@ -18,16 +25,16 @@
                                     </a>
                                 </th>
                                 <th><?= ui_text('backend/projects.labels.parentProject', [], false); ?></th>
-                                <th><?= ui_text('backend/projects.labels.localUrl', [], false); ?></th>
-                                <th><?= ui_text('backend/projects.labels.productionUrl', [], false); ?></th>
-                                <th><?= ui_text('backend/projects.labels.protection', [], false); ?></th>
-                                <th style="width: 10%;"><?= ui_text('backend/projects.buttons.actions', [], false); ?></th>
+                                <th class="text-center text-nowrap"><?= ui_text('backend/projects.labels.applications', [], false); ?></th>
+                                <th class="text-center text-nowrap"><?= ui_text('backend/projects.related.tasks', [], false); ?></th>
+                                <th class="text-center text-nowrap"><?= ui_text('backend/projects.related.notes', [], false); ?></th>
+                                <th style="width: 1%;" class="text-nowrap text-end"><?= ui_text('backend/projects.buttons.actions', [], false); ?></th>
                             </tr>
                         </thead>
                         <tbody id="projectsBody">
                             <?php foreach($data['records'] as $project): ?>
                                 <?php $isTrashed = ( ! is_null($project->deleted_at)); ?>
-                                <tr class="border-end border-start table-row-110">
+                                <tr class="border-end border-start">
                                     <td class="align-middle fw-bold">
                                         <button <?= ui_binding('backend/projects.buttons.showSystemDetails', 'title', [], true); ?> class="toggle-meta-btn btn btn-sm btn-link p-0 me-1 app-text shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#meta-<?= esc($project->uuid, 'attr'); ?>" aria-controls="meta-<?= esc($project->uuid, 'attr'); ?>" aria-expanded="false" title="<?= esc(lang('backend/projects.buttons.showSystemDetails'), 'attr'); ?>">
                                             <i class="fa-solid fa-chevron-right"></i>
@@ -35,68 +42,61 @@
                                     </td>
                                     <td class="align-middle fw-bold text-break"><?= esc($project->name); ?></td>
                                     <td class="align-middle text-break"><?= esc($project->parent_project_name ?? ''); ?></td>
-                                    <td class="align-middle text-break"><?= esc($project->local_url ?? ''); ?></td>
-                                    <td class="align-middle text-break"><?= esc($project->production_url ?? ''); ?></td>
-                                    <td class="align-middle">
-                                        <?php if((int) $project->is_protected === 1): ?>
-                                            <span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><i class="fa-solid fa-lock me-1"></i><?= ui_text('backend/projects.labels.protected', [], false); ?></span>
-                                        <?php endif; ?>
-                                        <?php if($isTrashed): ?>
-                                            <span class="badge app-bg-danger"><?= ui_text('backend/projects.labels.deleted', [], false); ?></span>
-                                        <?php endif; ?>
+                                    <td class="align-middle text-center"><?php if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'applications_show_all')): ?><a class="badge app-bg-muted-subtle app-text-muted-emphasis border text-decoration-none" href="<?= esc(base_url('backend/applications/showAll') . '?project_uuid=' . rawurlencode($project->uuid), 'attr'); ?>"><?= (int) ($project->application_count ?? 0); ?></a><?php else: ?><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($project->application_count ?? 0); ?></span><?php endif; ?></td>
+                                    <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($project->task_count ?? 0); ?></span></td>
+                                    <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($project->note_count ?? 0); ?></span></td>
+                                    <!-- Azioni del progetto, allineate a destra -->
+                                    <td class="align-middle text-end">
+                                        <div class="d-flex flex-row flex-nowrap justify-content-end align-items-center gap-1">
+                                            <?php if( ! $isTrashed): ?>
+                                                <?php if($canEditProjects): ?>
+                                                    <a href="<?= esc(base_url('backend/projects/edit/' . rawurlencode($project->uuid)), 'attr'); ?>" class="btn btn-sm app-btn-secondary text-nowrap">
+                                                        <i class="fa-solid fa-pen fa-fw"></i> <?= ui_text('backend/projects.actions.edit', [], false); ?>
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if($canShowProjects): ?>
+                                                    <a href="<?= esc(base_url('backend/projects/show/' . rawurlencode($project->uuid)), 'attr'); ?>" class="btn btn-sm app-btn-secondary text-nowrap">
+                                                        <i class="fa-solid fa-eye fa-fw"></i> <?= ui_text('backend/projects.actions.show', [], false); ?>
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if(\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'tasks_add')): ?>
+                                                <button type="button" class="btn btn-sm app-btn-secondary text-nowrap" data-bs-toggle="modal" data-bs-target="#projects-add-task-modal" data-project-uuid="<?= esc($project->uuid, 'attr'); ?>" data-project-name="<?= esc($project->name, 'attr'); ?>">
+                                                    <i class="fa-solid fa-plus fa-fw"></i> <?= ui_text('backend/projects.actions.addTask', [], false); ?>
+                                                </button>
+                                                <?php endif; ?>
+                                                <?php if(\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'notes_add')): ?>
+                                                <button type="button" class="btn btn-sm app-btn-secondary text-nowrap" data-bs-toggle="modal" data-bs-target="#projects-add-note-modal" data-project-uuid="<?= esc($project->uuid, 'attr'); ?>" data-project-name="<?= esc($project->name, 'attr'); ?>">
+                                                    <i class="fa-solid fa-note-sticky fa-fw"></i> <?= ui_text('backend/projects.actions.addNote', [], false); ?>
+                                                </button>
+                                                <?php endif; ?>
+                                                <?php if($canDeleteProjects): ?>
+                                                    <form novalidate <?= ui_binding('backend/projects.messages.areYouSureSoftDelete', 'data-message', [$project->name], true); ?> class="deleteRecord m-0 p-0" data-controller="projects" data-message="<?= esc(sprintf(lang('backend/projects.messages.areYouSureSoftDelete'), $project->name), 'attr'); ?>">
+                                                        <input type="hidden" name="uuid" value="<?= esc($project->uuid, 'attr'); ?>">
+                                                        <button type="submit" class="btn btn-sm app-btn-secondary text-nowrap">
+                                                            <i class="fa-solid fa-trash-can fa-fw" aria-hidden="true"></i> <?= ui_text('backend/projects.actions.softDelete', [], false); ?>
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <?php if($canRestoreProjects): ?>
+                                                <form novalidate <?= ui_binding('backend/projects.messages.areYouSureRestoreDelete', 'data-message', [$project->name], true); ?> class="restoreRecord m-0 p-0" data-controller="projects" data-message="<?= esc(sprintf(lang('backend/projects.messages.areYouSureRestoreDelete'), $project->name), 'attr'); ?>">
+                                                    <input type="hidden" name="uuid" value="<?= esc($project->uuid, 'attr'); ?>">
+                                                    <button type="submit" class="btn btn-sm app-btn-secondary text-nowrap">
+                                                        <i class="fa-solid fa-trash-arrow-up fa-fw"></i> <?= ui_text('backend/projects.actions.restoreDelete', [], false); ?>
+                                                    </button>
+                                                </form>
+                                                <?php endif; ?>
+                                                <?php if($canDeleteProjects): ?>
+                                                <form novalidate <?= ui_binding('backend/projects.messages.areYouSureHardDelete', 'data-message', [$project->name], true); ?> class="hardDeleteRecord m-0 p-0" data-controller="projects" data-message="<?= esc(sprintf(lang('backend/projects.messages.areYouSureHardDelete'), $project->name), 'attr'); ?>">
+                                                    <input type="hidden" name="uuid" value="<?= esc($project->uuid, 'attr'); ?>">
+                                                    <button type="submit" class="btn btn-sm app-btn-danger text-nowrap">
+                                                        <i class="fa-solid fa-trash-can fa-fw" aria-hidden="true"></i> <?= ui_text('backend/projects.actions.hardDelete', [], false); ?>
+                                                    </button>
+                                                </form>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
-                                            <!-- Cella Azioni Rapide -->
-                                            <td class="align-middle text-start">
-                                                
-                                                <div class="d-flex flex-column gap-1">
-                                                    
-                                                    <?php if( ! $isTrashed): ?>
-                                                        
-                                                        <!-- Pulsante Dettaglio -->
-                                                        <a href="<?= esc(base_url('backend/projects/show/' . rawurlencode($project->uuid)), 'attr'); ?>" class="text-decoration-none badge app-bg-muted-subtle app-text-muted-emphasis action">
-                                                            <i class="fa-solid fa-eye fa-fw"></i> <?= ui_text('backend/projects.actions.show', [], false); ?>
-                                                        </a>
-
-                                                        <!-- Pulsante Aggiorna -->
-                                                        <a href="<?= esc(base_url('backend/projects/edit/' . rawurlencode($project->uuid)), 'attr'); ?>" class="text-decoration-none badge app-bg-muted-subtle app-text-muted-emphasis action">
-                                                            <i class="fa-solid fa-pen fa-fw"></i> <?= ui_text('backend/projects.actions.edit', [], false); ?>
-                                                        </a>
-
-                                                        <!-- Pulsante Elimina (Soft Delete) -->
-                                                        <?php if((int) $project->is_protected !== 1): ?>
-                                                        <form <?= ui_binding('backend/projects.messages.areYouSureSoftDelete', 'data-message', [$project->name], true); ?> class="deleteRecord m-0 p-0" data-controller="projects" data-message="<?= esc(sprintf(lang('backend/projects.messages.areYouSureSoftDelete'), $project->name), 'attr'); ?>">
-                                                            <input type="hidden" name="uuid" value="<?= esc($project->uuid, 'attr'); ?>">
-                                                            <button type="submit" class="btn badge app-bg-danger-subtle app-text-danger-emphasis action shadow-none w-100 border-0">
-                                                                <i class="fa-solid fa-xmark fa-fw"></i> <?= ui_text('backend/projects.actions.softDelete', [], false); ?>
-                                                            </button>
-                                                        </form>
-                                                        <?php endif; ?>
-                                                        
-                                                    <?php else: ?>
-                                                        
-                                                        <!-- Pulsante Ripristina (Restore Delete) -->
-                                                        <form <?= ui_binding('backend/projects.messages.areYouSureRestoreDelete', 'data-message', [$project->name], true); ?> class="restoreRecord m-0 p-0" data-controller="projects" data-message="<?= esc(sprintf(lang('backend/projects.messages.areYouSureRestoreDelete'), $project->name), 'attr'); ?>">
-                                                            <input type="hidden" name="uuid" value="<?= esc($project->uuid, 'attr'); ?>">
-                                                            <button type="submit" class="btn badge app-bg-success-subtle app-text-success-emphasis action shadow-none w-100 border-0">
-                                                                <i class="fa-solid fa-trash-arrow-up fa-fw"></i> <?= ui_text('backend/projects.actions.restoreDelete', [], false); ?>
-                                                            </button>
-                                                        </form>
-
-                                                        <!-- Pulsante Elimina Definitivamente (Hard Delete) -->
-                                                        <?php if((int) $project->is_protected !== 1): ?>
-                                                        <form <?= ui_binding('backend/projects.messages.areYouSureHardDelete', 'data-message', [$project->name], true); ?> class="hardDeleteRecord m-0 p-0" data-controller="projects" data-message="<?= esc(sprintf(lang('backend/projects.messages.areYouSureHardDelete'), $project->name), 'attr'); ?>">
-                                                            <input type="hidden" name="uuid" value="<?= esc($project->uuid, 'attr'); ?>">
-                                                            <button type="submit" class="btn badge app-bg-danger-subtle app-text-danger-emphasis action shadow-none w-100 border-0">
-                                                                <i class="fa-solid fa-xmark fa-fw"></i> <?= ui_text('backend/projects.actions.hardDelete', [], false); ?>
-                                                            </button>
-                                                        </form>
-                                                        <?php endif; ?>
-                                                        
-                                                    <?php endif; ?>
-                                                    
-                                                </div>
-                                                
-                                            </td>
                                 </tr>
                                 <tr class="border-end border-start">
                                     <td colspan="7" class="p-0 border-0">

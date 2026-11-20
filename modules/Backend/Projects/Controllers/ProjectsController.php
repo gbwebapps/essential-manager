@@ -2,276 +2,442 @@
 
 namespace Modules\Backend\Projects\Controllers;
 
+use App\Controllers\Backend\BackendController;
+use App\Libraries\Backend\AuthorizationClass;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
-use Psr\Log\LoggerInterface;
-use CodeIgniter\HTTP\RedirectResponse;
 use Modules\Backend\Projects\Config\Views;
-use Modules\Backend\Projects\Models\ProjectsModel;
 use Modules\Backend\Projects\Libraries\ProjectsClass;
-use App\Controllers\Backend\BackendController;
+use Modules\Backend\Projects\Models\ProjectsModel;
+use Modules\Backend\Tasks\Models\TasksModel;
+use Modules\Backend\Notes\Models\NotesModel;
+use Psr\Log\LoggerInterface;
 
-/**
- * Anteprima delle viste Projects con dati fittizi, senza salvataggi.
- */
+/** Gestisce progetti reali, bozza iniziale e modali dei dati collegati. */
 class ProjectsController extends BackendController
 {
     protected ProjectsModel $projectsModel;
-
     protected ProjectsClass $projectsClass;
+    protected TasksModel $tasksModel;
+    protected NotesModel $notesModel;
 
+    /**
+     * Inizializza i modelli applicativi mantenendo autenticazione e layout nel backbone.
+     * @param RequestInterface $request Richiesta HTTP corrente.
+     * @param ResponseInterface $response Risposta HTTP corrente.
+     * @param LoggerInterface $logger Logger applicativo.
+     * @return void
+     */
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         parent::initController($request, $response, $logger);
-
         $this->data['controller'] = 'projects';
         $this->data['entity'] = 'projects';
-
+        $this->data['project'] = null;
         $this->projectsModel = model(ProjectsModel::class);
+        $this->tasksModel = model(TasksModel::class);
+        $this->notesModel = model(NotesModel::class);
         $this->projectsClass = new ProjectsClass();
-
-        $this->data['parentProjectOptions'] = array_values(array_filter($this->getDummyProjects(), static fn (object $project): bool => $project->deleted_at === null));
     }
 
-    public function index(): string
+    /**
+     * Usa la stessa lista reale per l'ingresso della sezione.
+     * @return string|ResponseInterface Pagina oppure risposta alla richiesta della lista.
+     */
+    public function index(): string|ResponseInterface
     {
-        $this->prepareDummyView('showAll');
-
-        return $this->render(Views::SHOW_ALL_VIEW, $this->data);
+        return $this->showAll();
     }
 
+    /**
+     * Valida i filtri e delega paginazione e query al BackendModel tramite ProjectsModel.
+     * @return string|ResponseInterface Lista HTML oppure JSON con record e conteggi aggiornati.
+     */
     public function showAll(): string|ResponseInterface
     {
         if ($this->request->is('post')):
-            $posts = $this->request->getPost();
-            $list = $this->getDummyList($posts);
-            $this->data['posts'] = $list['posts'];
-            $this->data['data'] = $list['data'];
-
-            $projects = $this->getDummyProjects();
-            $trashed = count(array_filter($projects, static fn (object $project): bool => $project->deleted_at !== null));
-
+            $validated = $this->projectsModel->validateList($this->request->getPost());
+            if ( ! $validated['result']): return $this->jsonResponse($this->withValidationMessage($validated)); endif;
+            $this->data['posts'] = $validated['data'];
+            $this->data['data'] = $this->projectsModel->getData($validated['data']);
+            if ( ! $this->data['data']['result']): return $this->jsonResponse($this->data['data']); endif;
+            $this->prepareView('showAll');
             return $this->jsonResponse([
                 'result' => true,
                 'output' => view(Views::SHOW_ALL_PARTIAL, $this->data),
-                'trashCounts' => ['active' => count($projects) - $trashed, 'trashed' => $trashed, 'all' => count($projects)],
+                'trashCounts' => $this->projectsModel->getTrashCounts(),
+                'navigationCounts' => $this->data['navigationCounts'],
             ]);
         endif;
-
-        $this->prepareDummyView('showAll');
-
+        $this->prepareView('showAll');
         return $this->render(Views::SHOW_ALL_VIEW, $this->data);
     }
 
+    /**
+     * Mostra il form o salva progetto e bozza in un'unica transazione validata dal model.
+     * @return string|ResponseInterface HTML di inserimento, reset oppure risultato con UUID persistito.
+     */
     public function add(): string|ResponseInterface
     {
+        $this->data['project'] = null;
+        $this->prepareView('add');
         if ($this->request->is('post')):
-            if ($this->request->getPost('action') === 'reset'):
+            $posts = $this->request->getPost();
+            if ( ! $this->allows('projects_add')): return $this->forbidden(); endif;
+            if (($posts['action'] ?? null) === 'reset'):
                 return $this->jsonResponse(['result' => true, 'output' => view(Views::ADD_PARTIAL, $this->data)]);
             endif;
-
-            return $this->previewOnly();
+            if (( ! empty($posts['tasks']) && ! $this->allows('tasks_add')) || ( ! empty($posts['notes']) && ! $this->allows('notes_add'))): return $this->forbidden(); endif;
+            if (is_array($posts['tasks'] ?? null) && ! $this->allows('tasks_complete')):
+                foreach ($posts['tasks'] as $task):
+                    if (is_array($task) && ($task['status'] ?? null) === 'completed'): return $this->forbidden(); endif;
+                endforeach;
+            endif;
+            $result = $this->projectsModel->add($posts, $this->currentAdmin->uuid ?? null);
+            if ($result['result']): $this->audit('ADD_PROJECTS', $result['uuid'], $result['row']->name); endif;
+            unset($result['row']);
+            return $this->jsonResponse($this->withValidationMessage($result));
         endif;
-
-        $this->prepareDummyView('add');
-
         return $this->render(Views::ADD_VIEW, $this->data);
     }
 
+    /**
+     * Carica, ricarica o aggiorna il progetto corrente, senza accettare modifiche a campi di sistema.
+     * @param string|null $uuid UUID nella rotta GET; nelle POST proviene dal form e viene validato.
+     * @return string|ResponseInterface HTML di modifica oppure esito JSON.
+     */
     public function edit(?string $uuid = null): string|ResponseInterface
     {
         if ($this->request->is('post')):
-            if ($this->request->getPost('action') !== 'refresh'):
-                return $this->previewOnly();
+            $posts = $this->request->getPost();
+            if ( ! $this->allows('projects_edit')): return $this->forbidden(); endif;
+            if ( ! $this->validateData($posts, $this->projectsModel->delValidationRules())): return $this->validationResponse(); endif;
+            $project = $this->projectOr404($posts['uuid']);
+            if ($project->deleted_at !== null): return $this->jsonResponse(['result' => false, 'message' => lang('backend/projects.messages.cannotModifyDeleted')]); endif;
+            if (($posts['action'] ?? null) === 'refresh'):
+                $this->data['project'] = $project;
+                $this->prepareView('edit');
+                return $this->jsonResponse(['result' => true, 'output' => view(Views::EDIT_PARTIAL, $this->data)]);
             endif;
-
-            $postedUuid = $this->request->getPost('uuid');
-            $this->data['project'] = $this->getDummyProject(is_string($postedUuid) ? $postedUuid : null);
-            $this->data['uuid'] = $this->data['project']->uuid;
-
-            return $this->jsonResponse(['result' => true, 'output' => view(Views::EDIT_PARTIAL, $this->data)]);
+            $result = $this->projectsModel->edit($posts);
+            if ($result['result']): $this->audit('EDIT_PROJECTS', $posts['uuid'], $result['row']->name); endif;
+            unset($result['row']);
+            return $this->jsonResponse($this->withValidationMessage($result));
         endif;
-
-        $this->data['project'] = $this->getDummyProject($uuid);
-        $this->data['uuid'] = $this->data['project']->uuid;
-        $this->prepareDummyView('edit');
-
+        $this->data['project'] = $this->projectOr404($uuid);
+        if ($this->data['project']->deleted_at !== null): throw PageNotFoundException::forPageNotFound(); endif;
+        $this->prepareView('edit');
         return $this->render(Views::EDIT_VIEW, $this->data);
     }
 
-    public function show(string $uuid): RedirectResponse|string
+    /**
+     * Mostra il dettaglio di un progetto attivo e i dati collegati in sola lettura.
+     * @param string $uuid Identificativo nella rotta.
+     * @return string HTML del dettaglio.
+     */
+    public function show(string $uuid): string
     {
-        $this->data['project'] = $this->getDummyProject($uuid);
-        $this->data['uuid'] = $this->data['project']->uuid;
-        $this->prepareDummyView('show');
-
+        $this->data['project'] = $this->projectOr404($uuid);
+        if ($this->data['project']->deleted_at !== null): throw PageNotFoundException::forPageNotFound(); endif;
+        $this->prepareView('show');
         return $this->render(Views::SHOW_VIEW, $this->data);
     }
 
+    /**
+     * Esegue la cancellazione definitiva autorizzata dal filtro della rotta.
+     * @return ResponseInterface Esito JSON.
+     */
     public function hardDelete(): ResponseInterface
     {
-        return $this->previewOnly();
+        return $this->changeDeletion('hardDelete');
     }
 
+    /**
+     * Esegue lo spostamento nel cestino del progetto.
+     * @return ResponseInterface Esito JSON.
+     */
     public function softDelete(): ResponseInterface
     {
-        return $this->previewOnly();
+        return $this->changeDeletion('softDelete');
     }
 
+    /**
+     * Ripristina un progetto cestinato.
+     * @return ResponseInterface Esito JSON.
+     */
     public function restoreDelete(): ResponseInterface
     {
-        return $this->previewOnly();
+        return $this->changeDeletion('restoreDelete');
     }
 
+    /**
+     * Ricarica il pannello generale usando solo i due contesti previsti.
+     * @return ResponseInterface HTML parziale in JSON oppure errori di validazione.
+     */
     public function getGeneralData(): ResponseInterface
     {
-        $uuid = $this->request->getPost('uuid');
-        $this->data['project'] = $this->getDummyProject(is_string($uuid) ? $uuid : null);
-        $view = $this->request->getPost('context') === 'edit' ? Views::EDIT_GENERAL_DATA_PARTIAL : Views::SHOW_GENERAL_DATA_PARTIAL;
-
-        return $this->jsonResponse(['result' => true, 'output' => view($view, $this->data)]);
+        $posts = $this->request->getPost();
+        $rules = $this->projectsModel->delValidationRules() + ['context' => ['rules' => ['required', 'string', 'in_list[edit,show]']]];
+        if ( ! $this->validateData($posts, $rules)): return $this->validationResponse('action'); endif;
+        $this->data['project'] = $this->projectOr404($posts['uuid']);
+        if ($this->data['project']->deleted_at !== null): return $this->jsonResponse(['result' => false, 'message' => lang('backend/projects.messages.cannotModifyDeleted')]); endif;
+        $this->data['parentProjectOptions'] = $this->projectsModel->getParentOptions($posts['uuid']);
+        return $this->jsonResponse(['result' => true, 'output' => view($posts['context'] === 'edit' ? Views::EDIT_GENERAL_DATA_PARTIAL : Views::SHOW_GENERAL_DATA_PARTIAL, $this->data)]);
     }
 
+    /**
+     * Rilegge le date del progetto dal database senza utilizzare metadati inviati dal browser.
+     * @return ResponseInterface HTML dei metadati in JSON.
+     */
     public function getMetaData(): ResponseInterface
     {
-        $uuid = $this->request->getPost('uuid');
-        $this->data['project'] = $this->getDummyProject(is_string($uuid) ? $uuid : null);
-
+        $posts = $this->request->getPost();
+        if ( ! $this->validateData($posts, $this->projectsModel->delValidationRules())): return $this->validationResponse('action'); endif;
+        $this->data['project'] = $this->projectOr404($posts['uuid']);
         return $this->jsonResponse(['result' => true, 'output' => view(Views::META_DATA_PARTIAL, $this->data)]);
     }
 
-    private function prepareDummyView(string $action): void
+    /**
+     * Ricarica i task reali del progetto verificando anche il permesso del modulo Tasks.
+     * @return ResponseInterface Elenco HTML in JSON.
+     */
+    public function getTasks(): ResponseInterface
+    {
+        return $this->getRelatedData('task');
+    }
+
+    /**
+     * Ricarica le note reali del progetto verificando il permesso Notes.
+     * @return ResponseInterface Elenco HTML in JSON.
+     */
+    public function getNotes(): ResponseInterface
+    {
+        return $this->getRelatedData('note');
+    }
+
+    /**
+     * Salva task e passi del modale nel progetto autorizzato.
+     * @return ResponseInterface Record persistito oppure errori, senza chiudere il modale.
+     */
+    public function saveTask(): ResponseInterface
+    {
+        return $this->saveRelated('task');
+    }
+
+    /**
+     * Salva una nota del progetto autorizzato.
+     * @return ResponseInterface Record persistito oppure errori.
+     */
+    public function saveNote(): ResponseInterface
+    {
+        return $this->saveRelated('note');
+    }
+
+    /**
+     * Valida UUID e contesto dei pannelli, mantenendo la sola lettura dopo la ricarica di show.
+     * @param string $kind Tipo interno task oppure note.
+     * @return ResponseInterface Risposta JSON del pannello richiesto.
+     */
+    private function getRelatedData(string $kind): ResponseInterface
+    {
+        if ( ! $this->allowsProjectContext()): return $this->forbidden(); endif;
+        if ( ! $this->allows($kind === 'task' ? 'tasks_show' : 'notes_show')): return $this->forbidden(); endif;
+        $posts = $this->request->getPost();
+        $rules = $this->projectsModel->delValidationRules() + ['context' => ['rules' => ['required', 'string', 'in_list[edit,show]']]];
+        if ( ! $this->validateData($posts, $rules)): return $this->validationResponse('action'); endif;
+        $project = $this->projectOr404($posts['uuid']);
+        if ($project->deleted_at !== null): return $this->jsonResponse(['result' => false, 'message' => lang('backend/projects.messages.cannotModifyDeleted')]); endif;
+        return $this->jsonResponse(['result' => true, 'output' => view(Views::RELATED_ITEMS_PARTIAL, [
+            'relatedKind' => $kind,
+            'relatedReadOnly' => $posts['context'] === 'show',
+            'relatedItems' => $kind === 'task' ? $this->tasksModel->getForProject($project->uuid) : $this->notesModel->getForProject($project->uuid),
+            'relatedProject' => $project,
+            'currentAdmin' => $this->currentAdmin,
+        ])]);
+    }
+
+    /**
+     * Valida un task della bozza senza scrivere su database o sessione.
+     * @return ResponseInterface Dati normalizzati o errori del model, in JSON.
+     */
+    public function validateTaskDraft(): ResponseInterface
+    {
+        return $this->validateDraft('task');
+    }
+
+    /**
+     * Valida una nota della bozza senza scrivere su database o sessione.
+     * @return ResponseInterface Contenuto normalizzato o errori del model, in JSON.
+     */
+    public function validateNoteDraft(): ResponseInterface
+    {
+        return $this->validateDraft('note');
+    }
+
+    /**
+     * Applica alle bozze le stesse regole del salvataggio definitivo e verifica i permessi.
+     * @param string $kind Tipo interno task oppure note.
+     * @return ResponseInterface JSON; nessuna creazione di record o identificativi persistenti.
+     */
+    private function validateDraft(string $kind): ResponseInterface
+    {
+        $module = $kind === 'task' ? 'tasks' : 'notes';
+        if ( ! $this->allows('projects_add') || ! $this->allows($module . '_add')): return $this->forbidden(); endif;
+        $posts = $this->request->getPost();
+        if ($kind === 'task' && ($posts['status'] ?? null) === 'completed' && ! $this->allows('tasks_complete')): return $this->forbidden(); endif;
+        $model = $kind === 'task' ? $this->tasksModel : $this->notesModel;
+        return $this->jsonResponse($this->withValidationMessage($model->validatePayload($posts), 'modal'));
+    }
+
+    /**
+     * Controlla il permesso add/edit corretto e assegna il contesto al model dal lato server.
+     * @param string $kind Tipo interno task oppure note.
+     * @return ResponseInterface Esito del salvataggio del modale.
+     */
+    private function saveRelated(string $kind): ResponseInterface
+    {
+        if ( ! $this->allowsProjectContext()): return $this->forbidden(); endif;
+        $posts = $this->request->getPost();
+        $rules = ['project_uuid' => $this->projectsModel->delValidationRules()['uuid'], 'uuid' => ['rules' => ['permit_empty', 'string', 'regex_match[/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i]']]];
+        if ((array_key_exists('uuid', $posts) && ! is_string($posts['uuid'])) || ! $this->validateData($posts, $rules)): return $this->jsonResponse(['result' => false, 'message' => lang('backend/projects.messages.invalidData')]); endif;
+        $editing = ($posts['uuid'] ?? '') !== '';
+        $module = $kind === 'task' ? 'tasks' : 'notes';
+        if ( ! $this->allows($module . ($editing ? '_edit' : '_add'))): return $this->forbidden(); endif;
+        $projectUuid = $posts['project_uuid'];
+        unset($posts['project_uuid']);
+        $result = $kind === 'task'
+            ? $this->tasksModel->saveForProject($posts, $projectUuid, $this->currentAdmin->uuid ?? null, $this->allows('tasks_complete'))
+            : $this->notesModel->saveForProject($posts, $projectUuid, $this->currentAdmin->uuid ?? null);
+        if ($result['result']): $this->audit(($editing ? 'EDIT_' : 'ADD_') . strtoupper($module), $result['record']->uuid, $kind === 'task' ? $result['record']->title : lang('backend/projects.related.notes'), $module); endif;
+        return $this->jsonResponse($this->withValidationMessage($result, 'modal'));
+    }
+
+    /**
+     * Esegue una transizione del cestino validata e ne registra l'audit dopo il commit.
+     * @param string $method Metodo interno del model.
+     * @return ResponseInterface Risposta JSON.
+     */
+    private function changeDeletion(string $method): ResponseInterface
+    {
+        if ( ! $this->allows($method === 'restoreDelete' ? 'projects_restore' : 'projects_delete')): return $this->forbidden(); endif;
+        $posts = $this->request->getPost();
+        if ( ! $this->validateData($posts, $this->projectsModel->delValidationRules())): return $this->validationResponse('action'); endif;
+        $result = $this->projectsModel->{$method}($posts);
+        if ($result['result']): $this->audit(strtoupper($method) . '_PROJECTS', $result['uuid'], $result['name']); endif;
+        return $this->jsonResponse($result);
+    }
+
+    /**
+     * Prepara dati, origini e conteggi reali per la vista richiesta.
+     * @param string $action Azione corrente.
+     * @return void
+     */
+    private function prepareView(string $action): void
     {
         $this->data['action'] = $action;
+        $this->data['draftMode'] = $action === 'add';
         $this->data['title'] = lang('backend/projects.titles.' . $action);
         $this->data['icon'] = '<i class="fa-solid fa-folder-open"></i>';
-        $this->data['options'] = '<span class="badge app-bg-muted-subtle app-text-muted-emphasis border text-wrap"><i class="fa-solid fa-circle-info me-1"></i>' . ui_text('backend/projects.messages.previewOnly', [], true) . '</span>';
+        $this->data['options'] = '';
+        $project = $this->data['project'] ?? null;
+        $this->data['uuid'] = $project->uuid ?? null;
+        $this->data['parentProjectOptions'] = $this->projectsModel->getParentOptions($project->uuid ?? null);
+        $this->data['navigationCounts'] = ['projects' => $this->projectsModel->activeCount()];
+        $this->data['projectApplications'] = $project && $this->allows('applications_show_all') ? model(\Modules\Backend\Applications\Models\ApplicationsModel::class)->getForProject($project->uuid) : [];
+        $this->data['projectTasks'] = $project && $this->allows('tasks_show') ? $this->tasksModel->getForProject($project->uuid) : [];
+        $this->data['projectNotes'] = $project && $this->allows('notes_show') ? $this->notesModel->getForProject($project->uuid) : [];
     }
 
-    private function previewOnly(): ResponseInterface
+    /**
+     * Recupera un progetto con il metodo globale getByUUID oppure restituisce 404.
+     * @param string|null $uuid UUID ricevuto dalla rotta o già validato dalla POST.
+     * @return object Progetto persistito con i conteggi.
+     * @throws PageNotFoundException Se l'identificativo o il record non sono disponibili.
+     */
+    private function projectOr404(?string $uuid): object
     {
-        return $this->jsonResponse(['result' => false, 'message' => lang('backend/projects.messages.previewOnly')]);
+        if ($uuid === null || ! $this->validateData(['uuid' => $uuid], $this->projectsModel->delValidationRules())): throw PageNotFoundException::forPageNotFound(); endif;
+        $record = $this->projectsModel->getByUUID($uuid);
+        if ( ! $record['result']): throw PageNotFoundException::forPageNotFound(); endif;
+        return $record['row'];
     }
 
-    /** Cerca soltanto fra i dati fittizi del controller. */
-    private function getDummyProject(?string $uuid): object
+    /**
+     * Usa la stessa decisione dei permessi impiegata dal backbone e dai registrar.
+     * @param string $permission Permesso applicativo richiesto.
+     * @return bool True quando l'amministratore è autorizzato.
+     */
+    private function allows(string $permission): bool
     {
-        foreach ($this->getDummyProjects() as $project):
-            if ($project->uuid === $uuid):
-                return $project;
-            endif;
-        endforeach;
-
-        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        return AuthorizationClass::allows($this->currentAdmin, $permission);
     }
 
-    /** Dati temporanei per vedere le pagine; non provengono dal database. */
-    private function getDummyProjects(): array
+    /**
+     * Richiede accesso al progetto anche quando il chiamante possiede permessi sui suoi task o note.
+     * @return bool True se il contesto del progetto è accessibile.
+     */
+    private function allowsProjectContext(): bool
     {
-        $base = [
-            'id' => 1,
-            'uuid' => '56f74671-a310-4200-bf26-f053ff5b9f27',
-            'name' => 'Essential Framework',
-            'description' => 'Laboratorio del backbone Essential.',
-            'parent_project_uuid' => null,
-            'parent_project_name' => null,
-            'local_path' => 'D:\\Laragon\\www\\gbwebapps\\essential-framework',
-            'local_url' => 'https://gbwebapps.test/essential-framework/',
-            'production_url' => null,
-            'execute_name' => 'essential-framework',
-            'is_protected' => 1,
-            'created_at' => '2026-11-17 09:00:00',
-            'updated_at' => null,
-            'deleted_at' => null,
-            'restored_at' => null,
-        ];
-
-        return [
-            (object) $base,
-            (object) array_replace($base, [
-                'id' => 2, 'uuid' => '0931da61-d2db-47bf-9f07-2254db9d6603',
-                'name' => 'GB Web Apps', 'description' => 'Organizzazione e attivita dello studio.',
-                'local_path' => 'D:\\Laragon\\www\\gbwebapps', 'local_url' => 'https://gbwebapps.test/',
-                'production_url' => 'https://example.com/', 'execute_name' => null,
-            ]),
-            (object) array_replace($base, [
-                'id' => 3, 'uuid' => '7d7fdb48-f47d-4ac8-a3b5-499fdc4989e1',
-                'name' => 'Essential Store', 'description' => 'Progetto applicativo per e-commerce.',
-                'parent_project_uuid' => $base['uuid'], 'parent_project_name' => $base['name'],
-                'local_path' => 'D:\\Laragon\\www\\gbwebapps\\essential-store',
-                'local_url' => 'https://gbwebapps.test/essential-store/', 'execute_name' => 'essential-store',
-                'is_protected' => 0, 'updated_at' => '2026-11-17 10:00:00',
-            ]),
-            (object) array_replace($base, [
-                'id' => 4, 'uuid' => '06a02a25-8579-4c96-9ccc-8277286566dc',
-                'name' => 'Essential Manager', 'description' => 'Gestione del lavoro dello studio.',
-                'parent_project_uuid' => $base['uuid'], 'parent_project_name' => $base['name'],
-                'local_path' => 'D:\\Laragon\\www\\gbwebapps\\essential-manager',
-                'local_url' => 'https://gbwebapps.test/essential-manager/', 'execute_name' => 'essential-manager',
-            ]),
-            (object) array_replace($base, [
-                'id' => 5, 'uuid' => 'f0047a50-b930-40ab-939a-5c80d9e69679',
-                'name' => 'Progetto di esempio', 'description' => 'Esempio di progetto nel cestino.',
-                'local_path' => null, 'local_url' => null, 'execute_name' => null,
-                'is_protected' => 0, 'deleted_at' => '2026-11-17 11:00:00',
-            ]),
-        ];
+        return $this->allows('projects_show_all') || $this->allows('projects_show') || $this->allows('projects_edit');
     }
 
-    /** Filtri e paginazione della sola anteprima in memoria. */
-    private function getDummyList(array $posts): array
+    /**
+     * Restituisce un rifiuto senza dettagli dei record non autorizzati.
+     * @return ResponseInterface JSON HTTP 403.
+     */
+    private function forbidden(): ResponseInterface
     {
-        $projects = $this->getDummyProjects();
-        $trashFilter = in_array($posts['trash_filter'] ?? null, ['active', 'trashed', 'all'], true) ? $posts['trash_filter'] : 'active';
-        $searchFields = is_array($posts['searchFields'] ?? null) ? $posts['searchFields'] : [];
-        $searchDates = is_array($posts['searchDates'] ?? null) ? $posts['searchDates'] : [];
-        $name = is_string($searchFields['name'] ?? null) ? trim($searchFields['name']) : '';
+        return $this->jsonResponse(['result' => false, 'message' => lang('backend/projects.messages.forbidden')])->setStatusCode(403);
+    }
 
-        $projects = array_values(array_filter($projects, static function (object $project) use ($trashFilter, $name, $searchDates): bool {
-            if (($trashFilter === 'active' && $project->deleted_at !== null) || ($trashFilter === 'trashed' && $project->deleted_at === null)):
-                return false;
-            endif;
-            if ($name !== '' && mb_stripos($project->name, $name) === false):
-                return false;
-            endif;
-            foreach (['created_at', 'updated_at'] as $field):
-                foreach (['from', 'to'] as $side):
-                    $date = $searchDates[$field . '-' . $side] ?? '';
-                    if ( ! is_string($date) || $date === ''):
-                        continue;
-                    endif;
-                    if ( ! preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $date)):
-                        return false;
-                    endif;
-                    if ($project->{$field} === null || ($side === 'from' && $project->{$field} < $date) || ($side === 'to' && $project->{$field} > $date)):
-                        return false;
-                    endif;
-                endforeach;
+    /**
+     * Converte gli errori nativi del controller nel formato AJAX comune.
+     * @param string $context form, modal oppure action: contesto interno della risposta.
+     * @return ResponseInterface Esito JSON non salvabile.
+     */
+    private function validationResponse(string $context = 'form'): ResponseInterface
+    {
+        return $this->jsonResponse($this->withValidationMessage(['result' => false, 'errors' => $this->validator->getErrors()], $context));
+    }
+
+    /**
+     * Distingue errori di campi visibili e azioni prive di campi modificabili, come in Admins.
+     * @param array $result Esito con eventuali errori del model o del controller.
+     * @param string $context form per campi principali, modal per passi annidati, action per parametri nascosti.
+     * @return array Esito con alert generico nei form oppure dettagli escapati nelle azioni.
+     */
+    private function withValidationMessage(array $result, string $context = 'form'): array
+    {
+        if ( ! isset($result['errors'])): return $result; endif;
+        if ($context === 'action'):
+            $result['message'] = implode('<br>', array_map(static fn ($error): string => esc((string) $error), $result['errors']));
+            return $result;
+        endif;
+        if ($context === 'form'):
+            $fields = [];
+            foreach ($result['errors'] as $field => $error):
+                $parts = explode('.', (string) $field);
+                $key = in_array($parts[0], ['searchFields', 'searchDates'], true) ? ($parts[1] ?? 'payload') : $parts[0];
+                $fields[$key] = isset($fields[$key]) ? $fields[$key] . ' ' . $error : $error;
             endforeach;
-            return true;
-        }));
+            $result['errors'] = $fields;
+        endif;
+        $result['message'] = lang('backend/projects.messages.validationErrors');
+        return $result;
+    }
 
-        $column = in_array($posts['column'] ?? null, ['id', 'name'], true) ? $posts['column'] : 'id';
-        $order = ($posts['order'] ?? null) === 'asc' ? 'asc' : 'desc';
-        usort($projects, static function (object $left, object $right) use ($column, $order): int {
-            $comparison = $column === 'id' ? $left->id <=> $right->id : strnatcasecmp($left->name, $right->name);
-            return $order === 'asc' ? $comparison : -$comparison;
-        });
-        $limit = filter_var($posts['rows'] ?? 5, FILTER_VALIDATE_INT);
-        $limit = in_array($limit, [5, 10, 15, 20], true) ? $limit : 5;
-        $total = count($projects);
-        $page = max(1, (int) filter_var($posts['page'] ?? 1, FILTER_VALIDATE_INT));
-        $page = min($page, max(1, (int) ceil($total / $limit)));
-        $offset = ($page - 1) * $limit;
-        $records = array_slice($projects, $offset, $limit);
 
-        return [
-            'posts' => ['column' => $column, 'order' => $order, 'page' => $page, 'rows' => $limit, 'trash_filter' => $trashFilter],
-            'data' => [
-                'records' => $records,
-                'lastItemPage' => count($records),
-                'pagination' => ['totalRows' => $total, 'limit' => $limit, 'page' => $page, 'offset' => $offset],
-            ],
-        ];
+    /**
+     * Registra operazioni già completate senza usare identità o dati di audit ricevuti dal client.
+     * @param string $action Identificatore dell'azione.
+     * @param string $uuid Identificativo del record.
+     * @param string $name Nome del record da registrare come testo sicuro.
+     * @param string $section Modulo applicativo interessato.
+     * @return void
+     */
+    private function audit(string $action, string $uuid, string $name, string $section = 'projects'): void
+    {
+        log_admin_activity($action, $section, esc($name) . ' [' . esc($uuid) . ']', $this->currentAdmin);
     }
 }

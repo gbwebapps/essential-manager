@@ -1,1 +1,1 @@
-<?php // TODO: contenuto della vista Tasks/partials/edit/generalDataPartial.php. ?>
+<?= $this->include(\Modules\Backend\Tasks\Config\Views::FORM_PARTIAL); ?>

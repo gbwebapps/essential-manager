@@ -11,9 +11,18 @@ return [
     'panels' => [],
     'linksBar' => [],
     'links' => [],
-    'labels' => [],
+    'labels' => [
+        'content' => 'Contenuto',
+    ],
     'placeholders' => [],
     'errors' => [],
     'audits' => [],
-    'messages' => [],
+    'messages' => [
+        'noDataChanged' => 'Non sono state effettuate modifiche.',
+        'invalidData' => 'Controlla il contenuto della nota.',
+        'projectUnavailable' => 'Il progetto o l’applicazione non è disponibile.',
+        'notFound' => 'La nota non appartiene al progetto o all’applicazione oppure è stata eliminata.',
+        'saveSuccess' => 'Nota salvata.',
+        'saveError' => 'Impossibile salvare la nota.',
+    ],
 ];

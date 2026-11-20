@@ -1,4 +1,4 @@
-<?= $this->extend('backend/template/mainView') ?>
+<?= $this->extend(\Modules\Backend\Template\Config\Views::MAIN_VIEW) ?>
 
 <?= $this->section('content') ?>
 
@@ -40,10 +40,10 @@
                                     </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#projects-actionsOffcanvas" aria-label="Close"></button>
                                 </div>
-                                
+
                                 <div class="offcanvas-body pt-md-2">
                                     <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-md-end w-100 gap-0 gap-md-3">
-                                        
+
                                         <!-- Selezione stato record -->
                                         <div class="d-flex flex-column flex-md-row gap-0 gap-md-3 me-md-auto mb-3 mb-md-0 border-md-end pe-md-3">
                                             <a href="#" class="cmd-link active-filter" data-trash-filter="active">
@@ -65,15 +65,15 @@
                                         <a href="#" data-bs-toggle="collapse" data-bs-target="#projects-search-bar" class="cmd-link link-search">
                                             <i class="fa-solid fa-magnifying-glass"></i> <?= ui_text('backend/projects.links.filters', [], false); ?>
                                         </a>
-                                        
+
                                         <a href="#" class="cmd-link link-reset-search">
                                             <i class="fa-solid fa-xmark"></i> <?= ui_text('backend/projects.links.resetFilters', [], false); ?>
                                         </a>
-                                        
+
                                         <a href="#" class="cmd-link reset-sorting-link">
                                             <i class="fa-solid fa-sort"></i> <?= ui_text('backend/projects.links.resetSorting', [], false); ?>
                                         </a>
-                                        
+
                                         <a href="#" class="cmd-link refresh-list">
                                             <i class="fa-solid fa-arrows-rotate"></i> <?= ui_text('backend/projects.links.reloadList', [], false); ?>
                                         </a>
@@ -92,18 +92,18 @@
                     <div id="projects-search-bar" class="collapse search-bar">
                         <div class="row card-body pb-0">
 
-                            <!-- Ricerca avanzata per brand -->
+                            <!-- Ricerca avanzata per nome -->
                             <div class="col-md-3">
                                 <div class="mb-2 mb-md-0">
                                     <label for="projects-name"><?= ui_text('backend/projects.labels.name', [], false); ?></label>
                                     <div class="input-group">
-                                        <input <?= ui_binding('backend/projects.placeholders.searchName', 'placeholder', [], true); ?> type="text" id="projects-name" class="form-control" placeholder="<?= esc(lang('backend/projects.placeholders.searchName'), 'attr'); ?>" data-search-field="brand" autocomplete="off">
+                                        <input <?= ui_binding('backend/projects.placeholders.searchName', 'placeholder', [], true); ?> type="text" id="projects-name" class="form-control" placeholder="<?= esc(lang('backend/projects.placeholders.searchName'), 'attr'); ?>" data-search-field="name" autocomplete="off">
                                         <span class="input-group-text reset-search-field"><i class="fa-solid fa-times"></i></span>
                                     </div>
-                                    <div data-search-error="brand" class="error_brand app-text-danger fw-bold small pt-1">&nbsp;</div>
+                                    <div data-search-error="name" class="error_name app-text-danger fw-bold small pt-1">&nbsp;</div>
                                 </div>
                             </div>
-                            <!-- End Ricerca avanzata per brand -->
+                            <!-- End Ricerca avanzata per nome -->
 
                         </div>
 
@@ -183,5 +183,7 @@
         </div>
     </div>
 
-    
+
+    <?= $this->include(\Modules\Backend\Projects\Config\Views::PROJECT_ACTIONS_PARTIAL); ?>
+
 <?= $this->endSection() ?>

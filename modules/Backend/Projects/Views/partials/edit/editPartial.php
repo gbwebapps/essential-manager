@@ -1,10 +1,10 @@
 <!-- Struttura principale del form di aggiornamento (Partial) -->
 
 <!-- Form per aggiornamento dati generali -->
-<form id="getGeneralData"></form>
+<form novalidate id="getGeneralData"></form>
 
 <!-- Form per aggiornamento metadati -->
-<form id="getMetaData"></form>
+<form novalidate id="getMetaData"></form>
 
 <div class="row">
     <div class="col-12 col-lg-8 offset-lg-2">
@@ -12,7 +12,7 @@
         <div class="card">
 
             <!-- Form identificato per la gestione AJAX -->
-            <form id="projects-edit" data-unsaved-check>
+            <form novalidate id="projects-edit" data-unsaved-check>
 
                 <!-- General Data -->
                 <div class="card-header rounded-0 d-flex justify-content-between align-items-center">
@@ -45,6 +45,9 @@
                 <input type="hidden" name="uuid" id="uuid" value="<?= esc($project->uuid, 'attr'); ?>">
 
             </form>
+
+            <?= $this->include(\Modules\Backend\Projects\Config\Views::APPLICATIONS_PARTIAL); ?>
+            <?= $this->include(\Modules\Backend\Projects\Config\Views::RELATED_PANELS_PARTIAL); ?>
 
         </div>
 

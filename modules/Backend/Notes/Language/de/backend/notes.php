@@ -11,9 +11,18 @@ return [
     'panels' => [],
     'linksBar' => [],
     'links' => [],
-    'labels' => [],
+    'labels' => [
+        'content' => 'Inhalt',
+    ],
     'placeholders' => [],
     'errors' => [],
     'audits' => [],
-    'messages' => [],
+    'messages' => [
+        'noDataChanged' => 'Es wurden keine Änderungen vorgenommen.',
+        'invalidData' => 'Check the note content.',
+        'projectUnavailable' => 'The project is unavailable.',
+        'notFound' => 'The note does not belong to this project or application or has been deleted.',
+        'saveSuccess' => 'Note saved.',
+        'saveError' => 'Unable to save the note.',
+    ],
 ];

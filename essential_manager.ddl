@@ -16,11 +16,11 @@ create table if not exists `essential_manager`.`admins_groups_permissions` (
     `permission` varchar(50) not null,
     primary key (`id`),
     unique key `unique_group_permission` (`group_id`, `permission`),
-    constraint `fk_group_permissions_group_id` 
+    constraint `fk_group_permissions_group_id`
         foreign key (`group_id`) references `essential_manager`.`admins_groups`(`id`) on update cascade on delete cascade
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
 
--- TABELLA admins 
+-- TABELLA admins
 create table if not exists `essential_manager`.`admins` (
     `id` int unsigned auto_increment unique,
     `uuid` char(36) not null unique,
@@ -54,7 +54,7 @@ create table if not exists `essential_manager`.`admins` (
     index `idx_admins_resetted_at` (`resetted_at`),
     index `idx_admins_deleted_at` (`deleted_at`),
     index `idx_admins_restored_at` (`restored_at`),
-    constraint `fk_admins_group_id` 
+    constraint `fk_admins_group_id`
         foreign key (`group_id`) references `essential_manager`.`admins_groups`(`id`) on update cascade on delete restrict
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
 
@@ -174,7 +174,7 @@ create table if not exists `essential_manager`.`admins_logs` (
     `admin_uuid` char(36) null default null,
     `username` varchar(100) not null default 'Guest',
     `login` datetime not null,
-    `logout` datetime null default null, 
+    `logout` datetime null default null,
     `logout_reason` enum('manual', 'timeout', 'deleted', 'banned') null default null,
     `token_type` enum('cookie', 'session') not null,
     `user_agent` varchar(255) not null,
@@ -188,14 +188,14 @@ create table if not exists `essential_manager`.`admins_logs` (
     index (`logout`),
     index (`logout_reason`),
     -- Aggiunta del vincolo FK
-    constraint `fk_logs_token` 
-        foreign key (`token_id`) 
-        references `essential_manager`.`admins_tokens`(`id`) 
+    constraint `fk_logs_token`
+        foreign key (`token_id`)
+        references `essential_manager`.`admins_tokens`(`id`)
         on update cascade
         on delete set null
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
 
--- TABELLA users 
+-- TABELLA users
 create table if not exists `essential_manager`.`users` (
     `id` int unsigned auto_increment unique,
     `uuid` char(36) not null unique,
@@ -333,7 +333,7 @@ create table if not exists `essential_manager`.`users_logs` (
     `user_uuid` char(36) null default null,
     `username` varchar(100) not null default 'Guest',
     `login` datetime not null,
-    `logout` datetime null default null, 
+    `logout` datetime null default null,
     `logout_reason` enum('manual', 'timeout', 'deleted', 'banned') null default null,
     `token_type` enum('cookie', 'session') not null,
     `user_agent` varchar(255) not null,
@@ -347,9 +347,9 @@ create table if not exists `essential_manager`.`users_logs` (
     index (`logout`),
     index (`logout_reason`),
     -- Aggiunta del vincolo FK
-    constraint `fk_users_logs_token` 
-        foreign key (`token_id`) 
-        references `essential_manager`.`users_tokens`(`id`) 
+    constraint `fk_users_logs_token`
+        foreign key (`token_id`)
+        references `essential_manager`.`users_tokens`(`id`)
         on update cascade
         on delete set null
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
@@ -424,18 +424,14 @@ create table if not exists `essential_manager`.`settings` (
 -- projects_edit
 -- projects_delete
 -- projects_restore
--- L'identita e la protezione dei progetti di sistema sono verificate anche dal modulo Projects.
 create table if not exists `essential_manager`.`projects` (
     `id` int unsigned auto_increment unique,
     `uuid` char(36) not null unique,
     `name` varchar(255) not null unique,
     `description` text null,
     `parent_project_uuid` char(36) null default null,
-    `system_key` varchar(50) null default null unique,
-    `is_protected` tinyint(1) not null default 0,
     `local_path` varchar(1024) null default null,
     `local_url` varchar(2048) null default null,
-    `production_url` varchar(2048) null default null,
     `execute_name` varchar(100) null default null unique,
     `created_by_admin_uuid` char(36) null default null,
     `created_at` datetime not null,
@@ -450,9 +446,41 @@ create table if not exists `essential_manager`.`projects` (
     index `idx_projects_updated_at` (`updated_at`),
     index `idx_projects_deleted_at` (`deleted_at`),
     constraint `chk_projects_parent`
-        check (`parent_project_uuid` is null or `parent_project_uuid` <> `uuid`),
-    constraint `chk_projects_is_protected`
-        check (`is_protected` in (0, 1))
+        check (`parent_project_uuid` is null or `parent_project_uuid` <> `uuid`)
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA applications
+-- PERMESSI applications
+-- applications_show_all
+-- applications_show
+-- applications_add
+-- applications_edit
+-- applications_delete
+-- applications_restore
+-- Ogni applicazione concreta deriva da un solo progetto.
+-- Locale e produzione sono due ambienti della stessa applicazione.
+create table if not exists `essential_manager`.`applications` (
+    `id` int unsigned auto_increment unique,
+    `uuid` char(36) not null unique,
+    `project_uuid` char(36) not null,
+    `name` varchar(255) not null unique,
+    `description` text null,
+    `local_path` varchar(1024) null default null,
+    `local_url` varchar(2048) null default null,
+    `production_url` varchar(2048) null default null,
+    `execute_name` varchar(100) null default null unique,
+    `created_by_admin_uuid` char(36) null default null,
+    `created_at` datetime not null,
+    `updated_at` datetime null default null,
+    `deleted_at` datetime null default null,
+    `restored_at` datetime null default null,
+    primary key (`uuid`),
+    index (`id`),
+    index (`created_by_admin_uuid`),
+    index `idx_applications_project_deleted_at` (`project_uuid`, `deleted_at`),
+    index `idx_applications_created_at` (`created_at`),
+    index `idx_applications_updated_at` (`updated_at`),
+    index `idx_applications_deleted_at` (`deleted_at`)
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
 
 -- TABELLA tasks
@@ -465,10 +493,12 @@ create table if not exists `essential_manager`.`projects` (
 -- tasks_restore
 -- tasks_complete
 -- tasks_set_current
+-- Un task appartiene a un progetto oppure a una applicazione, mai a entrambi.
 create table if not exists `essential_manager`.`tasks` (
     `id` int unsigned auto_increment unique,
     `uuid` char(36) not null unique,
-    `project_uuid` char(36) not null,
+    `project_uuid` char(36) null default null,
+    `application_uuid` char(36) null default null,
     `title` varchar(255) not null,
     `description` text null,
     `status` enum('todo', 'in_progress', 'completed') not null default 'todo',
@@ -481,10 +511,15 @@ create table if not exists `essential_manager`.`tasks` (
     primary key (`uuid`),
     index (`id`),
     index (`created_by_admin_uuid`),
+    unique key `unique_tasks_project_uuid` (`project_uuid`, `uuid`),
+    unique key `unique_tasks_application_uuid` (`application_uuid`, `uuid`),
+    index `idx_tasks_application_status` (`application_uuid`, `status`, `created_at`),
     index `idx_tasks_project_status` (`project_uuid`, `status`, `created_at`),
     index `idx_tasks_status_created_at` (`status`, `created_at`),
     index `idx_tasks_updated_at` (`updated_at`),
     index `idx_tasks_deleted_at` (`deleted_at`),
+    constraint `chk_tasks_context`
+        check ((`project_uuid` is not null) + (`application_uuid` is not null) = 1),
     constraint `chk_tasks_completed_at`
         check ((`status` = 'completed' and `completed_at` is not null) or (`status` <> 'completed' and `completed_at` is null))
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
@@ -565,11 +600,12 @@ create table if not exists `essential_manager`.`task_steps` (
 -- notes_edit
 -- notes_delete
 -- notes_restore
--- Ogni nota appartiene a un solo progetto, task oppure passaggio.
+-- Ogni nota appartiene a un solo progetto, applicazione, task oppure passaggio.
 create table if not exists `essential_manager`.`notes` (
     `id` int unsigned auto_increment unique,
     `uuid` char(36) not null unique,
     `project_uuid` char(36) null default null,
+    `application_uuid` char(36) null default null,
     `task_uuid` char(36) null default null,
     `step_uuid` char(36) null default null,
     `content` text not null,
@@ -581,12 +617,13 @@ create table if not exists `essential_manager`.`notes` (
     primary key (`uuid`),
     index (`id`),
     index (`created_by_admin_uuid`),
+    index `idx_notes_application_created_at` (`application_uuid`, `created_at`),
     index `idx_notes_project_created_at` (`project_uuid`, `created_at`),
     index `idx_notes_task_created_at` (`task_uuid`, `created_at`),
     index `idx_notes_step_created_at` (`step_uuid`, `created_at`),
     index `idx_notes_deleted_at` (`deleted_at`),
     constraint `chk_notes_context`
-        check ((`project_uuid` is not null) + (`task_uuid` is not null) + (`step_uuid` is not null) = 1)
+        check ((`project_uuid` is not null) + (`application_uuid` is not null) + (`task_uuid` is not null) + (`step_uuid` is not null) = 1)
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
 
 -- TABELLA admin_work_state
@@ -618,7 +655,8 @@ create table if not exists `essential_manager`.`admin_work_state` (
 create table if not exists `essential_manager`.`operation_runs` (
     `id` int unsigned auto_increment unique,
     `uuid` char(36) not null unique,
-    `project_uuid` char(36) not null,
+    `project_uuid` char(36) null default null,
+    `application_uuid` char(36) null default null,
     `task_uuid` char(36) null default null,
     `step_uuid` char(36) null default null,
     `operation` varchar(50) not null,
@@ -636,10 +674,15 @@ create table if not exists `essential_manager`.`operation_runs` (
     primary key (`uuid`),
     index (`id`),
     index (`admin_uuid`),
+    index `idx_operation_runs_application_created_at` (`application_uuid`, `created_at`),
+    index `idx_operation_runs_project_task` (`project_uuid`, `task_uuid`),
+    index `idx_operation_runs_application_task` (`application_uuid`, `task_uuid`),
     index `idx_operation_runs_project_created_at` (`project_uuid`, `created_at`),
     index `idx_operation_runs_task_step` (`task_uuid`, `step_uuid`),
     index (`step_uuid`),
     index `idx_operation_runs_status_created_at` (`status`, `created_at`),
+    constraint `chk_operation_runs_context`
+        check ((`project_uuid` is not null) + (`application_uuid` is not null) = 1),
     constraint `chk_operation_runs_task_step`
         check (`step_uuid` is null or `task_uuid` is not null),
     constraint `chk_operation_runs_dates`
@@ -652,11 +695,11 @@ add constraint `fk_admins_permissions_admin_uuid`
 foreign key (`admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete cascade;
 
 alter table `essential_manager`.`admins_tokens`
-add constraint `fk_admins_tokens_admin_uuid` 
+add constraint `fk_admins_tokens_admin_uuid`
 foreign key (`admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete cascade;
 
 alter table `essential_manager`.`admins_attempts`
-add constraint `fk_admins_attempts_admin_uuid` 
+add constraint `fk_admins_attempts_admin_uuid`
 foreign key (`admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete cascade;
 
 alter table `essential_manager`.`admins_2fa`
@@ -704,6 +747,18 @@ alter table `essential_manager`.`projects`
 add constraint `fk_projects_created_by_admin_uuid`
 foreign key (`created_by_admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
 
+alter table `essential_manager`.`applications`
+add constraint `fk_applications_project_uuid`
+foreign key (`project_uuid`) references `essential_manager`.`projects`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`applications`
+add constraint `fk_applications_created_by_admin_uuid`
+foreign key (`created_by_admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`tasks`
+add constraint `fk_tasks_application_uuid`
+foreign key (`application_uuid`) references `essential_manager`.`applications`(`uuid`) on update restrict on delete restrict;
+
 alter table `essential_manager`.`tasks`
 add constraint `fk_tasks_project_uuid`
 foreign key (`project_uuid`) references `essential_manager`.`projects`(`uuid`) on update restrict on delete restrict;
@@ -733,6 +788,10 @@ add constraint `fk_task_steps_completed_by_admin_uuid`
 foreign key (`completed_by_admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
 
 alter table `essential_manager`.`notes`
+add constraint `fk_notes_application_uuid`
+foreign key (`application_uuid`) references `essential_manager`.`applications`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`notes`
 add constraint `fk_notes_project_uuid`
 foreign key (`project_uuid`) references `essential_manager`.`projects`(`uuid`) on update restrict on delete restrict;
 
@@ -755,6 +814,18 @@ foreign key (`admin_uuid`) references `essential_manager`.`admins`(`uuid`) on up
 alter table `essential_manager`.`admin_work_state`
 add constraint `fk_admin_work_state_task_uuid`
 foreign key (`task_uuid`) references `essential_manager`.`tasks`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`operation_runs`
+add constraint `fk_operation_runs_application_uuid`
+foreign key (`application_uuid`) references `essential_manager`.`applications`(`uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`operation_runs`
+add constraint `fk_operation_runs_project_task`
+foreign key (`project_uuid`, `task_uuid`) references `essential_manager`.`tasks`(`project_uuid`, `uuid`) on update restrict on delete restrict;
+
+alter table `essential_manager`.`operation_runs`
+add constraint `fk_operation_runs_application_task`
+foreign key (`application_uuid`, `task_uuid`) references `essential_manager`.`tasks`(`application_uuid`, `uuid`) on update restrict on delete restrict;
 
 alter table `essential_manager`.`operation_runs`
 add constraint `fk_operation_runs_project_uuid`

@@ -35,6 +35,9 @@ class GalleryOneController extends BackendController
     private function canAccess(array $posts, bool $readOnly = false): bool
     {
         $entity = (string) ($posts['entity'] ?? '');
+        if ( ! config(\Config\Backend\Features::class)->isEntityEnabled($entity)):
+            return false;
+        endif;
         if ($entity === 'users'):
             if ( ! $readOnly || $posts['context'] !== 'show'
                 || ! AuthorizationClass::allows($this->currentAdmin, 'users_show')):

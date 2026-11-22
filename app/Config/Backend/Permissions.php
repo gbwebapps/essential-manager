@@ -31,7 +31,7 @@ class Permissions extends BaseConfig
 	}
 
 	/**
-	 * Restituisce la struttura completa dei permessi suddivisi per controller e relative azioni consentite.
+	 * Restituisce i permessi delle sole sezioni abilitate, inclusi quelli forniti dai moduli.
 	 *
 	 * @return array Array multidimensionale contenente i titoli, i controller, le icone e l'elenco dei permessi localizzati
 	 */
@@ -72,6 +72,45 @@ class Permissions extends BaseConfig
 			$permissions = array_merge($permissions, $provider());
 		endforeach;
 
-		return $permissions;
+		$features = config(Features::class);
+		$visible = [];
+		foreach ($permissions as $group):
+			if ( ! $features->isSectionEnabled($group['controller'])):
+				continue;
+			endif;
+			$group['perms'] = array_filter(
+				$group['perms'],
+				static fn (string $code): bool => $features->isPermissionEnabled($code),
+				ARRAY_FILTER_USE_KEY
+			);
+			if ($group['perms'] !== []):
+				$visible[] = $group;
+			endif;
+		endforeach;
+
+		return $visible;
 	}
+	/**
+	 * Estrae la whitelist modificabile dalle stesse definizioni mostrate nelle viste.
+	 * @return list<string> Codici delle sezioni abilitate, compresi i moduli applicativi.
+	 */
+	public function getEditableKeys(): array
+	{
+		$keys = [];
+		foreach ($this->getPermissions() as $group):
+			$keys = array_merge($keys, array_keys($group['perms']));
+		endforeach;
+		return array_values(array_unique($keys));
+	}
+
+	/**
+	 * Limita confronti e scritture ai permessi realmente esposti dal form corrente.
+	 * @param array $permissions Lista di codici ricevuti dal form o letti dal database.
+	 * @return list<string> Sottoinsieme modificabile; gli altri valori nel database restano intatti.
+	 */
+	public function filterEditable(array $permissions): array
+	{
+		return array_values(array_intersect($permissions, $this->getEditableKeys()));
+	}
+
 }

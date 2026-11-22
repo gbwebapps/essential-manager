@@ -22,7 +22,7 @@ class Contacts extends BaseConfig
     {
         parent::__construct();
 
-        $this->enabled = (bool) env('contacts.enabled', $this->enabled);
+        $this->enabled = (bool) env('contacts.frontend.enabled', false);
         $this->notificationRecipient = trim((string) env('contacts.notificationRecipient', $this->notificationRecipient));
     }
 }

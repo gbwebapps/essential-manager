@@ -397,6 +397,7 @@ class GroupsModel extends BackendModel
         {
             /* Filtro campi post ammessi tramite metodo centralizzato */
             $posts = $this->checkAllowedFields($posts, $this->addAllowedFields);
+            $posts['permissions'] = config(\Config\Backend\Permissions::class)->filterEditable($posts['permissions'] ?? []);
 
             if ($manageTransaction):
                 $this->db->transBegin();
@@ -474,6 +475,7 @@ class GroupsModel extends BackendModel
         {
             /* Filtro campi post ammessi tramite metodo centralizzato */
             $posts = $this->checkAllowedFields($posts, $this->editAllowedFields);
+            $posts['permissions'] = config(\Config\Backend\Permissions::class)->filterEditable($posts['permissions'] ?? []);
 
             /* 1. Recupero il record originale del gruppo dal DB per il confronto */
             $originalGroup = $this->getGroupById($posts);
@@ -494,9 +496,12 @@ class GroupsModel extends BackendModel
             $sqlGroup = "update admins_groups set name = ?, description = ? where id = ?";
             $this->db->query($sqlGroup, [$posts['name'], $posts['description'], $posts['id']]);
 
-            /* 2. Rimozione totale dei vecchi permessi per evitare duplicati o disallineamenti */
-            $sqlDeletePerms = "delete from admins_groups_permissions where group_id = ?";
-            $this->db->query($sqlDeletePerms, [$posts['id']]);
+            /* 2. Riscriviamo solo i permessi visibili; quelli delle sezioni spente restano intatti. */
+            $editable = config(\Config\Backend\Permissions::class)->getEditableKeys();
+            if ($editable !== []):
+                $sqlDeletePerms = "delete from admins_groups_permissions where group_id = ? and permission in (" . implode(', ', array_fill(0, count($editable), '?')) . ")";
+                $this->db->query($sqlDeletePerms, array_merge([$posts['id']], $editable));
+            endif;
 
             /* 3. Inserimento nuovi permessi associati tramite un'unica Bulk Insert (se selezionati) */
             if ( ! empty($posts['permissions']) && is_array($posts['permissions'])):
@@ -614,10 +619,10 @@ class GroupsModel extends BackendModel
         endif;
 
         /* 2. Recupero i permessi attualmente salvati nel DB per questo gruppo */
-        $oldPermissions = $this->getGroup((int) $original->id);
+        $oldPermissions = config(\Config\Backend\Permissions::class)->filterEditable($this->getGroup((int) $original->id));
 
         /* 3. Preparo i nuovi permessi inviati dal form (se vuoti, array vuoto) */
-        $newPermissions = $posts['permissions'] ?? [];
+        $newPermissions = config(\Config\Backend\Permissions::class)->filterEditable($posts['permissions'] ?? []);
 
         /* 4. Ordino entrambi gli array per evitare falsi positivi dovuti all'ordine di selezione */
         sort($oldPermissions);
@@ -778,11 +783,12 @@ class GroupsModel extends BackendModel
             endif;
 
             /* 1. Recuperiamo la situazione ATTUALE sul database prima di fare modifiche */
-            $groupPermissions = $this->getGroupPermissionsArray((int) $admin->group_id);
+            $permissionConfig = config(\Config\Backend\Permissions::class);
+            $groupPermissions = $permissionConfig->filterEditable($this->getGroupPermissionsArray((int) $admin->group_id));
             
             /* getAdminExceptionsArray deve restituire la visualizzazione reale (es: array associativo o lista di permessi attivi) */
-            $currentExceptions = $this->getAdminExceptionsArray($posts['uuid']); 
-            $submittedPermissions = $posts['permissions'] ?? [];
+            $currentExceptions = array_intersect_key($this->getAdminExceptionsArray($posts['uuid']), array_flip($permissionConfig->getEditableKeys()));
+            $submittedPermissions = $permissionConfig->filterEditable($posts['permissions'] ?? []);
 
             /* 2. Calcoliamo la matrice dei permessi attualmente attivi per l'utente sul DB */
             $currentActivePermissions = $groupPermissions;

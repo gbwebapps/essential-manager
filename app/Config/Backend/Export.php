@@ -21,6 +21,10 @@ class Export extends BaseConfig
     /** Keeps existing superadmin exports available and delegates only the configured entities. */
     public static function allowsEntity(?object $admin, string $entity): bool
     {
+        if ( ! config(Features::class)->isEntityEnabled($entity)):
+            return false;
+        endif;
+
         $permission = self::ENTITY_PERMISSIONS[$entity] ?? null;
         return $permission !== null
             ? AuthorizationClass::allows($admin, $permission)

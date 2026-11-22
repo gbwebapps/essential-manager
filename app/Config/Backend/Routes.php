@@ -74,30 +74,34 @@ $routes->group('backend', function($routes) {
 
 
         /* USERS */
-        $routes->group('users', function($routes) {
-            $routes->get('/', function() { return redirect()->to('backend/users/showAll'); }, ['filter' => 'permission:users_show_all']);
-            $routes->match(['GET', 'POST'], 'showAll', '\App\Controllers\Backend\UsersController::showAll', ['filter' => 'permission:users_show_all']);
-            $routes->get('show/(:uuid)', '\App\Controllers\Backend\UsersController::show/$1', ['filter' => 'permission:users_show']);
-            $routes->post('getGeneralData', '\App\Controllers\Backend\UsersController::getGeneralData', ['filter' => 'permission:users_show']);
-            $routes->post('getMetaData', '\App\Controllers\Backend\UsersController::getMetaData', ['filter' => 'permission:users_show']);
-            $routes->post('getTokens', '\App\Controllers\Backend\UsersController::getTokens', ['filter' => 'permission:users_show']);
-            $routes->post('restoreDelete', '\App\Controllers\Backend\UsersController::restoreDelete', ['filter' => 'permission:users_restore']);
-            $routes->post('hardDelete', '\App\Controllers\Backend\UsersController::hardDelete', ['filter' => 'permission:users_delete']);
-            $routes->post('changeStatus', '\App\Controllers\Backend\UsersController::changeStatus', ['filter' => 'permission:users_change_status']);
-            $routes->post('resetPassword', '\App\Controllers\Backend\UsersController::resetPassword', ['filter' => 'permission:users_reset_password']);
-            $routes->post('deleteToken', '\App\Controllers\Backend\UsersController::deleteToken', ['filter' => 'permission:users_delete_token']);
-        });
+        if (config(\Config\Backend\Features::class)->usersEnabled):
+            $routes->group('users', function($routes) {
+                $routes->get('/', function() { return redirect()->to('backend/users/showAll'); }, ['filter' => 'permission:users_show_all']);
+                $routes->match(['GET', 'POST'], 'showAll', '\App\Controllers\Backend\UsersController::showAll', ['filter' => 'permission:users_show_all']);
+                $routes->get('show/(:uuid)', '\App\Controllers\Backend\UsersController::show/$1', ['filter' => 'permission:users_show']);
+                $routes->post('getGeneralData', '\App\Controllers\Backend\UsersController::getGeneralData', ['filter' => 'permission:users_show']);
+                $routes->post('getMetaData', '\App\Controllers\Backend\UsersController::getMetaData', ['filter' => 'permission:users_show']);
+                $routes->post('getTokens', '\App\Controllers\Backend\UsersController::getTokens', ['filter' => 'permission:users_show']);
+                $routes->post('restoreDelete', '\App\Controllers\Backend\UsersController::restoreDelete', ['filter' => 'permission:users_restore']);
+                $routes->post('hardDelete', '\App\Controllers\Backend\UsersController::hardDelete', ['filter' => 'permission:users_delete']);
+                $routes->post('changeStatus', '\App\Controllers\Backend\UsersController::changeStatus', ['filter' => 'permission:users_change_status']);
+                $routes->post('resetPassword', '\App\Controllers\Backend\UsersController::resetPassword', ['filter' => 'permission:users_reset_password']);
+                $routes->post('deleteToken', '\App\Controllers\Backend\UsersController::deleteToken', ['filter' => 'permission:users_delete_token']);
+            });
+        endif;
 
         /* MESSAGES */
-        $routes->group('messages', function($routes) {
-            $routes->match(['GET', 'POST'], 'showAll', '\App\Controllers\Backend\MessagesController::showAll', ['filter' => 'permission:messages_show_all']);
-            $routes->get('show/(:num)', '\App\Controllers\Backend\MessagesController::show/$1', ['filter' => 'permission:messages_show']);
-            $routes->post('getGeneralData', '\App\Controllers\Backend\MessagesController::getGeneralData', ['filter' => 'permission:messages_show']);
-            $routes->post('changeStatus/(:num)', '\App\Controllers\Backend\MessagesController::changeStatus/$1', ['filter' => 'permission:messages_mark']);
-        });
+        if (config(\Config\Backend\Features::class)->contactsEnabled):
+            $routes->group('messages', function($routes) {
+                $routes->match(['GET', 'POST'], 'showAll', '\App\Controllers\Backend\MessagesController::showAll', ['filter' => 'permission:messages_show_all']);
+                $routes->get('show/(:num)', '\App\Controllers\Backend\MessagesController::show/$1', ['filter' => 'permission:messages_show']);
+                $routes->post('getGeneralData', '\App\Controllers\Backend\MessagesController::getGeneralData', ['filter' => 'permission:messages_show']);
+                $routes->post('changeStatus/(:num)', '\App\Controllers\Backend\MessagesController::changeStatus/$1', ['filter' => 'permission:messages_mark']);
+            });
+        endif;
 
         /* EXPORT CSV */
-        $routes->group('export', ['filter' => 'permission:users_export,messages_export'], function($routes) {
+        $routes->group('export', ['filter' => 'permission:all,users_export,messages_export'], function($routes) {
             $routes->post('showModal', '\App\Controllers\Backend\Components\ExportController::showModal');
             $routes->post('generate', '\App\Controllers\Backend\Components\ExportController::generate');
             $routes->post('remove', '\App\Controllers\Backend\Components\ExportController::remove');

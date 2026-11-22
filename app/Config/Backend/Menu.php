@@ -71,8 +71,17 @@ class Menu extends BaseConfig
 
         parent::__construct();
 
+        $features = config(Features::class);
         foreach (['topRight', 'bottomLeft', 'bottomRight'] as $section):
-            $this->{$section} = array_merge($this->prepend[$section] ?? [], $this->{$section});
+            $this->{$section} = array_values(array_filter(
+                array_merge($this->prepend[$section] ?? [], $this->{$section}),
+                static fn (array $item): bool => $features->isSectionEnabled($item['controller'] ?? '')
+            ));
         endforeach;
+        $this->counterPermissions = array_filter(
+            $this->counterPermissions,
+            static fn (string $entity): bool => $features->isSectionEnabled($entity),
+            ARRAY_FILTER_USE_KEY
+        );
     }
 }

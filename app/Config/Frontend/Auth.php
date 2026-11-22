@@ -16,7 +16,7 @@ class Auth extends BaseConfig
     public bool $enabled = false;
 
     /** Consente la registrazione pubblica dei nuovi utenti. */
-    public bool $registration = true;
+    public bool $registration = false;
 
     /** Finestra e limite IP per contenere invii ripetuti del form di registrazione. */
     public int $registrationInterval = 900;
@@ -59,8 +59,8 @@ class Auth extends BaseConfig
         /* Assegna la chiave binaria pronta per le funzioni crittografiche */
         $this->hashKey = $binaryKey;
         $this->sessionCryptoKey = $binaryKey;
-        $this->enabled = (bool) env('users.enabled', $this->enabled);
-        $this->registration = (bool) env('users.registration', $this->registration);
+        $this->enabled = (bool) env('users.frontend.enabled', false);
+        $this->registration = (bool) env('users.frontend.registration', false);
     }
 
     /**

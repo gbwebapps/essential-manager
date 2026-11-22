@@ -293,6 +293,10 @@ class AuthorizationClass
     /** Checks an effective backend permission, including the superadmin grant. */
     public static function allows(?object $admin, ?string $permission): bool
     {
+        if ( ! config(\Config\Backend\Features::class)->isPermissionEnabled($permission)):
+            return false;
+        endif;
+
         return (int) ($admin->superadmin ?? 0) === 1
             || ($admin->permissions->all ?? false) === true
             || ($permission !== null && ($admin->permissions->{$permission} ?? false) === true);

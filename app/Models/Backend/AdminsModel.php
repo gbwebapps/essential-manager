@@ -1185,12 +1185,13 @@ class AdminsModel extends BackendModel implements ImportPersistenceInterface, Ex
             $this->db->query($sql, [$posts['firstname'], $posts['lastname'], $posts['email'], $posts['phone'], $posts['status'], $posts['group_id'], (trim($posts['note']) !== '' ? $posts['note'] : null), $updated_at, $suspendedAt, $posts['uuid']]);
 
             if ( ! $preservePermissions):
-                /* Eliminazione incondizionata delle vecchie eccezioni dell'utente */
+                /* Le eccezioni dei permessi nascosti restano nel database. */
                 $this->deletePermissions($posts['uuid']);
 
                 /* Recupero i permessi nativi del gruppo appena assegnato per calcolare le eccezioni */
-                $groupPermissions = $this->getGroupPermissions((int)$posts['group_id']);
-                $submittedPermissions = $posts['permissions'] ?? [];
+                $permissionConfig = config(\Config\Backend\Permissions::class);
+                $groupPermissions = $permissionConfig->filterEditable($this->getGroupPermissions((int)$posts['group_id']));
+                $submittedPermissions = $permissionConfig->filterEditable($posts['permissions'] ?? []);
 
                 /* 1. Calcolo eccezioni positive (Permessi extra): presenti nel form MA non nel gruppo */
                 $extraPermissions = array_diff($submittedPermissions, $groupPermissions);
@@ -1385,7 +1386,7 @@ class AdminsModel extends BackendModel implements ImportPersistenceInterface, Ex
         endforeach;
 
         /* 5. Preparo l'array dei nuovi permessi inviati dal form */
-        $newPermissions = $posts['permissions'] ?? [];
+        $newPermissions = config(\Config\Backend\Permissions::class)->filterEditable($posts['permissions'] ?? []);
 
         /* 6. Ordino entrambi gli array per garantire un confronto coerente */
         sort($newPermissions);
@@ -1857,6 +1858,10 @@ class AdminsModel extends BackendModel implements ImportPersistenceInterface, Ex
         {
             $posts = $this->checkAllowedFields($posts, $this->changePermissionAllowedFields);
 
+            if ( ! config(\Config\Backend\Features::class)->isPermissionEnabled($posts['permission'])):
+                return ['result' => false, 'message' => lang('backend/admins.errors.permission')];
+            endif;
+
             $data = $this->getByUUID($posts['uuid']);
 
             if ($data['result'] === false):
@@ -2019,16 +2024,17 @@ class AdminsModel extends BackendModel implements ImportPersistenceInterface, Ex
     }
 
     /**
-     * Metodo di utilità per la rimozione totale di tutte le eccezioni di permesso associate a un utente.
-     * 
-     * Utilizzato principalmente durante l'operazione di `edit` (modifica) per ripulire la matrice utente 
-     * prima di inserire il nuovo set di eccezioni calcolato rispetto al gruppo.
-     *
-     * @param string $admin_uuid L'identificativo univoco
+     * Rimuove solo le eccezioni modificabili, preservando quelle nascoste o non più esposte.
+     * @param string $admin_uuid Identificativo dell'amministratore già verificato dal chiamante.
+     * @return void Nessuna scrittura quando non esistono permessi modificabili.
      */
     public function deletePermissions($admin_uuid)
     {
-        $sql = "delete from admins_permissions where admin_uuid = ?";
-        $this->db->query($sql, [$admin_uuid]);
+        $editable = config(\Config\Backend\Permissions::class)->getEditableKeys();
+        if ($editable === []):
+            return;
+        endif;
+        $sql = "delete from admins_permissions where admin_uuid = ? and permission in (" . implode(', ', array_fill(0, count($editable), '?')) . ")";
+        $this->db->query($sql, array_merge([$admin_uuid], $editable));
     }
 }

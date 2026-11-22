@@ -1,3 +1,4 @@
+import { showModalMessages } from './ManagerFeedback.js';
 import { initTaskSteps } from './TaskSteps.js';
 import { urlbase, action, apiFetch, markUnsavedClean, showAlert, initOffcanvasAutoClose, initRangeDatePicker, confirmDiscardChanges, askConfirm } from './backend.js';
 import { ListManager, AddManager, EditManager, DeleteManager, GeneralDataManager, MetaDataManager } from './modules/Crud.js';
@@ -274,22 +275,36 @@ document.addEventListener('submit', async event => {
 const noteModal = document.getElementById('tasks-note-modal');
 if (noteModal) {
     const form = noteModal.querySelector('form');
+    let resetRecord = null;
+    let taskUuid = '';
+    let taskTitle = '';
+    let stepTitle = '';
+    let stepUuid = '';
+    /** Ripristina nota e contesto iniziali; una nota modificata conserva il proprio UUID. */
+    const resetForm = () => {
+        if (form.dataset.saving === 'true') return;
+        form.reset();
+        form.elements.namedItem('task_uuid').value = taskUuid;
+        form.elements.namedItem('step_uuid').value = resetRecord?.step_uuid || stepUuid;
+        form.elements.namedItem('uuid').value = resetRecord?.uuid || '';
+        form.elements.namedItem('content').value = resetRecord?.content || '';
+        noteModal.querySelector('[data-note-task-title]').textContent = taskTitle;
+        noteModal.querySelector('[data-note-step-context]').hidden = !form.elements.namedItem('step_uuid').value;
+        noteModal.querySelector('[data-note-step-title]').textContent = stepTitle;
+        const feedback = noteModal.querySelector('[data-note-feedback]');
+        showModalMessages(form, feedback, feedback.dataset.defaultFeedback);
+    };
+    noteModal.querySelector('[data-modal-reset]').addEventListener('click', resetForm);
     noteModal.addEventListener('show.bs.modal', event => {
         const trigger = event.relatedTarget;
         const record = trigger?.dataset.taskNoteRecord ? JSON.parse(trigger.dataset.taskNoteRecord) : null;
-        form.reset();
-        form.elements.namedItem('task_uuid').value = trigger?.dataset.taskUuid || '';
-        form.elements.namedItem('step_uuid').value = record?.step_uuid || trigger?.dataset.taskNoteStep || '';
-        form.elements.namedItem('uuid').value = record?.uuid || '';
-        form.elements.namedItem('content').value = record?.content || '';
-        noteModal.querySelector('[data-note-task-title]').textContent = trigger?.dataset.taskTitle || '';
-        noteModal.querySelector('[data-note-step-context]').hidden = !form.elements.namedItem('step_uuid').value;
-        noteModal.querySelector('[data-note-step-title]').textContent = trigger?.dataset.taskStepTitle || '';
-        const feedback = noteModal.querySelector('[data-note-feedback]');
-        feedback.style.minHeight = ''; feedback.textContent = feedback.dataset.defaultFeedback; feedback.classList.remove('app-text-danger');
-        form.querySelectorAll('[data-work-field-error], [data-work-form-errors]').forEach(node => node.textContent = '');
+        resetRecord = record ? structuredClone(record) : null;
+        taskUuid = trigger?.dataset.taskUuid || '';
+        taskTitle = trigger?.dataset.taskTitle || '';
+        stepUuid = trigger?.dataset.taskNoteStep || '';
+        stepTitle = trigger?.dataset.taskStepTitle || '';
+        resetForm();
     });
-    noteModal.addEventListener('shown.bs.modal', () => { const feedback = noteModal.querySelector('[data-note-feedback]'); feedback.style.minHeight = `${feedback.getBoundingClientRect().height}px`; });
     form.addEventListener('submit', async event => {
         event.preventDefault();
         if (form.dataset.saving === 'true') return;
@@ -297,20 +312,17 @@ if (noteModal) {
         const controls = [...form.querySelectorAll('input, textarea, button')].map(node => [node, node.disabled]);
         controls.forEach(([node]) => node.disabled = true); form.dataset.saving = 'true';
         const feedback = noteModal.querySelector('[data-note-feedback]');
-        form.querySelectorAll('[data-work-field-error], [data-work-form-errors]').forEach(node => node.textContent = '');
         try {
             const response = await apiFetch(urlbase + 'backend/tasks/saveNote', { method: 'POST', body });
-            const data = await response.json(); feedback.textContent = data.message || '';
-            feedback.classList.toggle('app-text-danger', data.result !== true && data.changed !== false);
-            const other = [];
-            Object.entries(data.errors || {}).forEach(([field, message]) => {
-                const error = [...form.querySelectorAll('[data-work-field-error]')].find(node => node.dataset.workFieldError === field);
-                if (error) error.textContent = String(message); else other.push(String(message));
-            });
-            form.querySelector('[data-work-form-errors]').textContent = other.join(' ');
-            if (data.result === true) { form.elements.namedItem('uuid').value = data.uuid; await reloadNotes(); }
+            const data = await response.json();
+            showModalMessages(form, feedback, data.message, data.result === true ? 'success' : (data.changed === false ? 'neutral' : 'error'), data.errors || {});
+            if (data.result === true) {
+                form.elements.namedItem('uuid').value = data.uuid;
+                resetRecord = { uuid: data.uuid, content: form.elements.namedItem('content').value, step_uuid: form.elements.namedItem('step_uuid').value };
+                await reloadNotes();
+            }
         } catch (error) {
-            feedback.textContent = noteModal.dataset.saveError; feedback.classList.add('app-text-danger');
+            showModalMessages(form, feedback, noteModal.dataset.saveError, 'error');
         } finally {
             controls.forEach(([node, disabled]) => node.disabled = disabled); delete form.dataset.saving;
         }

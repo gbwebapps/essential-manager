@@ -8,5 +8,6 @@ use CodeIgniter\Config\BaseConfig;
 class Views extends BaseConfig
 {
     public const MAIN_VIEW = 'Modules\\Backend\\Template\\Views\\mainView';
+    public const MODAL_STYLE_PARTIAL = 'Modules\\Backend\\Template\\Views\\partials\\modalStylePartial';
     public const NAVIGATION_PARTIAL = 'Modules\\Backend\\Template\\Views\\partials\\navigationPartial';
 }

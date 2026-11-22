@@ -86,7 +86,7 @@ class ProjectsController extends BackendController
             $posts = $this->request->getPost();
             if ( ! $this->allows('projects_add')): return $this->forbidden(); endif;
             if (($posts['action'] ?? null) === 'reset'):
-                return $this->jsonResponse(['result' => true, 'output' => view(Views::ADD_PARTIAL, $this->data)]);
+                return $this->jsonResponse(['result' => true, 'output' => view(Views::ADD_PARTIAL, $this->data), 'navigationCounts' => $this->data['navigationCounts']]);
             endif;
             if (( ! empty($posts['tasks']) && ! $this->allows('tasks_add')) || ( ! empty($posts['notes']) && ! $this->allows('notes_add'))): return $this->forbidden(); endif;
             if (is_array($posts['tasks'] ?? null) && ! $this->allows('tasks_complete')):
@@ -97,6 +97,7 @@ class ProjectsController extends BackendController
             $result = $this->projectsModel->add($posts, $this->currentAdmin->uuid ?? null);
             if ($result['result']): $this->audit('ADD_PROJECTS', $result['uuid'], $result['row']->name); endif;
             unset($result['row']);
+            if ($result['result']): $result['navigationCounts'] = \Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin); endif;
             return $this->jsonResponse($this->withValidationMessage($result));
         endif;
         return $this->render(Views::ADD_VIEW, $this->data);
@@ -123,6 +124,7 @@ class ProjectsController extends BackendController
             $result = $this->projectsModel->edit($posts);
             if ($result['result']): $this->audit('EDIT_PROJECTS', $posts['uuid'], $result['row']->name); endif;
             unset($result['row']);
+            if ($result['result']): $result['navigationCounts'] = \Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin); endif;
             return $this->jsonResponse($this->withValidationMessage($result));
         endif;
         $this->data['project'] = $this->projectOr404($uuid);
@@ -254,7 +256,7 @@ class ProjectsController extends BackendController
             'relatedItems' => $kind === 'task' ? $this->tasksModel->getForProject($project->uuid) : $this->notesModel->getForProject($project->uuid),
             'relatedProject' => $project,
             'currentAdmin' => $this->currentAdmin,
-        ])]);
+        ], ['saveData' => false])]);
     }
 
     /**
@@ -310,7 +312,42 @@ class ProjectsController extends BackendController
             ? $this->tasksModel->saveForProject($posts, $projectUuid, $this->currentAdmin->uuid ?? null, $this->allows('tasks_complete'))
             : $this->notesModel->saveForProject($posts, $projectUuid, $this->currentAdmin->uuid ?? null);
         if ($result['result']): $this->audit(($editing ? 'EDIT_' : 'ADD_') . strtoupper($module), $result['record']->uuid, $kind === 'task' ? $result['record']->title : lang('backend/projects.related.notes'), $module); endif;
+        if ($result['result']): $result['navigationCounts'] = \Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin); endif;
         return $this->jsonResponse($this->withValidationMessage($result, 'modal'));
+    }
+
+    /**
+     * Cestina un task dalla scheda di modifica del suo proprietario.
+     * @return ResponseInterface Esito JSON con conteggi aggiornati.
+     */
+    public function deleteTask(): ResponseInterface { return $this->deleteRelated('task'); }
+
+    /**
+     * Elimina definitivamente una nota dalla scheda del suo proprietario.
+     * @return ResponseInterface Esito JSON senza cancellazioni fuori contesto.
+     */
+    public function deleteNote(): ResponseInterface { return $this->deleteRelated('note'); }
+
+    /**
+     * Verifica permessi e identificativi nascosti prima della cancellazione contestuale.
+     * @param string $kind task oppure note, stabilito dal chiamante interno.
+     * @return ResponseInterface Esito; errori dei parametri nascosti nell'alert.
+     */
+    private function deleteRelated(string $kind): ResponseInterface
+    {
+        $module = $kind === 'task' ? 'tasks' : 'notes';
+        if ( ! $this->allows('projects_edit') || ! $this->allows($module . '_delete')): return $this->forbidden(); endif;
+        $posts = $this->request->getPost();
+        $rule = $this->projectsModel->delValidationRules()['uuid'];
+        if (array_diff(array_keys($posts), ['uuid', 'project_uuid']) !== []): return $this->jsonResponse(['result' => false, 'message' => lang('backend/projects.messages.invalidData')]); endif;
+        if ( ! $this->validateData($posts, ['uuid' => $rule, 'project_uuid' => $rule])): return $this->validationResponse('action'); endif;
+        $model = $kind === 'task' ? $this->tasksModel : $this->notesModel;
+        $result = $model->deleteForOwner($posts['uuid'], 'project_uuid', $posts['project_uuid']);
+        if ($result['result']):
+            $this->audit(($kind === 'task' ? 'SOFTDELETE_' : 'HARDDELETE_') . strtoupper($module), $result['uuid'], $module, $module);
+            $result['navigationCounts'] = \Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin);
+        endif;
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -343,7 +380,7 @@ class ProjectsController extends BackendController
         $project = $this->data['project'] ?? null;
         $this->data['uuid'] = $project->uuid ?? null;
         $this->data['parentProjectOptions'] = $this->projectsModel->getParentOptions($project->uuid ?? null);
-        $this->data['navigationCounts'] = ['projects' => $this->projectsModel->activeCount()];
+        $this->data['navigationCounts'] = \Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin);
         $this->data['projectApplications'] = $project && $this->allows('applications_show_all') ? model(\Modules\Backend\Applications\Models\ApplicationsModel::class)->getForProject($project->uuid) : [];
         $this->data['projectTasks'] = $project && $this->allows('tasks_show') ? $this->tasksModel->getForProject($project->uuid) : [];
         $this->data['projectNotes'] = $project && $this->allows('notes_show') ? $this->notesModel->getForProject($project->uuid) : [];

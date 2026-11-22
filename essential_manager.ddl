@@ -432,6 +432,7 @@ create table if not exists `essential_manager`.`projects` (
     `parent_project_uuid` char(36) null default null,
     `local_path` varchar(1024) null default null,
     `local_url` varchar(2048) null default null,
+    `production_url` varchar(2048) null default null,
     `execute_name` varchar(100) null default null unique,
     `created_by_admin_uuid` char(36) null default null,
     `created_at` datetime not null,

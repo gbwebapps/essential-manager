@@ -1,9 +1,5 @@
-<style>
-    .tasks-related-modal .modal-dialog { max-width: min(56rem, calc(100% - 2rem)) !important; }
-    .tasks-related-modal .modal-content { color: var(--app-text); background: var(--app-surface); border: 1px solid var(--app-border); border-radius: .75rem; }
-    body:has(.tasks-related-modal.show) .scrollup { display: none; }
-</style>
-<div class="modal fade transfer-modal tasks-related-modal" id="tasks-note-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="tasks-note-title" aria-hidden="true" data-save-error="<?= esc(lang('backend/tasks.messages.saveError'), 'attr'); ?>">
+<?= view(\Modules\Backend\Template\Config\Views::MODAL_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<div class="modal fade transfer-modal manager-work-modal tasks-related-modal" id="tasks-note-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="tasks-note-title" aria-hidden="true" data-save-error="<?= esc(lang('backend/tasks.messages.saveError'), 'attr'); ?>">
     <div class="modal-dialog modal-dialog-centered transfer-export-dialog">
         <div class="modal-content shadow">
             <form novalidate method="post" id="tasks-note-form">
@@ -32,7 +28,8 @@
                     <div class="app-text-danger fw-bold small" data-work-form-errors role="status"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn app-btn-primary"><i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.buttons.sendData', [], false); ?></button>
+                    <button type="button" class="btn btn-sm app-btn-secondary" data-modal-reset><i class="fa-solid fa-arrow-rotate-left me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.buttons.resetData', [], false); ?></button>
+                        <button type="submit" class="btn btn-sm app-btn-success"><i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.buttons.sendData', [], false); ?></button>
                 </div>
             </form>
         </div>

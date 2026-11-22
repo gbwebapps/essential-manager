@@ -47,6 +47,7 @@ return [
         'noParent' => 'Sin proyecto de origen',
         'localPath' => 'Carpeta local',
         'localUrl' => 'URL local',
+        'productionUrl' => 'URL de producción',
         'executeName' => 'Nombre en execute',
     ],
     'placeholders' => [
@@ -58,6 +59,7 @@ return [
         'description' => 'Descripción',
         'localPath' => 'Carpeta local',
         'localUrl' => 'URL local',
+        'productionUrl' => 'URL de producción',
         'executeName' => 'Nombre en execute',
         'searchName' => 'Nombre del proyecto',
     ],

@@ -1,10 +1,6 @@
-<style>
-    .projects-related-modal .modal-dialog { max-width: min(56rem, calc(100% - 2rem)) !important; }
-    .projects-related-modal .modal-content { color: var(--app-text); background: var(--app-surface); border: 1px solid var(--app-border); border-radius: .75rem; }
-    body:has(.projects-related-modal.show) .scrollup { display: none; }
-</style>
+<?= view(\Modules\Backend\Template\Config\Views::MODAL_STYLE_PARTIAL, [], ['saveData' => false]); ?>
 <?php foreach (['task', 'note'] as $projectAction): ?>
-    <div class="modal fade transfer-modal projects-related-modal" id="projects-add-<?= $projectAction; ?>-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="projects-add-<?= $projectAction; ?>-title" aria-hidden="true" data-project-action-modal data-save-label="<?= esc(lang('backend/projects.buttons.sendData'), 'attr'); ?>" data-project-action-kind="<?= $projectAction; ?>" data-draft-mode="<?= ($draftMode ?? false) ? 'true' : 'false'; ?>" data-add-title="<?= esc(lang('backend/' . ($projectAction === 'task' ? 'tasks' : 'notes') . '.titles.add'), 'attr'); ?>" data-edit-title="<?= esc(lang('backend/' . ($projectAction === 'task' ? 'tasks' : 'notes') . '.titles.edit'), 'attr'); ?>" data-project-uuid="<?= esc($project->uuid ?? '', 'attr'); ?>" data-project-name="<?= esc($project->name ?? '', 'attr'); ?>" data-no-changes="<?= esc(lang('backend/projects.messages.noDataChanged'), 'attr'); ?>" data-save-error="<?= esc(lang('backend/projects.messages.saveError'), 'attr'); ?>" data-save-notice="<?= esc(lang('backend/projects.messages.saveNotice'), 'attr'); ?>">
+    <div class="modal fade transfer-modal manager-work-modal projects-related-modal" id="projects-add-<?= $projectAction; ?>-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="projects-add-<?= $projectAction; ?>-title" aria-hidden="true" data-project-action-modal data-save-label="<?= esc(lang('backend/projects.buttons.sendData'), 'attr'); ?>" data-project-action-kind="<?= $projectAction; ?>" data-draft-mode="<?= ($draftMode ?? false) ? 'true' : 'false'; ?>" data-add-title="<?= esc(lang('backend/' . ($projectAction === 'task' ? 'tasks' : 'notes') . '.titles.add'), 'attr'); ?>" data-edit-title="<?= esc(lang('backend/' . ($projectAction === 'task' ? 'tasks' : 'notes') . '.titles.edit'), 'attr'); ?>" data-project-uuid="<?= esc($project->uuid ?? '', 'attr'); ?>" data-project-name="<?= esc($project->name ?? '', 'attr'); ?>" data-no-changes="<?= esc(lang('backend/projects.messages.noDataChanged'), 'attr'); ?>" data-save-error="<?= esc(lang('backend/projects.messages.saveError'), 'attr'); ?>" data-save-notice="<?= esc(lang('backend/projects.messages.saveNotice'), 'attr'); ?>">
         <div class="modal-dialog modal-dialog-centered transfer-export-dialog">
             <div class="modal-content shadow">
                 <form novalidate method="post" data-project-action-form>
@@ -32,7 +28,8 @@
                         <div class="app-text-danger fw-bold small" data-work-form-errors role="status"></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn app-btn-primary"><i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i><span data-project-action-submit-label><?= ui_text(($draftMode ?? false) ? 'backend/projects.draft.addButton' : 'backend/projects.buttons.sendData', [], false); ?></span></button>
+                        <button type="button" class="btn btn-sm app-btn-secondary" data-modal-reset><i class="fa-solid fa-arrow-rotate-left me-1" aria-hidden="true"></i><?= ui_text('backend/projects.buttons.resetData', [], false); ?></button>
+                        <button type="submit" class="btn btn-sm app-btn-success"><i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i><span data-project-action-submit-label><?= ui_text(($draftMode ?? false) ? 'backend/projects.draft.addButton' : 'backend/projects.buttons.sendData', [], false); ?></span></button>
                     </div>
                 </form>
             </div>

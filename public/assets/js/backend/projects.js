@@ -1,4 +1,5 @@
-import { urlbase, action, apiFetch, markUnsavedClean, showAlert, initOffcanvasAutoClose, initRangeDatePicker } from './backend.js';
+import { updateNavigationCounts, showModalMessages } from './ManagerFeedback.js';
+import { urlbase, action, apiFetch, markUnsavedClean, showAlert, initOffcanvasAutoClose, initRangeDatePicker, askConfirm } from './backend.js';
 import { ProjectDraft } from './ProjectDraft.js';
 import { setControlValue } from '../components/TomSelect.js';
 import { ListManager, AddManager, EditManager, DeleteManager, GeneralDataManager, MetaDataManager } from './modules/Crud.js';
@@ -16,12 +17,7 @@ const actions = {
             searchDates: ['created_at', 'updated_at']
         }, {
             onShowAfter: async data => {
-                if (data.navigationCounts) {
-                    document.querySelectorAll('[data-navigation-count]').forEach(badge => {
-                        const count = data.navigationCounts[badge.dataset.navigationCount];
-                        if (Number.isSafeInteger(count)) badge.textContent = String(count);
-                    });
-                }
+                updateNavigationCounts(data);
                 const counts = data.trashCounts;
                 const filters = ['active', 'trashed', 'all'];
                 if (!counts || !filters.every(filter => Number.isSafeInteger(counts[filter]) && counts[filter] >= 0)) return;
@@ -58,7 +54,8 @@ const actions = {
             containerId: 'add-projects-container'
         }, {
             onAddBefore: formData => projectDraft.appendTo(formData),
-            onResetAfter: () => projectDraft.reset()
+            onResetAfter: data => { projectDraft.reset(); updateNavigationCounts(data); },
+            onAddAfter: updateNavigationCounts
         }).init();
     },
 
@@ -174,56 +171,49 @@ function initTaskSteps(form) {
     });
 }
 
-/** Svuota solo gli errori del modale corrente, mantenendo i messaggi degli altri form. */
-function clearRelatedErrors(form) {
-    form.querySelectorAll('[data-work-field-error], [data-work-form-errors]').forEach(box => { box.textContent = ''; });
-}
-
-/** Mostra ogni errore server sotto il relativo campo; i parametri non visibili restano nel riepilogo del form. */
-function showRelatedErrors(form, errors) {
-    const boxes = [...form.querySelectorAll('[data-work-field-error]')];
-    const remaining = [];
-    Object.entries(errors).forEach(([field, message]) => {
-        const box = boxes.find(candidate => candidate.dataset.workFieldError === field);
-        if (box) box.textContent = String(message);
-        else remaining.push(String(message));
-    });
-    form.querySelector('[data-work-form-errors]').textContent = remaining.join(' ');
-}
-
 function initProjectActions() {
     document.querySelectorAll('[data-project-action-modal]').forEach(modal => {
         const form = modal.querySelector('[data-project-action-form]');
         initTaskSteps(form);
+        let resetRecord = null;
+        let contextUuid = '';
+        let contextName = '';
+
+        /** Ripristina i campi iniziali mantenendo UUID, contesto e identità della bozza. */
+        const resetForm = () => {
+            if (form.dataset.saving === 'true') return;
+            const record = resetRecord;
+            form.reset();
+            form.dataset.draftId = record?.draftId || '';
+            fillTaskSteps(form.querySelector('[data-task-steps]'), record?.steps);
+            showModalMessages(form, modal.querySelector('[data-project-action-feedback]'), projectDraft ? projectDraft.text('notice') : modal.dataset.saveNotice);
+            modal.querySelector('[data-project-action-submit-label]').textContent = projectDraft ? projectDraft.text(record ? 'updateButton' : 'addButton') : modal.dataset.saveLabel;
+            modal.querySelector('.modal-title').textContent = record ? modal.dataset.editTitle : modal.dataset.addTitle;
+            form.elements.namedItem('uuid').value = record?.uuid || '';
+            for (const name of ['title', 'description', 'status', 'content']) {
+                const field = form.elements.namedItem(name);
+                if (field) field.value = record?.[name] ?? (name === 'status' ? 'todo' : '');
+            }
+            const status = form.elements.namedItem('status');
+            // TomSelect applica il reset nativo nel ciclo successivo.
+            if (status) setTimeout(() => setControlValue(status, record?.status || 'todo'), 0);
+            form.elements.namedItem('project_uuid').value = contextUuid;
+            form.querySelector('[data-project-action-name]').textContent = contextName;
+        };
+        modal.querySelector('[data-modal-reset]').addEventListener('click', resetForm);
         modal.addEventListener('show.bs.modal', event => {
             const trigger = event.relatedTarget;
             const panel = trigger?.closest('[data-project-related-panel]');
             const kind = modal.dataset.projectActionKind;
             const record = projectDraft ? projectDraft.find(kind, trigger?.dataset.draftId) : (trigger?.dataset.projectRecord ? JSON.parse(trigger.dataset.projectRecord) : null);
-            form.dataset.draftId = record?.draftId || '';
-            form.reset();
-            fillTaskSteps(form.querySelector('[data-task-steps]'), record?.steps);
-            clearRelatedErrors(form);
-            modal.querySelector('[data-project-action-feedback]').classList.remove('app-text-danger');
-            modal.querySelector('[data-project-action-feedback]').textContent = projectDraft ? projectDraft.text('notice') : modal.dataset.saveNotice;
-            modal.querySelector('[data-project-action-submit-label]').textContent = projectDraft ? projectDraft.text(record ? 'updateButton' : 'addButton') : '';
-            if ( ! projectDraft) modal.querySelector('[data-project-action-submit-label]').textContent = modal.dataset.saveLabel;
-            modal.querySelector('.modal-title').textContent = record ? modal.dataset.editTitle : modal.dataset.addTitle;
-            form.querySelector('[name="uuid"]').value = record?.uuid || '';
-            for (const name of ['title', 'description', 'status', 'content']) {
-                const field = form.elements.namedItem(name);
-                if (field && record && record[name] !== undefined) field.value = record[name];
-            }
-            const status = form.elements.namedItem('status');
-            // Il reset condiviso di TomSelect termina nel ciclo successivo.
-            if (status) setTimeout(() => setControlValue(status, record?.status || 'todo'), 0);
-            form.querySelector('[name="project_uuid"]').value = trigger?.dataset.projectUuid || panel?.dataset.projectUuid || modal.dataset.projectUuid || '';
-            form.querySelector('[data-project-action-name]').textContent = projectDraft ? projectDraft.projectName() : (trigger?.dataset.projectName || panel?.dataset.projectName || modal.dataset.projectName || '');
+            resetRecord = record ? structuredClone(record) : null;
+            contextUuid = trigger?.dataset.projectUuid || panel?.dataset.projectUuid || modal.dataset.projectUuid || '';
+            contextName = projectDraft ? projectDraft.projectName() : (trigger?.dataset.projectName || panel?.dataset.projectName || modal.dataset.projectName || '');
+            resetForm();
         });
         form.addEventListener('submit', async event => {
             event.preventDefault();
             const feedback = modal.querySelector('[data-project-action-feedback]');
-            clearRelatedErrors(form);
             if (form.dataset.saving === 'true') return;
             const draftMode = projectDraft && modal.dataset.draftMode === 'true';
             const kind = modal.dataset.projectActionKind;
@@ -243,26 +233,26 @@ function initProjectActions() {
                 const response = await apiFetch(urlbase + 'backend/projects/' + endpoint, { method: 'POST', body, loader: form.querySelector('[type="submit"]') });
                 const data = await response.json();
                 if (draftMode && generation !== projectDraft.generation) return;
-                feedback.classList.remove('app-text-danger');
                 if (data.result !== true) {
-                    feedback.classList.add('app-text-danger');
-                    if (data.errors) showRelatedErrors(form, data.errors);
-                    feedback.textContent = data.message || modal.dataset.saveError;
+                    showModalMessages(form, feedback, data.message || modal.dataset.saveError, data.changed === false ? 'neutral' : 'error', data.errors || {});
                     return;
                 }
                 if (draftMode) {
                     if ( ! projectDraft.hasChanges(kind, data.data, draftId)) {
-                        feedback.textContent = modal.dataset.noChanges;
+                        showModalMessages(form, feedback, modal.dataset.noChanges);
                         return;
                     }
                     form.dataset.draftId = projectDraft.upsert(kind, data.data, draftId);
+                    resetRecord = { ...structuredClone(data.data), draftId: form.dataset.draftId };
                     modal.querySelector('[data-project-action-submit-label]').textContent = projectDraft.text('updateButton');
-                    feedback.textContent = projectDraft.text('updatedFeedback');
+                    showModalMessages(form, feedback, projectDraft.text('updatedFeedback'), 'success');
                 } else {
                     const record = data.record;
+                    resetRecord = structuredClone(record);
                     form.elements.namedItem('uuid').value = record.uuid;
                     modal.querySelector('.modal-title').textContent = modal.dataset.editTitle;
-                    feedback.textContent = data.message;
+                    showModalMessages(form, feedback, data.message, 'success');
+                    updateNavigationCounts(data);
                     if (kind === 'task') {
                         fillTaskSteps(form.querySelector('[data-task-steps]'), record.steps);
                         setControlValue(form.elements.namedItem('status'), record.status);
@@ -277,14 +267,10 @@ function initProjectActions() {
                     if (list) await list.showAll();
                 }
             } catch (error) {
-                feedback.classList.add('app-text-danger');
-                feedback.textContent = modal.dataset.saveError;
+                showModalMessages(form, feedback, modal.dataset.saveError, 'error');
             } finally {
                 controls.forEach(([control, disabled]) => { if (control.isConnected) control.disabled = disabled; });
                 delete form.dataset.saving;
-            }
-            if ( ! window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                feedback.animate([{ opacity: .35 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
             }
         });
     });
@@ -379,6 +365,34 @@ if (action === 'add') {
         }
     });
 }
+
+/** Cancella solo l'elemento del pannello corrente, senza toccare il form principale. */
+document.addEventListener('submit', async event => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.matches('[data-related-delete]')) return;
+    const panel = form.closest('[data-project-related-panel]');
+    if (!panel) return;
+    event.preventDefault();
+    if (form.dataset.busy === 'true') return;
+    form.dataset.busy = 'true';
+    const button = form.querySelector('[type="submit"]');
+    button.disabled = true;
+    try {
+        if (!await askConfirm(form.dataset.confirm)) return;
+        const endpoint = form.dataset.relatedDelete === 'task' ? 'deleteTask' : 'deleteNote';
+        const response = await apiFetch(urlbase + 'backend/projects/' + endpoint, { method: 'POST', body: new FormData(form) });
+        const data = await response.json();
+        if (data.result !== true) { showAlert('danger', data.message); return; }
+        updateNavigationCounts(data);
+        await reloadRelatedPanel(panel, panel.querySelector('[data-related-reload]'));
+        if (data.message) showAlert('success', data.message);
+    } catch (error) {
+        showAlert('danger', panel.dataset.reloadError);
+    } finally {
+        delete form.dataset.busy;
+        if (button.isConnected) button.disabled = false;
+    }
+});
 
 initRelatedPanels();
 initProjectActions();

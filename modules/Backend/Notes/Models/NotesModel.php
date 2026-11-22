@@ -242,6 +242,32 @@ class NotesModel extends BackendModel
     }
 
     /**
+     * Elimina definitivamente una nota dal progetto o dall'applicazione autorizzati.
+     * @param string $uuid UUID della nota già validato dal controller.
+     * @param string $column project_uuid oppure application_uuid, scelto dal codice.
+     * @param string $ownerUuid UUID del proprietario attivo.
+     * @return array Esito atomico, senza accesso alle note di altri contesti.
+     */
+    public function deleteForOwner(string $uuid, string $column, string $ownerUuid): array
+    {
+        if ( ! in_array($column, ['project_uuid', 'application_uuid'], true)): throw new \InvalidArgumentException('Invalid note owner.'); endif;
+        try {
+            $this->db->transBegin();
+            $this->lockNoteContext($column, $ownerUuid);
+            $row = $this->db->query("select uuid from notes where uuid=? and {$column}=? for update", [$uuid, $ownerUuid])->getRow();
+            if ( ! $row): throw new \DomainException(lang('backend/notes.messages.notFound')); endif;
+            $this->execute("delete from notes where uuid=? and {$column}=?", [$uuid, $ownerUuid]);
+            if ( ! $this->db->transStatus()): throw new \RuntimeException('Context note deletion failed.'); endif;
+            $this->db->transCommit();
+            return ['result' => true, 'uuid' => $uuid, 'message' => lang('backend/tasks.messages.noteDeleted')];
+        } catch (\Throwable $error) {
+            $this->db->transRollback(); $this->db->resetTransStatus();
+            log_message('error', 'Context note deletion - ' . $error->getMessage());
+            return ['result' => false, 'message' => $error instanceof \DomainException ? $error->getMessage() : lang('backend/notes.messages.saveError')];
+        }
+    }
+
+    /**
      * Elimina definitivamente una nota solo se appartiene al task autorizzato o a un suo passo.
      * @param string $uuid UUID della nota.
      * @param string $taskUuid Contesto verificato dal controller.

@@ -1,18 +1,7 @@
 <?php
-    $navigationControllers = ['dashboard', 'tasks', 'projects', 'applications', 'notes', 'checklists', 'operations'];
+    $navigationControllers = ['dashboard', 'tasks', 'projects', 'applications', 'checklists', 'operations'];
     $navigationItems = [];
-    if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'tasks_show_all') && ! isset($navigationCounts['tasks'])):
-        $canReadProjects = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'projects_show_all') || \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'projects_show') || \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'projects_edit');
-        $canReadApplications = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'applications_show_all') || \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'applications_show') || \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'applications_edit');
-        $navigationCounts['tasks'] = model(\Modules\Backend\Tasks\Models\TasksModel::class)->activeCount($canReadProjects, $canReadApplications);
-    endif;
-
-    foreach (['projects'=>\Modules\Backend\Projects\Models\ProjectsModel::class, 'applications'=>\Modules\Backend\Applications\Models\ApplicationsModel::class] as $countController=>$countModel):
-        if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null,$countController.'_show_all') && ! isset($navigationCounts[$countController])):
-            $navigationCounts[$countController]=model($countModel)->activeCount();
-        endif;
-    endforeach;
-
+    $navigationCounts = \Modules\Backend\Template\Libraries\NavigationClass::counts($currentAdmin ?? null);
 
     foreach ($menuBottomLeft ?? [] as $item):
         $itemController = $item['controller'] ?? '';
@@ -38,7 +27,7 @@
             top: var(--manager-navbar-top-height, 3.5rem);
             z-index: 1020;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+            grid-template-columns: repeat(var(--manager-navigation-columns), minmax(0, 1fr));
             gap: 0;
             width: 100%;
             padding: 0;
@@ -52,11 +41,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: .5rem;
+            gap: .375rem;
+            min-width: 0;
             min-height: 2.75rem;
             margin: 0;
-            padding: 0;
+            padding: .375rem .5rem;
             border: 0;
+            border-inline-start: 1px solid var(--app-border);
             border-radius: 0;
             color: inherit;
             background: transparent;
@@ -65,7 +56,8 @@
 
         #manager-top-navigation a.manager-navigation-link:hover,
         #manager-top-navigation a.manager-navigation-link:focus-visible {
-            background: var(--app-surface-muted);
+            background: color-mix(in srgb, var(--app-surface-inverse) 50%, transparent);
+            color: var(--bs-emphasis-color);
         }
 
         #manager-top-navigation .manager-navigation-link.active {
@@ -74,20 +66,37 @@
             background: var(--app-surface-inverse);
         }
 
-        @media (max-width: 767.98px) {
+        /* Il contenitore trasparente degli alert non deve intercettare i link sottostanti. */
+        body:has(#manager-top-navigation) #alert-container { pointer-events: none; }
+        body:has(#manager-top-navigation) #alert-container > * { pointer-events: auto; }
+
+        #manager-top-navigation .manager-navigation-link:first-child { border-inline-start: 0; }
+        #manager-top-navigation .manager-navigation-label {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #manager-top-navigation .badge,
+        #manager-top-navigation [aria-hidden] { flex-shrink: 0; }
+
+        @media (min-width: 576px) and (max-width: 991.98px) {
             #manager-top-navigation {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-columns: repeat(var(--manager-navigation-tablet-columns), minmax(0, 1fr));
             }
+            #manager-top-navigation .manager-navigation-link:nth-child(3n+1) { border-inline-start: 0; }
         }
 
-        @media (max-width: 479.98px) {
+        @media (max-width: 575.98px) {
             #manager-top-navigation {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns: repeat(var(--manager-navigation-mobile-columns), minmax(0, 1fr));
             }
+            #manager-top-navigation .manager-navigation-link { font-size: .875rem; gap: .25rem; }
+            #manager-top-navigation .manager-navigation-link:nth-child(2n+1) { border-inline-start: 0; }
         }
     </style>
 
-    <nav id="manager-top-navigation" class="bar" aria-label="<?= esc(lang('backend/global.buttons.modules'), 'attr'); ?>">
+    <nav id="manager-top-navigation" class="bar" style="--manager-navigation-columns: <?= count($navigationItems); ?>; --manager-navigation-tablet-columns: <?= min(3, count($navigationItems)); ?>; --manager-navigation-mobile-columns: <?= min(2, count($navigationItems)); ?>;" aria-label="<?= esc(lang('backend/global.buttons.modules'), 'attr'); ?>">
         <?php foreach ($navigationControllers as $navigationController): ?>
             <?php
                 if ( ! isset($navigationItems[$navigationController])):
@@ -103,7 +112,7 @@
                 <a href="<?= esc(base_url($item['route']), 'attr'); ?>" class="manager-navigation-link">
             <?php endif; ?>
                 <span aria-hidden="true"><?= $item['icon'] ?? ''; ?></span>
-                <span><?= ui_value($item['label'] ?? '', false); ?></span>
+                <span class="manager-navigation-label"><?= ui_value($item['label'] ?? '', false); ?></span>
                 <?php if (is_int($count) && $count >= 0): ?>
                     <span class="badge app-bg-muted-subtle app-text-muted-emphasis border rounded-1" data-navigation-count="<?= esc($navigationController, 'attr'); ?>"><?= $count; ?></span>
                 <?php endif; ?>

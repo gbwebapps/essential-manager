@@ -25,7 +25,7 @@ class TasksModel extends BackendModel
     public function addValidationRules(): array
     {
         return [
-            'title' => ['label' => lang('backend/tasks.labels.title'), 'rules' => ['required', 'string', 'max_length[255]', 'regex_match[/^(?=.*[\p{L}\p{N}])[^\x00-\x1F\x7F-\x9F<>]+$/u]']],
+            'title' => ['label' => lang('backend/tasks.labels.title'), 'rules' => ['required', 'string', 'max_length[100]', 'regex_match[/^(?=.*[\p{L}\p{N}])[^\x00-\x1F\x7F-\x9F<>]+$/u]']],
             'description' => ['label' => lang('backend/tasks.labels.description'), 'rules' => ['permit_empty', 'string', 'max_length[10000]', 'regex_match[/^[^\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F<>]*$/u]']],
             'status' => ['label' => lang('backend/tasks.labels.status'), 'rules' => ['required', 'string', 'in_list[todo,in_progress,completed]']],
         ];
@@ -309,9 +309,34 @@ class TasksModel extends BackendModel
     }
 
     /**
+     * Cestina un task dalla scheda del proprietario, conservando passi e note.
+     * @param string $uuid UUID del task già validato dal controller.
+     * @param string $column project_uuid oppure application_uuid, scelto dal codice.
+     * @param string $ownerUuid UUID del proprietario autorizzato.
+     * @return array Esito senza modifiche a task di altri contesti.
+     */
+    public function deleteForOwner(string $uuid, string $column, string $ownerUuid): array
+    {
+        if ( ! in_array($column, ['project_uuid', 'application_uuid'], true)): throw new \InvalidArgumentException('Invalid task owner.'); endif;
+        try {
+            $this->db->transBegin();
+            $this->lockOwner($column, $ownerUuid);
+            $task = $this->lockTask($uuid, false);
+            if ($task->{$column} !== $ownerUuid): throw new \DomainException(lang('backend/tasks.messages.notFound')); endif;
+            if ($task->deleted_at !== null): return $this->unchangedTransaction(); endif;
+            $now = date('Y-m-d H:i:s');
+            $this->execute('update tasks set deleted_at=?, updated_at=? where uuid=?', [$now, $now, $uuid]);
+            $this->clearCurrent($uuid);
+            if ( ! $this->db->transStatus()): throw new \RuntimeException('Context task deletion failed.'); endif;
+            $this->db->transCommit();
+            return ['result' => true, 'uuid' => $uuid, 'message' => lang('backend/tasks.messages.softDeleteSuccess')];
+        } catch (\Throwable $error) { return $this->failTask($error); }
+    }
+
+    /**
      * @param string $uuid Task.
      * @param string $action softDelete, restoreDelete oppure hardDelete, fissato dal controller.
-     * @return array Esito senza cascade dei dati collegati.
+     * @return array Esito atomico; le note seguono la cancellazione definitiva del task.
      */
     public function changeDeletion(string $uuid, string $action): array
     {
@@ -333,8 +358,9 @@ class TasksModel extends BackendModel
                 $this->execute('update tasks set deleted_at=null,restored_at=?,updated_at=? where uuid=?',[$now,$now,$uuid]);
             elseif ($action==='hardDelete'):
                 if ($task->deleted_at===null): throw new \DomainException(lang('backend/tasks.messages.notTrashed')); endif;
-                $refs=$this->db->query('select (select count(*) from notes where task_uuid=? or step_uuid in (select uuid from task_steps where task_uuid=?))+(select count(*) from operation_runs where task_uuid=? or step_uuid in (select uuid from task_steps where task_uuid=?)) as total',[$uuid,$uuid,$uuid,$uuid])->getRow();
+                $refs=$this->db->query('select count(*) as total from operation_runs where task_uuid=? or step_uuid in (select uuid from task_steps where task_uuid=?)',[$uuid,$uuid])->getRow();
                 if ((int)$refs->total>0): throw new \DomainException(lang('backend/tasks.messages.hasReferences')); endif;
+                $this->execute('delete from notes where task_uuid=? or step_uuid in (select uuid from task_steps where task_uuid=?)',[$uuid,$uuid]);
                 $this->clearCurrent($uuid);$this->execute('delete from task_steps where task_uuid=?',[$uuid]);$this->execute('delete from tasks where uuid=?',[$uuid]);
             else: throw new \LogicException('Invalid deletion action.'); endif;
             if ( ! $this->db->transStatus()): throw new \RuntimeException('Task deletion failed.'); endif;
@@ -701,8 +727,9 @@ class TasksModel extends BackendModel
                 if ($stepsChanged || $task->status !== $data['status']):
                     foreach ($existing as $step):
                         if (isset($retained[$step->uuid])): continue; endif;
-                        $references = $this->db->query('select (select count(*) from notes where step_uuid = ?) + (select count(*) from operation_runs where step_uuid = ?) as total', [$step->uuid, $step->uuid])->getRow();
+                        $references = $this->db->query('select count(*) as total from operation_runs where step_uuid = ?', [$step->uuid])->getRow();
                         if ((int) $references->total !== 0): throw new \DomainException(lang('backend/tasks.messages.stepInUse')); endif;
+                        $this->execute('delete from notes where step_uuid = ?', [$step->uuid]);
                         $this->execute('delete from task_steps where uuid = ? and task_uuid = ?', [$step->uuid, $uuid]);
                     endforeach;
                     // Libera le posizioni prima del riordino, preservando gli UUID già referenziati.

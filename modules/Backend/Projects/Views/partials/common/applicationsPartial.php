@@ -15,10 +15,10 @@
                         <span class="fw-bold text-break"><?= esc($child->name); ?></span>
                         <div class="d-flex flex-row flex-nowrap justify-content-end gap-1">
                             <?php if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'applications_show')): ?>
-                                <a class="btn btn-sm app-btn-secondary text-nowrap" href="<?= esc(base_url('backend/applications/show/' . $child->uuid), 'attr'); ?>"><?= ui_text('backend/applications.actions.show', [], false); ?></a>
+                                <a class="btn btn-sm app-btn-secondary text-nowrap" href="<?= esc(base_url('backend/applications/show/' . $child->uuid), 'attr'); ?>" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-arrow-up-right-from-square me-1" aria-hidden="true"></i><?= ui_text('backend/applications.actions.show', [], false); ?></a>
                             <?php endif; ?>
-                            <?php if (($action ?? '') === 'edit' && \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'applications_edit')): ?>
-                                <a class="btn btn-sm app-btn-secondary text-nowrap" href="<?= esc(base_url('backend/applications/edit/' . $child->uuid), 'attr'); ?>"><?= ui_text('backend/applications.actions.edit', [], false); ?></a>
+                            <?php if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'applications_edit')): ?>
+                                <a class="btn btn-sm app-btn-secondary text-nowrap" href="<?= esc(base_url('backend/applications/edit/' . $child->uuid), 'attr'); ?>" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-arrow-up-right-from-square me-1" aria-hidden="true"></i><?= ui_text('backend/applications.actions.edit', [], false); ?></a>
                             <?php endif; ?>
                         </div>
                     </li>

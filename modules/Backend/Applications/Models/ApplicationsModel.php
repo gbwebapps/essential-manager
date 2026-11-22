@@ -240,7 +240,7 @@ class ApplicationsModel extends BackendModel
     }
 
     /**
-     * Elimina definitivamente un’applicazione cestinata priva di dati collegati, senza cascade impliciti.
+     * Elimina definitivamente un’applicazione cestinata senza altri vincoli, eliminando anche le sue annotazioni.
      * @param array $posts Identificativo validato dal controller.
      * @return array Esito dell'operazione.
      */
@@ -250,7 +250,7 @@ class ApplicationsModel extends BackendModel
     }
 
     /**
-     * Gestisce cestino e ripristino; la cancellazione definitiva richiede assenza di dati collegati.
+     * Gestisce cestino e ripristino; la cancellazione definitiva rimuove le annotazioni e richiede assenza di altri vincoli.
      * @param array $posts Payload contenente l'UUID dell'applicazione.
      * @param string $operation Nome interno dell'operazione autorizzata dal controller.
      * @return array Esito con identificativo e nome per il registro attività.
@@ -271,8 +271,9 @@ class ApplicationsModel extends BackendModel
                 $this->execute('update applications set deleted_at = null, restored_at = ?, updated_at = ? where uuid = ?', [$now, $now, $row->uuid]);
             else:
                 if ($row->deleted_at === null): throw new \DomainException(lang('backend/applications.messages.notTrashed')); endif;
-                $references = $this->db->query('select (select count(*) from tasks where application_uuid = ?) + (select count(*) from notes where application_uuid = ?) + (select count(*) from operation_runs where application_uuid = ?) as total', array_fill(0, 3, $row->uuid))->getRow();
+                $references = $this->db->query('select (select count(*) from tasks where application_uuid = ?) + (select count(*) from operation_runs where application_uuid = ?) as total', array_fill(0, 2, $row->uuid))->getRow();
                 if ((int) $references->total > 0): throw new \DomainException(lang('backend/applications.messages.hasReferences')); endif;
+                $this->execute('delete from notes where application_uuid = ?', [$row->uuid]);
                 $this->execute('delete from applications where uuid = ?', [$row->uuid]);
             endif;
             if ( ! $this->db->transStatus()): throw new \RuntimeException('Application deletion transaction failed.'); endif;

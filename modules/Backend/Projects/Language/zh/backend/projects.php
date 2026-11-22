@@ -47,6 +47,7 @@ return [
         'noParent' => '无来源项目',
         'localPath' => '本地文件夹',
         'localUrl' => '本地网址',
+        'productionUrl' => '生产地址',
         'executeName' => 'execute 中的名称',
     ],
     'placeholders' => [
@@ -58,6 +59,7 @@ return [
         'description' => '描述',
         'localPath' => '本地文件夹',
         'localUrl' => '本地网址',
+        'productionUrl' => '生产地址',
         'executeName' => 'execute 中的名称',
         'searchName' => '项目名称',
     ],

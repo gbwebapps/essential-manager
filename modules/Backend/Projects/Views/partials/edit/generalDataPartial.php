@@ -45,6 +45,14 @@
 
         <div class="col-12 col-lg-6">
             <div class="mb-2">
+                <label for="production_url" class="form-label"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/projects.labels.productionUrl', [], false); ?></label>
+                <input <?= ui_binding('backend/projects.placeholders.productionUrl', 'placeholder', [], true); ?> type="text" inputmode="url" name="production_url" id="production_url" value="<?= esc($project->production_url ?? '', 'attr'); ?>" class="form-control" placeholder="<?= esc(lang('backend/projects.placeholders.productionUrl'), 'attr'); ?>">
+                <div class="error_production_url app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="mb-2">
                 <label for="execute_name" class="form-label"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/projects.labels.executeName', [], false); ?></label>
                 <input <?= ui_binding('backend/projects.placeholders.executeName', 'placeholder', [], true); ?> type="text" name="execute_name" id="execute_name" value="<?= esc($project->execute_name ?? '', 'attr'); ?>" class="form-control" placeholder="<?= esc(lang('backend/projects.placeholders.executeName'), 'attr'); ?>">
                 <div class="error_execute_name app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>

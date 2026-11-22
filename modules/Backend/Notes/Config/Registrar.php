@@ -7,11 +7,7 @@ class Registrar
 {
     public static function Menu(): array
     {
-        return [
-            'bottomLeft' => [
-                ['label' => lang('backend/permissions.notes.title'), 'route' => 'backend/notes/showAll', 'icon' => '<i class="fa-solid fa-note-sticky"></i>', 'controller' => 'notes', 'permission' => 'notes_show_all'],
-            ],
-        ];
+        return [];
     }
 
     public static function Permissions(): array

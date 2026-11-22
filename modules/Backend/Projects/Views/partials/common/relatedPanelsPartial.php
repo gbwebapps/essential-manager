@@ -1,3 +1,4 @@
+<?= view(\Modules\Backend\Tasks\Config\Views::ACTION_LINKS_STYLE_PARTIAL, [], ['saveData' => false]); ?>
 <?php
     $isDraft = ($draftMode ?? false) === true;
     $hasProject = ! empty($project->uuid);
@@ -10,7 +11,7 @@
 <style>
     .project-related-panel .card-header { gap: .5rem; flex-wrap: wrap; border-top: 1px solid var(--app-border) !important; }
     .project-related-item + .project-related-item { border-top: 1px solid var(--app-border); }
-    .project-related-toggle { display: flex; align-items: center; gap: .65rem; width: 100%; padding: .6rem .8rem; border: 0; text-align: left; color: inherit; background: transparent; }
+    .project-related-toggle { min-width: 0; display: flex; align-items: center; gap: .65rem; width: 100%; padding: .6rem .8rem; border: 0; text-align: left; color: inherit; background: transparent; }
     .project-related-toggle:hover, .project-related-toggle:focus-visible { background: var(--app-surface-muted); }
     .project-related-toggle > .fa-chevron-right { font-size: .75rem; transition: transform .3s ease; }
     .project-related-toggle[aria-expanded="true"] > .fa-chevron-right { transform: rotate(90deg); }

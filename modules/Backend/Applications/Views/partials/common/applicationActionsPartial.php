@@ -1,10 +1,6 @@
-<style>
-    .applications-related-modal .modal-dialog { max-width: min(56rem, calc(100% - 2rem)) !important; }
-    .applications-related-modal .modal-content { color: var(--app-text); background: var(--app-surface); border: 1px solid var(--app-border); border-radius: .75rem; }
-    body:has(.applications-related-modal.show) .scrollup { display: none; }
-</style>
+<?= view(\Modules\Backend\Template\Config\Views::MODAL_STYLE_PARTIAL, [], ['saveData' => false]); ?>
 <?php foreach (['task', 'note'] as $applicationAction): ?>
-    <div class="modal fade transfer-modal applications-related-modal" id="applications-add-<?= $applicationAction; ?>-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="applications-add-<?= $applicationAction; ?>-title" aria-hidden="true" data-application-action-modal data-save-label="<?= esc(lang('backend/applications.buttons.sendData'), 'attr'); ?>" data-application-action-kind="<?= $applicationAction; ?>" data-draft-mode="<?= ($draftMode ?? false) ? 'true' : 'false'; ?>" data-add-title="<?= esc(lang('backend/' . ($applicationAction === 'task' ? 'tasks' : 'notes') . '.titles.add'), 'attr'); ?>" data-edit-title="<?= esc(lang('backend/' . ($applicationAction === 'task' ? 'tasks' : 'notes') . '.titles.edit'), 'attr'); ?>" data-application-uuid="<?= esc($application->uuid ?? '', 'attr'); ?>" data-application-name="<?= esc($application->name ?? '', 'attr'); ?>" data-no-changes="<?= esc(lang('backend/applications.messages.noDataChanged'), 'attr'); ?>" data-save-error="<?= esc(lang('backend/applications.messages.saveError'), 'attr'); ?>" data-save-notice="<?= esc(lang('backend/applications.messages.saveNotice'), 'attr'); ?>">
+    <div class="modal fade transfer-modal manager-work-modal applications-related-modal" id="applications-add-<?= $applicationAction; ?>-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="applications-add-<?= $applicationAction; ?>-title" aria-hidden="true" data-application-action-modal data-save-label="<?= esc(lang('backend/applications.buttons.sendData'), 'attr'); ?>" data-application-action-kind="<?= $applicationAction; ?>" data-draft-mode="<?= ($draftMode ?? false) ? 'true' : 'false'; ?>" data-add-title="<?= esc(lang('backend/' . ($applicationAction === 'task' ? 'tasks' : 'notes') . '.titles.add'), 'attr'); ?>" data-edit-title="<?= esc(lang('backend/' . ($applicationAction === 'task' ? 'tasks' : 'notes') . '.titles.edit'), 'attr'); ?>" data-application-uuid="<?= esc($application->uuid ?? '', 'attr'); ?>" data-application-name="<?= esc($application->name ?? '', 'attr'); ?>" data-no-changes="<?= esc(lang('backend/applications.messages.noDataChanged'), 'attr'); ?>" data-save-error="<?= esc(lang('backend/applications.messages.saveError'), 'attr'); ?>" data-save-notice="<?= esc(lang('backend/applications.messages.saveNotice'), 'attr'); ?>">
         <div class="modal-dialog modal-dialog-centered transfer-export-dialog">
             <div class="modal-content shadow">
                 <form novalidate method="post" data-application-action-form>
@@ -32,7 +28,8 @@
                         <div class="app-text-danger fw-bold small" data-work-form-errors role="status"></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn app-btn-primary"><i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i><span data-application-action-submit-label><?= ui_text(($draftMode ?? false) ? 'backend/applications.draft.addButton' : 'backend/applications.buttons.sendData', [], false); ?></span></button>
+                        <button type="button" class="btn btn-sm app-btn-secondary" data-modal-reset><i class="fa-solid fa-arrow-rotate-left me-1" aria-hidden="true"></i><?= ui_text('backend/applications.buttons.resetData', [], false); ?></button>
+                        <button type="submit" class="btn btn-sm app-btn-success"><i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i><span data-application-action-submit-label><?= ui_text(($draftMode ?? false) ? 'backend/applications.draft.addButton' : 'backend/applications.buttons.sendData', [], false); ?></span></button>
                     </div>
                 </form>
             </div>

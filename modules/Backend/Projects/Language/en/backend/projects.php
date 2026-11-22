@@ -47,6 +47,7 @@ return [
         'noParent' => 'No source project',
         'localPath' => 'Local folder',
         'localUrl' => 'Local URL',
+        'productionUrl' => 'Production URL',
         'executeName' => 'Name in execute',
     ],
     'placeholders' => [
@@ -58,6 +59,7 @@ return [
         'description' => 'Description',
         'localPath' => 'Local folder',
         'localUrl' => 'Local URL',
+        'productionUrl' => 'Production URL',
         'executeName' => 'Name in execute',
         'searchName' => 'Project name',
     ],

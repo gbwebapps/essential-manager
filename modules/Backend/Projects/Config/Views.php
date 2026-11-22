@@ -23,6 +23,7 @@ class Views extends BaseConfig
     public const PROJECT_ACTIONS_PARTIAL = 'Modules\\Backend\\Projects\\Views\\partials\\common\\projectActionsPartial';
     public const DRAFT_PANELS_PARTIAL = 'Modules\\Backend\\Projects\\Views\\partials\\common\\draftPanelsPartial';
     public const RELATED_PANELS_PARTIAL = 'Modules\\Backend\\Projects\\Views\\partials\\common\\relatedPanelsPartial';
+    public const RELATED_ACTIONS_PARTIAL = 'Modules\\Backend\\Projects\\Views\\partials\\common\\relatedActionsPartial';
     public const RELATED_ITEMS_PARTIAL = 'Modules\\Backend\\Projects\\Views\\partials\\common\\relatedItemsPartial';
     public const APPLICATIONS_PARTIAL = 'Modules\\Backend\\Projects\\Views\\partials\\common\\applicationsPartial';
     public const META_DATA_PARTIAL = 'Modules\\Backend\\Projects\\Views\\partials\\common\\metaDataPartial';

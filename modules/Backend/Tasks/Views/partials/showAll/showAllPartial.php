@@ -40,8 +40,9 @@
                                             <i class="fa-solid fa-chevron-right"></i>
                                         </button>
                                     </td>
-                                    <td class="align-middle fw-bold text-break" style="min-width: 14rem;"><?= esc($task->title); ?></td>
-                                    <td class="align-middle text-break"><?= esc($task->project_name ?? ''); ?><?php if ($task->application_name !== null): ?><div class="small app-text-muted"><?= esc($task->application_name); ?></div><?php endif; ?></td>
+                                    <td class="align-middle fw-bold"><span class="d-block text-truncate" style="width: 18rem; max-width: 35vw;" title="<?= esc($task->title, 'attr'); ?>"><?= esc($task->title); ?></span></td>
+                                    <?php $contextLabel = ($task->project_name ?? '') . ($task->application_name !== null ? ' / ' . $task->application_name : ''); ?>
+                                    <td class="align-middle text-nowrap"><span class="d-block text-truncate" style="max-width: 18rem;" title="<?= esc($contextLabel, 'attr'); ?>"><?= esc($contextLabel); ?></span></td>
                                     <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= ui_text('backend/tasks.statuses.' . $task->status, [], false); ?></span><?php if (($currentTask->uuid ?? null) === $task->uuid): ?><div class="small app-text-muted"><?= ui_text('backend/tasks.labels.current', [], false); ?></div><?php endif; ?></td>
                                     <td class="align-middle text-center text-nowrap"><?= (int) $task->completed_count; ?>/<?= (int) $task->step_count; ?></td>
                                     <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($task->note_count ?? 0); ?></span></td>

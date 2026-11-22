@@ -15,9 +15,9 @@ class ProjectsModel extends BackendModel
     protected array $showAllSearchAllowedFields = ['name'];
     protected array $showAllSearchAllowedDates = ['created_at', 'updated_at'];
     protected array $allowedOrderColumns = ['id', 'name', 'created_at', 'updated_at'];
-    protected array $addAllowedFields = ['name', 'description', 'parent_project_uuid', 'local_path', 'local_url', 'execute_name', 'tasks', 'notes'];
-    protected array $editAllowedFields = ['uuid', 'name', 'description', 'parent_project_uuid', 'local_path', 'local_url', 'execute_name'];
-    protected array $toCompare = ['name', 'description', 'parent_project_uuid', 'local_path', 'local_url', 'execute_name'];
+    protected array $addAllowedFields = ['name', 'description', 'parent_project_uuid', 'local_path', 'local_url', 'production_url', 'execute_name', 'tasks', 'notes'];
+    protected array $editAllowedFields = ['uuid', 'name', 'description', 'parent_project_uuid', 'local_path', 'local_url', 'production_url', 'execute_name'];
+    protected array $toCompare = ['name', 'description', 'parent_project_uuid', 'local_path', 'local_url', 'production_url', 'execute_name'];
     protected TasksModel $tasksModel;
     protected NotesModel $notesModel;
 
@@ -102,6 +102,7 @@ class ProjectsModel extends BackendModel
             'parent_project_uuid' => ['label' => lang('backend/projects.labels.parentProject'), 'rules' => ['permit_empty', 'string', 'regex_match[/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i]']],
             'local_path' => ['label' => lang('backend/projects.labels.localPath'), 'rules' => ['permit_empty', 'string', 'max_length[1024]', 'regex_match[/^[^\x00-\x1F\x7F]*$/u]']],
             'local_url' => ['label' => lang('backend/projects.labels.localUrl'), 'rules' => ['permit_empty', 'string', 'max_length[2048]', 'valid_url_strict[http,https]']],
+            'production_url' => ['label' => lang('backend/projects.labels.productionUrl'), 'rules' => ['permit_empty', 'string', 'max_length[2048]', 'valid_url_strict[http,https]']],
             'execute_name' => ['label' => lang('backend/projects.labels.executeName'), 'rules' => ['permit_empty', 'string', 'max_length[100]', 'regex_match[/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/]', 'is_unique[projects.execute_name]']],
         ];
     }
@@ -183,7 +184,7 @@ class ProjectsModel extends BackendModel
             $this->validateParent($data['parent_project_uuid'], null);
             $uuid = $this->generateUUID();
             $now = date('Y-m-d H:i:s');
-            $this->execute('insert into projects (uuid, name, description, parent_project_uuid, local_path, local_url, execute_name, created_by_admin_uuid, created_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?)', [$uuid, $data['name'], $this->nullable($data['description']), $this->nullable($data['parent_project_uuid']), $this->nullable($data['local_path']), $this->nullable($data['local_url']), $this->nullable($data['execute_name']), $adminUuid, $now]);
+            $this->execute('insert into projects (uuid, name, description, parent_project_uuid, local_path, local_url, production_url, execute_name, created_by_admin_uuid, created_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [$uuid, $data['name'], $this->nullable($data['description']), $this->nullable($data['parent_project_uuid']), $this->nullable($data['local_path']), $this->nullable($data['local_url']), $this->nullable($data['production_url']), $this->nullable($data['execute_name']), $adminUuid, $now]);
             foreach ($data['tasks'] as $task): $this->tasksModel->insertForProject($task, $uuid, $adminUuid); endforeach;
             foreach ($data['notes'] as $note): $this->notesModel->insertForProject($note, $uuid, $adminUuid); endforeach;
             return $this->commitProject($uuid, 'addSuccess');
@@ -211,7 +212,7 @@ class ProjectsModel extends BackendModel
                 $this->db->transCommit();
                 return ['result' => false, 'changed' => false, 'message' => lang('backend/projects.messages.noDataChanged')];
             endif;
-            $this->execute('update projects set name = ?, description = ?, parent_project_uuid = ?, local_path = ?, local_url = ?, execute_name = ?, updated_at = ? where uuid = ?', [$data['name'], $this->nullable($data['description']), $this->nullable($data['parent_project_uuid']), $this->nullable($data['local_path']), $this->nullable($data['local_url']), $this->nullable($data['execute_name']), date('Y-m-d H:i:s'), $data['uuid']]);
+            $this->execute('update projects set name = ?, description = ?, parent_project_uuid = ?, local_path = ?, local_url = ?, production_url = ?, execute_name = ?, updated_at = ? where uuid = ?', [$data['name'], $this->nullable($data['description']), $this->nullable($data['parent_project_uuid']), $this->nullable($data['local_path']), $this->nullable($data['local_url']), $this->nullable($data['production_url']), $this->nullable($data['execute_name']), date('Y-m-d H:i:s'), $data['uuid']]);
             return $this->commitProject($data['uuid'], 'editSuccess');
         } catch (\Throwable $exception) {
             return $this->rollback($exception, 'editError');
@@ -239,7 +240,7 @@ class ProjectsModel extends BackendModel
     }
 
     /**
-     * Elimina definitivamente un progetto cestinato privo di dati collegati, senza cascade impliciti.
+     * Elimina definitivamente un progetto cestinato senza altri vincoli, eliminando anche le sue annotazioni.
      * @param array $posts Identificativo validato dal controller.
      * @return array Esito dell'operazione.
      */
@@ -249,7 +250,7 @@ class ProjectsModel extends BackendModel
     }
 
     /**
-     * Applica le transizioni di cestino sotto lock, preservando tutti i dati collegati.
+     * Applica le transizioni di cestino sotto lock, preservando le note nel cestino e rimuovendole solo nella cancellazione definitiva.
      * @param array $posts Payload contenente uuid.
      * @param string $operation Operazione interna ammessa dal chiamante.
      * @return array Esito con uuid e nome per l'audit.
@@ -272,8 +273,9 @@ class ProjectsModel extends BackendModel
                 $this->execute('update projects set deleted_at = null, restored_at = ?, updated_at = ? where uuid = ?', [$now, $now, $row->uuid]);
             else:
                 if ($row->deleted_at === null): throw new \DomainException(lang('backend/projects.messages.notTrashed')); endif;
-                $references = $this->db->query('select (select count(*) from projects where parent_project_uuid = ?) + (select count(*) from applications where project_uuid = ?) + (select count(*) from tasks where project_uuid = ?) + (select count(*) from notes where project_uuid = ?) + (select count(*) from operation_runs where project_uuid = ?) as total', array_fill(0, 5, $row->uuid))->getRow();
+                $references = $this->db->query('select (select count(*) from projects where parent_project_uuid = ?) + (select count(*) from applications where project_uuid = ?) + (select count(*) from tasks where project_uuid = ?) + (select count(*) from operation_runs where project_uuid = ?) as total', array_fill(0, 4, $row->uuid))->getRow();
                 if ((int) $references->total > 0): throw new \DomainException(lang('backend/projects.messages.hasReferences')); endif;
+                $this->execute('delete from notes where project_uuid = ?', [$row->uuid]);
                 $this->execute('delete from projects where uuid = ?', [$row->uuid]);
             endif;
             if ( ! $this->db->transStatus()): throw new \RuntimeException('Project deletion transaction failed.'); endif;

@@ -2,6 +2,8 @@
 
 <?= $this->section('content') ?>
 
+    <?= $this->include(\Modules\Backend\Projects\Config\Views::SECTION_STYLE_PARTIAL); ?>
+
     <div id="projects-list" class="projects crud-list">
 
         <div class="row">

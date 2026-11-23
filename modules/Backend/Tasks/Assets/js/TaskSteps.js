@@ -19,14 +19,17 @@ function updateStepRows(editor) {
         const errorBox=row.querySelector('[data-work-field-error]');
         errorBox.dataset.workFieldError = `steps.${index}.title`;
         if(editor.dataset.standalone==='true'){const otherClasses=[...errorBox.classList].filter(name=>!name.startsWith('error_step_'));errorBox.className=`error_step_${index}_title ${otherClasses.join(' ')}`;}
-        row.querySelector('[data-task-step-up]').disabled=editor.dataset.busy==='true'||index===0;
-        row.querySelector('[data-task-step-down]').disabled=editor.dataset.busy==='true'||index===rows.length-1;
+        const up = row.querySelector('[data-task-step-up]');
+        if (up) up.disabled=editor.dataset.busy==='true'||index===0;
+        const down = row.querySelector('[data-task-step-down]');
+        if (down) down.disabled=editor.dataset.busy==='true'||index===rows.length-1;
         const label = row.querySelector('[data-step-label]');
         label.htmlFor = id;
         label.textContent = `${editor.dataset.stepLabel} ${index + 1}`;
         row.querySelector('[data-task-step-remove]').disabled = editor.dataset.busy === 'true' || rows.length === 1;
     });
     editor.querySelector('[data-task-step-add]').disabled = editor.dataset.busy === 'true';
+    editor.dispatchEvent(new CustomEvent('tasksteps:change', { bubbles: true }));
 }
 
 function createStepRow(editor, step = {}) {
@@ -47,17 +50,47 @@ export function fillTaskSteps(editor, steps) {
     updateStepRows(editor);
 }
 
-async function animateStepRow(row, removing = false) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const height = row.getBoundingClientRect().height;
-    row.style.overflow = 'hidden';
-    const animation = row.animate(removing ? [
-        { height: `${height}px`, opacity: 1 }, { height: '0px', opacity: 0 }
-    ] : [
-        { height: '0px', opacity: 0 }, { height: `${height}px`, opacity: 1 }
-    ], { duration: 180, easing: 'ease-in-out' });
-    await animation.finished;
-    row.style.overflow = '';
+/**
+ * Anima una modifica dell'elenco includendo lo spazio tra i passi.
+ * Riceve l'elenco, la modifica da applicare e l'eventuale passo da rimuovere.
+ * Restituisce una Promise risolta quando elenco e passi hanno finito il movimento.
+ */
+async function animateStepChange(list, change, removingRow = null) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        change();
+        return;
+    }
+
+    const before = new Map([...list.children].map(row => [row, row.getBoundingClientRect().top]));
+    const previousHeight = list.getBoundingClientRect().height;
+    const previousStyle = { height: list.style.height, overflow: list.style.overflow };
+    const animations = [];
+    try {
+        if (removingRow) {
+            const fade = removingRow.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 100, easing: 'ease-out', fill: 'forwards' });
+            animations.push(fade);
+            await fade.finished;
+        }
+        change();
+        const nextHeight = list.getBoundingClientRect().height;
+        list.style.height = `${previousHeight}px`;
+        list.style.overflow = 'hidden';
+        const timing = { duration: 240, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'both' };
+        animations.push(list.animate([{ height: `${previousHeight}px` }, { height: `${nextHeight}px` }], timing));
+        for (const row of list.children) {
+            if (before.has(row)) {
+                const offset = before.get(row) - row.getBoundingClientRect().top;
+                if (offset !== 0) animations.push(row.animate([{ transform: `translateY(${offset}px)` }, { transform: 'translateY(0)' }], timing));
+            } else {
+                animations.push(row.animate([{ opacity: 0 }, { opacity: 1 }], timing));
+            }
+        }
+        await Promise.all(animations.map(animation => animation.finished));
+    } finally {
+        animations.forEach(animation => animation.cancel());
+        list.style.height = previousStyle.height;
+        list.style.overflow = previousStyle.overflow;
+    }
 }
 
 export function initTaskSteps(form) {
@@ -87,15 +120,18 @@ export function initTaskSteps(form) {
         try {
             if (add) {
                 const row = createStepRow(editor);
-                list.append(row);
-                updateStepRows(editor);
-                await animateStepRow(row);
+                await animateStepChange(list, () => {
+                    list.append(row);
+                    updateStepRows(editor);
+                });
                 focusStep(row.querySelector('[data-step-title]'));
             } else {
                 const row = remove.closest('[data-task-step-row]');
                 const next = row.nextElementSibling || row.previousElementSibling;
-                await animateStepRow(row, true);
-                row.remove();
+                await animateStepChange(list, () => {
+                    row.remove();
+                    updateStepRows(editor);
+                }, row);
                 focusStep(next?.querySelector('[data-step-title]'));
             }
         } finally {

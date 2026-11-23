@@ -26,6 +26,9 @@ class NavigationClass
             $applications = AuthorizationClass::allows($admin, 'applications_show_all') || AuthorizationClass::allows($admin, 'applications_show') || AuthorizationClass::allows($admin, 'applications_edit');
             $counts['tasks'] = model(TasksModel::class)->activeCount($projects, $applications);
         endif;
+        if (AuthorizationClass::allows($admin, 'studio_show') && (AuthorizationClass::allows($admin, 'tasks_show_all') || AuthorizationClass::allows($admin, 'tasks_show') || AuthorizationClass::allows($admin, 'tasks_edit'))):
+            $counts['studio'] = model(\Modules\Backend\Studio\Models\StudioModel::class)->taskCount();
+        endif;
         return $counts;
     }
 }

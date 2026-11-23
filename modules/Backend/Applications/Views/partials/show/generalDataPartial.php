@@ -1,17 +1,21 @@
 <div class="card-body">
     <div class="row">
+        <?php if (trim((string) ($application->name ?? '')) !== ''): ?>
         <div class="col-12 col-lg-6 mb-3">
             <ul class="list-group list-group-flush">
                 <li class="list-group-item"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.name', [], false); ?></li>
                 <li class="list-group-item fw-bold text-break" style="white-space: pre-wrap;"><?= esc($application->name ?? ''); ?></li>
             </ul>
         </div>
+        <?php endif; ?>
+        <?php if (trim((string) ($application->project_name ?? '')) !== ''): ?>
         <div class="col-12 col-lg-6 mb-3">
             <ul class="list-group list-group-flush">
                 <li class="list-group-item"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.project', [], false); ?></li>
                 <li class="list-group-item fw-bold text-break" style="white-space: pre-wrap;"><?= esc($application->project_name ?? ''); ?></li>
             </ul>
         </div>
+        <?php endif; ?>
         <?php if (trim($application->description ?? '') !== ''): ?>
         <div class="col-12 mb-3">
             <ul class="list-group list-group-flush">
@@ -20,12 +24,15 @@
             </ul>
         </div>
         <?php endif; ?>
+        <?php if (trim((string) ($application->local_path ?? '')) !== ''): ?>
         <div class="col-12 col-lg-6 mb-3">
             <ul class="list-group list-group-flush">
                 <li class="list-group-item"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.localPath', [], false); ?></li>
                 <li class="list-group-item fw-bold text-break" style="white-space: pre-wrap;"><?= esc($application->local_path ?? ''); ?></li>
             </ul>
         </div>
+        <?php endif; ?>
+        <?php if (trim((string) ($application->local_url ?? '')) !== ''): ?>
         <div class="col-12 col-lg-6 mb-3">
             <ul class="list-group list-group-flush">
                 <li class="list-group-item"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.localUrl', [], false); ?></li>
@@ -39,6 +46,8 @@
                 </li>
             </ul>
         </div>
+        <?php endif; ?>
+        <?php if (trim((string) ($application->production_url ?? '')) !== ''): ?>
         <div class="col-12 col-lg-6 mb-3">
             <ul class="list-group list-group-flush">
                 <li class="list-group-item"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.productionUrl', [], false); ?></li>
@@ -52,11 +61,14 @@
                 </li>
             </ul>
         </div>
+        <?php endif; ?>
+        <?php if (trim((string) ($application->execute_name ?? '')) !== ''): ?>
         <div class="col-12 col-lg-6 mb-3">
             <ul class="list-group list-group-flush">
                 <li class="list-group-item"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.executeName', [], false); ?></li>
                 <li class="list-group-item fw-bold text-break" style="white-space: pre-wrap;"><?= esc($application->execute_name ?? ''); ?></li>
             </ul>
         </div>
+        <?php endif; ?>
     </div>
 </div>

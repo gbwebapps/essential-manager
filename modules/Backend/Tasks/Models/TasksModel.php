@@ -109,7 +109,7 @@ class TasksModel extends BackendModel
      */
     public function restrictContexts(bool $projects, bool $applications): void
     {
-        $scope = $projects && $applications ? '1 = 1' : ($projects ? 'tasks.project_uuid is not null' : ($applications ? 'tasks.application_uuid is not null' : '1 = 0'));
+        $scope = $projects && $applications ? '(tasks.project_uuid is not null or tasks.application_uuid is not null)' : ($projects ? 'tasks.project_uuid is not null' : ($applications ? 'tasks.application_uuid is not null' : '1 = 0'));
         $this->getDataQuery = $this->taskSelect() . ' where ' . $scope;
         $this->getNumRowsQuery = 'select count(*) as count from tasks where ' . $scope;
     }
@@ -204,8 +204,7 @@ class TasksModel extends BackendModel
         if ($context === null):
             $errors['context'] = lang('backend/tasks.messages.chooseContext');
         elseif ($editing):
-            $column = $original->project_uuid !== null ? 'project_uuid' : 'application_uuid';
-            if ($context !== [$column, $original->{$column}]): $errors['context'] = lang('backend/tasks.messages.contextFixed'); endif;
+            if ($context !== self::ownerContext($original)): $errors['context'] = lang('backend/tasks.messages.contextFixed'); endif;
         endif;
         unset($posts['context']);
         $noteData = null;
@@ -269,9 +268,9 @@ class TasksModel extends BackendModel
      */
     public function lockTask(string $uuid, bool $active=true): object
     {
-        $initial=$this->db->query('select project_uuid,application_uuid from tasks where uuid=?',[$uuid])->getRow();
+        $initial=$this->db->query('select project_uuid,application_uuid,is_studio from tasks where uuid=?',[$uuid])->getRow();
         if ( ! $initial): throw new \DomainException(lang('backend/tasks.messages.notFound')); endif;
-        $column=$initial->project_uuid!==null?'project_uuid':'application_uuid';$ownerUuid=$initial->{$column};
+        [$column,$ownerUuid]=self::ownerContext($initial);
         if ($active): $this->lockOwner($column,$ownerUuid); endif;
         $row=$this->db->query('select * from tasks where uuid=? for update',[$uuid])->getRow();
         if ( ! $row || $row->{$column}!==$ownerUuid || ($active && $row->deleted_at!==null)): throw new \DomainException(lang('backend/tasks.messages.notFound')); endif;
@@ -317,7 +316,7 @@ class TasksModel extends BackendModel
      */
     public function deleteForOwner(string $uuid, string $column, string $ownerUuid): array
     {
-        if ( ! in_array($column, ['project_uuid', 'application_uuid'], true)): throw new \InvalidArgumentException('Invalid task owner.'); endif;
+        if ( ! in_array($column, ['project_uuid', 'application_uuid', 'is_studio'], true)): throw new \InvalidArgumentException('Invalid task owner.'); endif;
         try {
             $this->db->transBegin();
             $this->lockOwner($column, $ownerUuid);
@@ -344,9 +343,9 @@ class TasksModel extends BackendModel
             $this->db->transBegin();
             // Mantiene l'ordine dei lock proprietario -> task anche nel ripristino.
             if ($action==='restoreDelete'):
-                $owner=$this->db->query('select project_uuid,application_uuid from tasks where uuid=?',[$uuid])->getRow();
+                $owner=$this->db->query('select project_uuid,application_uuid,is_studio from tasks where uuid=?',[$uuid])->getRow();
                 if ( ! $owner): throw new \DomainException(lang('backend/tasks.messages.notFound')); endif;
-                $column=$owner->project_uuid!==null?'project_uuid':'application_uuid';$this->lockOwner($column,$owner->{$column});
+                [$column,$ownerUuid]=self::ownerContext($owner);$this->lockOwner($column,$ownerUuid);
             endif;
             $task=$this->lockTask($uuid,false);$now=date('Y-m-d H:i:s');
             if ($action==='softDelete'):
@@ -370,41 +369,38 @@ class TasksModel extends BackendModel
 
     /**
      * @param string $adminUuid Amministratore autenticato; non proviene dal form.
-     * @return object|null Task personale corrente con prossimo passo.
+     * @param bool $studio Seleziona lo stato Studio; false seleziona le attività.
+     * @return object|null Task personale corrente nel solo contesto richiesto, con prossimo passo.
      */
-    public function getCurrent(string $adminUuid): ?object
+    public function getCurrent(string $adminUuid, bool $studio = false): ?object
     {
-        $row=$this->db->query($this->taskSelect().' inner join admin_work_state work on work.task_uuid=tasks.uuid where work.admin_uuid=? and tasks.deleted_at is null and tasks.status<>\'completed\' and coalesce(app.deleted_at,direct.deleted_at,origin.deleted_at) is null limit 1',[$adminUuid])->getRow();
+        $row=$this->db->query($this->taskSelect().' inner join admin_work_state work on work.task_uuid=tasks.uuid where work.admin_uuid=? and work.work_context=? and tasks.is_studio=? and tasks.deleted_at is null and tasks.status<>\'completed\' and coalesce(app.deleted_at,direct.deleted_at,origin.deleted_at) is null limit 1',[$adminUuid,$studio?'studio':'activities',(int)$studio])->getRow();
         if ( ! $row): return null; endif;
-        $state=$this->db->query('select paused_at from admin_work_state where admin_uuid=?',[$adminUuid])->getRow();$row->paused_at=$state->paused_at;
         $row->next_step=$this->db->query('select uuid,title,position from task_steps where task_uuid=? and completed_at is null order by position limit 1',[$row->uuid])->getRow();
         return $row;
     }
 
     /**
-     * @param string $action set, pause oppure resume, deciso dalla rotta.
-     * @param string|null $uuid Task da selezionare, solo per set.
-     * @param string $adminUuid Identità autenticata.
-     * @return array Esito dello stato personale, serializzato per amministratore.
+     * Seleziona il task corrente senza modificare il corrente dell'altro contesto.
+     * @param string $uuid Task validato e autorizzato dal controller.
+     * @param string $adminUuid Amministratore autenticato.
+     * @param bool $studio Contesto imposto dal controller, non dal form.
+     * @return array Esito atomico con record e UUID, oppure nessun cambiamento.
      */
-    public function changeCurrent(string $action, ?string $uuid, string $adminUuid): array
+    public function setCurrent(string $uuid, string $adminUuid, bool $studio = false): array
     {
         try {
             $this->db->transBegin();
-            if ($action!=='set'):
-                $state=$this->db->query('select task_uuid from admin_work_state where admin_uuid=?',[$adminUuid])->getRow();$uuid=$state->task_uuid??null;
-            endif;
-            if ($uuid===null): throw new \DomainException(lang('backend/tasks.messages.noCurrent')); endif;
             $task=$this->lockTask($uuid);
+            if ((int)$task->is_studio !== (int)$studio): throw new \DomainException(lang('backend/tasks.messages.forbidden')); endif;
             if ($task->status==='completed'): throw new \DomainException(lang('backend/tasks.messages.currentCompleted')); endif;
             if ( ! $this->db->query('select uuid from admins where uuid=? for update',[$adminUuid])->getRow()): throw new \DomainException(lang('backend/tasks.messages.forbidden')); endif;
-            $state=$this->db->query('select * from admin_work_state where admin_uuid=? for update',[$adminUuid])->getRow();
-            if ($action!=='set' && ($state->task_uuid??null)!==$uuid): throw new \DomainException(lang('backend/tasks.messages.currentChanged')); endif;
-            $paused=$action==='pause';
-            if ($state && $state->task_uuid===$uuid && (($state->paused_at!==null)===$paused)): return $this->unchangedTransaction(); endif;
+            $context=$studio?'studio':'activities';
+            $state=$this->db->query('select task_uuid from admin_work_state where admin_uuid=? and work_context=? for update',[$adminUuid,$context])->getRow();
+            if (($state->task_uuid??null)===$uuid): return $this->unchangedTransaction(); endif;
             $now=date('Y-m-d H:i:s');
-            $this->execute('insert into admin_work_state (admin_uuid,task_uuid,paused_at,created_at,updated_at) values (?,?,?,?,?) on duplicate key update task_uuid=values(task_uuid),paused_at=values(paused_at),updated_at=values(updated_at)',[$adminUuid,$uuid,$paused?$now:null,$now,$now]);
-            if ($task->status==='todo' && ! $paused): $this->execute("update tasks set status='in_progress',updated_at=? where uuid=?",[$now,$uuid]); endif;
+            $this->execute('insert into admin_work_state (admin_uuid,work_context,task_uuid,created_at,updated_at) values (?,?,?,?,?) on duplicate key update task_uuid=values(task_uuid),updated_at=values(updated_at)',[$adminUuid,$context,$uuid,$now,$now]);
+            if ($task->status==='todo'): $this->execute("update tasks set status='in_progress',updated_at=? where uuid=?",[$now,$uuid]); endif;
             return $this->finishTask($uuid);
         } catch (\Throwable $error) { return $this->failTask($error); }
     }
@@ -415,6 +411,7 @@ class TasksModel extends BackendModel
      */
     public function parseContext(mixed $context): ?array
     {
+        if ($context === 'studio'): return ['is_studio', '1']; endif;
         if ( ! is_string($context) || ! preg_match('/^(project|application):([0-9a-f-]{36})$/i',$context,$parts) || ! $this->validUuid($parts[2])): return null; endif;
         return [strtolower($parts[1])==='project'?'project_uuid':'application_uuid',$parts[2]];
     }
@@ -426,7 +423,7 @@ class TasksModel extends BackendModel
      */
     public function getTrashCounts(bool $projects, bool $apps): array
     {
-        $scope=$projects&&$apps?'1=1':($projects?'project_uuid is not null':($apps?'application_uuid is not null':'1=0'));
+        $scope=$projects&&$apps?'(project_uuid is not null or application_uuid is not null)':($projects?'project_uuid is not null':($apps?'application_uuid is not null':'1=0'));
         $row=$this->db->query('select count(*) total,count(case when deleted_at is not null then 1 end) trashed from tasks where '.$scope)->getRow();
         return ['active'=>(int)$row->total-(int)$row->trashed,'trashed'=>(int)$row->trashed,'all'=>(int)$row->total];
     }
@@ -439,7 +436,7 @@ class TasksModel extends BackendModel
      */
     public function overview(bool $projects, bool $applications): array
     {
-        $scope = $projects && $applications ? '1=1' : ($projects ? 'project_uuid is not null' : ($applications ? 'application_uuid is not null' : '1=0'));
+        $scope = $projects && $applications ? '(project_uuid is not null or application_uuid is not null)' : ($projects ? 'project_uuid is not null' : ($applications ? 'application_uuid is not null' : '1=0'));
         $row = $this->db->query("select count(*) total, coalesce(sum(status <> 'completed'),0) open, coalesce(sum(status = 'in_progress'),0) in_progress,
             coalesce(sum((select count(*) from task_steps where task_uuid=tasks.uuid and completed_at is null)),0) remaining_steps
             from tasks where deleted_at is null and " . $scope)->getRowArray();
@@ -477,6 +474,10 @@ class TasksModel extends BackendModel
     private function lockOwner(string $column, string $uuid): void
     {
         $table=$this->ownerTable($column);
+        if ($column==='is_studio'):
+            if ($uuid!=='1'): throw new \InvalidArgumentException('Invalid Studio owner.'); endif;
+            return;
+        endif;
         if ($column==='application_uuid'):
             $app=$this->db->query('select project_uuid from applications where uuid=?',[$uuid])->getRow();
             if ( ! $app || ! $this->db->query('select uuid from projects where uuid=? and deleted_at is null for update',[$app->project_uuid])->getRow()): throw new \DomainException(lang('backend/tasks.messages.projectUnavailable')); endif;
@@ -505,7 +506,7 @@ class TasksModel extends BackendModel
      */
     private function clearCurrent(string $uuid): void
     {
-        $this->execute('update admin_work_state set task_uuid=null,paused_at=null,updated_at=? where task_uuid=?',[date('Y-m-d H:i:s'),$uuid]);
+        $this->execute('update admin_work_state set task_uuid=null,updated_at=? where task_uuid=?',[date('Y-m-d H:i:s'),$uuid]);
     }
 
     /**
@@ -676,6 +677,29 @@ class TasksModel extends BackendModel
     }
 
     /**
+     * Salva task e passi dello Studio riusando validazione e transazione comuni.
+     * @param array $posts Form non attendibile.
+     * @param string|null $adminUuid Amministratore autenticato.
+     * @param bool $canComplete Permesso server di completamento.
+     * @return array Esito del salvataggio, senza assegnazioni a progetti o applicazioni.
+     */
+    public function saveForStudio(array $posts, ?string $adminUuid, bool $canComplete = false): array
+    {
+        return $this->saveForContext($posts, 'is_studio', '1', $adminUuid, $canComplete);
+    }
+
+    /**
+     * Ricava il proprietario esclusivo del task dal record persistito.
+     * @param object $task Riga caricata dal database.
+     * @return array{0:string,1:string} Colonna interna e identificativo del contesto.
+     */
+    public static function ownerContext(object $task): array
+    {
+        if ((int) ($task->is_studio ?? 0) === 1): return ['is_studio', '1']; endif;
+        return $task->project_uuid !== null ? ['project_uuid', $task->project_uuid] : ['application_uuid', $task->application_uuid];
+    }
+
+    /**
      * Motore condiviso del metodo saveForProject per progetto e applicazione.
      * @param string $ownerColumn Colonna interna ammessa dalla whitelist ownerTable.
      * @param string $ownerUuid UUID del proprietario.
@@ -778,15 +802,16 @@ class TasksModel extends BackendModel
 
     /**
      * Traduce soltanto le colonne di contesto definite dal codice nei rispettivi proprietari.
-     * @param string $column project_uuid oppure application_uuid, mai un identificatore libero dal client.
-     * @return string Nome statico della tabella del proprietario.
+     * @param string $column project_uuid, application_uuid oppure is_studio, mai un identificatore libero dal client.
+     * @return string|null Nome statico della tabella del proprietario.
      * @throws \InvalidArgumentException Se il chiamante interno usa un contesto non previsto.
      */
-    private function ownerTable(string $column): string
+    private function ownerTable(string $column): ?string
     {
         return match ($column) {
             'project_uuid' => 'projects',
             'application_uuid' => 'applications',
+            'is_studio' => null,
             default => throw new \InvalidArgumentException('Invalid work owner.'),
         };
     }

@@ -23,6 +23,7 @@ $routes->group('backend', ['filter' => 'authorization'], function($routes) {
         $routes->post('validateTaskDraft', '\Modules\Backend\Applications\Controllers\ApplicationsController::validateTaskDraft', ['filter' => 'permission:applications_add']);
         $routes->post('validateNoteDraft', '\Modules\Backend\Applications\Controllers\ApplicationsController::validateNoteDraft', ['filter' => 'permission:applications_add']);
         $routes->post('saveTask', '\Modules\Backend\Applications\Controllers\ApplicationsController::saveTask', ['filter' => 'permission:applications_show_all,applications_show,applications_edit']);
+        $routes->post('getTaskForModal', '\Modules\Backend\Applications\Controllers\ApplicationsController::getTaskForModal', ['filter' => 'permission:applications_show_all,applications_show,applications_edit']);
         $routes->post('saveNote', '\Modules\Backend\Applications\Controllers\ApplicationsController::saveNote', ['filter' => 'permission:applications_show_all,applications_show,applications_edit']);
         $routes->post('deleteTask', '\Modules\Backend\Applications\Controllers\ApplicationsController::deleteTask', ['filter' => 'permission:applications_edit']);
         $routes->post('deleteNote', '\Modules\Backend\Applications\Controllers\ApplicationsController::deleteNote', ['filter' => 'permission:applications_edit']);

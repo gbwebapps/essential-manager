@@ -219,6 +219,28 @@ class ProjectsController extends BackendController
     }
 
     /**
+     * Carica task, passi e note del solo proprietario autorizzato per il modale.
+     * @return ResponseInterface Record completo oppure errore senza contenuti estranei.
+     */
+    public function getTaskForModal(): ResponseInterface
+    {
+        if ( ! $this->allowsProjectContext() || ! $this->allows('tasks_edit')): return $this->forbidden(); endif;
+        $posts = $this->request->getPost();
+        $rule = $this->projectsModel->delValidationRules()['uuid'];
+        if (array_diff(array_keys($posts), ['uuid', 'project_uuid']) !== [] || ! $this->validateData($posts, ['uuid' => $rule, 'project_uuid' => $rule])):
+            return $this->jsonResponse(['result' => false, 'message' => lang('backend/tasks.messages.invalidData')]);
+        endif;
+        $record = model(\Modules\Backend\Tasks\Models\TaskModalModel::class)->getModal($posts['uuid'], 'project_uuid', $posts['project_uuid'], $this->allows('notes_show'));
+        return $this->jsonResponse($record ? ['result' => true, 'record' => $record] : ['result' => false, 'message' => lang('backend/tasks.messages.notFound')]);
+    }
+
+    /** @return array<string, bool> Permessi delle note stabiliti dall'identità autenticata. */
+    private function taskNotePermissions(): array
+    {
+        return ['show' => $this->allows('notes_show'), 'add' => $this->allows('notes_add'), 'edit' => $this->allows('notes_edit'), 'delete' => $this->allows('notes_delete')];
+    }
+
+    /**
      * Salva task e passi del modale nel progetto autorizzato.
      * @return ResponseInterface Record persistito oppure errori, senza chiudere il modale.
      */
@@ -309,7 +331,7 @@ class ProjectsController extends BackendController
         $projectUuid = $posts['project_uuid'];
         unset($posts['project_uuid']);
         $result = $kind === 'task'
-            ? $this->tasksModel->saveForProject($posts, $projectUuid, $this->currentAdmin->uuid ?? null, $this->allows('tasks_complete'))
+            ? model(\Modules\Backend\Tasks\Models\TaskModalModel::class)->saveModal($posts, 'project_uuid', $projectUuid, $this->currentAdmin->uuid ?? null, $this->allows('tasks_complete'), $this->taskNotePermissions())
             : $this->notesModel->saveForProject($posts, $projectUuid, $this->currentAdmin->uuid ?? null);
         if ($result['result']): $this->audit(($editing ? 'EDIT_' : 'ADD_') . strtoupper($module), $result['record']->uuid, $kind === 'task' ? $result['record']->title : lang('backend/projects.related.notes'), $module); endif;
         if ($result['result']): $result['navigationCounts'] = \Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin); endif;

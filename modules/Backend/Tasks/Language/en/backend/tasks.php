@@ -1,10 +1,23 @@
 <?php declare(strict_types = 1);
 
 return [
+    'modal' => [
+        'stepNotes' => 'Step notes',
+        'noNotes' => 'No notes.',
+        'newNote' => 'New note',
+        'draftNotice' => 'Notes are saved with the task. Reset and closing discard unsaved changes.',
+        'noteChanged' => 'This note has changed or is no longer available. Close and reopen the modal before trying again.',
+    ],
     'overview' => [
-        'open' => 'Open tasks',
+        'todo' => 'To do',
         'inProgress' => 'In progress',
+        'completed' => 'Completed',
+        'total' => 'Total',
         'remainingSteps' => 'Remaining steps',
+        'summary' => 'Task summary',
+        'noCurrent' => 'No current task',
+        'noCurrentHint' => 'Open a task and choose “%s” to get started.',
+        'openTask' => 'Open task',
     ],
     'titles' => [
         'index' => 'Tasks',
@@ -36,6 +49,7 @@ return [
         'allRecords' => 'All',
     ],
     'labels' => [
+        'stepsCount' => '%s of %s',
         'step' => 'Step',
         'title' => 'Title',
         'description' => 'Description',
@@ -61,7 +75,6 @@ return [
         'completedAt' => 'Completed',
         'current' => 'Current task',
         'nextStep' => 'Next step',
-        'paused' => 'Paused',
         'note' => 'Note',
         'notes' => 'Notes',
         'taskNote' => 'Task note',
@@ -72,6 +85,8 @@ return [
         'restoredAt' => 'Restored',
     ],
     'placeholders' => [
+        'step' => 'Describe the step to complete',
+        'initialNote' => 'Write an initial note',
         'dateFromAdd' => 'Search by addition start date...',
         'dateToAdd' => 'Search by addition end date...',
         'dateFromEdit' => 'Search by update start date...',
@@ -81,13 +96,12 @@ return [
         'searchTitle' => 'Title',
     ],
     'actions' => [
+        'readNote' => 'Click to read',
         'addStep' => 'Add step',
         'removeStep' => 'Remove step',
         'complete' => 'Complete task',
         'reopen' => 'Reopen task',
         'work' => 'Work on this',
-        'pause' => 'Pause',
-        'resume' => 'Resume',
         'addNote' => 'Add note',
         'close' => 'Close',
         'save' => 'Save',
@@ -111,6 +125,7 @@ return [
         'showSystemDetails' => 'Show metadata',
     ],
     'messages' => [
+        'saveStepFirst' => 'Save the task before adding a note to this step.',
         'noteSaveNotice' => 'The note is saved to the selected task or step.',
         'confirmDeleteNote' => 'Permanently delete this note?',
         'noteDeleted' => 'Note permanently deleted.',
@@ -140,9 +155,7 @@ return [
         'softDeleteSuccess' => 'Task moved to trash.',
         'restoreDeleteSuccess' => 'Task restored.',
         'hardDeleteSuccess' => 'Task permanently deleted.',
-        'noCurrent' => 'There is no current task to pause or resume.',
         'currentCompleted' => 'A completed task cannot be selected as current.',
-        'currentChanged' => 'The current task changed. Reload and retry.',
         'confirmComplete' => 'Complete the task and all its steps?',
         'confirmReopen' => 'Reopen the task by reopening only its last step?',
         'confirmNote' => 'Confirm this note action?',

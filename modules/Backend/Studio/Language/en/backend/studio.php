@@ -1,0 +1,22 @@
+<?php declare(strict_types = 1);
+
+return [
+    'noTasksFound' => 'No tasks were found.',
+    'noNotesFound' => 'No notes were found.',
+    'clearSearch' => 'Clear search',
+    'invalidSearch' => 'The search contains characters that are not allowed.',
+    'searchTasks' => 'Search by title',
+    'searchNotes' => 'Search notes',
+    'newest' => 'Show newest first',
+    'oldest' => 'Show oldest first',
+    'unexpectedFields' => 'Unexpected parameters: {0}.',
+    'title' => 'Studio',
+    'tasks' => 'Tasks',
+    'notes' => 'Notes',
+    'newTask' => 'New task',
+    'newNote' => 'New note',
+    'taskNotes' => 'Task notes',
+    'saveNotice' => 'Data is saved to the Studio.',
+    'notFound' => 'This item is not available in the Studio.',
+    'confirmTaskDelete' => 'Permanently delete the task, its steps and all linked notes?',
+];

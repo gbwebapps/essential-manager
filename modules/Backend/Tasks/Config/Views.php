@@ -20,6 +20,8 @@ class Views extends BaseConfig
     public const META_DATA_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\metaDataPartial';
     public const FORM_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\taskFormPartial';
     public const EDITOR_STEP_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\editorStepPartial';
+    public const SECTION_STYLE_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\sectionStylePartial';
+    public const STEPS_STYLE_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\stepsStylePartial';
     public const STEPS_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\stepsPartial';
     public const NOTES_PANEL_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\notesPanelPartial';
     public const NOTES_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\noteItemsPartial';
@@ -27,6 +29,13 @@ class Views extends BaseConfig
     public const STEP_FIELD_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\stepFieldPartial';
     public const FORM_FIELDS_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\formFieldsPartial';
     public const DETAIL_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\detailPartial';
+    public const PROGRESS_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\progressPartial';
+    public const OVERVIEW_STYLE_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\overviewStylePartial';
     public const OVERVIEW_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\overviewPartial';
     public const ACTION_LINKS_STYLE_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\actionLinksStylePartial';
+    public const MODAL_STEP_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\modalStepPartial';
+    public const MODAL_NOTE_GROUP_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\modalNoteGroupPartial';
+    public const MODAL_NOTES_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\modalNotesPartial';
+    public const MODAL_EDITOR_STYLE_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\modalEditorStylePartial';
+    public const STATUS_PARTIAL = 'Modules\\Backend\\Tasks\\Views\\partials\\common\\statusPartial';
 }

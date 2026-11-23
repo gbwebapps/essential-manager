@@ -23,6 +23,7 @@ $routes->group('backend', ['filter' => 'authorization'], function($routes) {
         $routes->post('validateTaskDraft', '\Modules\Backend\Projects\Controllers\ProjectsController::validateTaskDraft', ['filter' => 'permission:projects_add']);
         $routes->post('validateNoteDraft', '\Modules\Backend\Projects\Controllers\ProjectsController::validateNoteDraft', ['filter' => 'permission:projects_add']);
         $routes->post('saveTask', '\Modules\Backend\Projects\Controllers\ProjectsController::saveTask', ['filter' => 'permission:projects_show_all,projects_show,projects_edit']);
+        $routes->post('getTaskForModal', '\Modules\Backend\Projects\Controllers\ProjectsController::getTaskForModal', ['filter' => 'permission:projects_show_all,projects_show,projects_edit']);
         $routes->post('saveNote', '\Modules\Backend\Projects\Controllers\ProjectsController::saveNote', ['filter' => 'permission:projects_show_all,projects_show,projects_edit']);
         $routes->post('deleteTask', '\Modules\Backend\Projects\Controllers\ProjectsController::deleteTask', ['filter' => 'permission:projects_edit']);
         $routes->post('deleteNote', '\Modules\Backend\Projects\Controllers\ProjectsController::deleteNote', ['filter' => 'permission:projects_edit']);

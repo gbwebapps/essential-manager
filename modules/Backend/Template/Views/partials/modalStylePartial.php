@@ -8,8 +8,13 @@
         min-block-size: 0;
         max-block-size: inherit;
     }
-    .manager-work-modal .modal-body { min-block-size: 0; overflow-y: auto; scrollbar-gutter: stable; }
+    .manager-work-modal .modal-body { min-block-size: 0; padding-block-end: 1rem; overflow-y: auto; scrollbar-gutter: stable; }
     .manager-work-modal .modal-footer { flex-wrap: nowrap; }
+    .manager-work-modal select[name="status"] + .ts-wrapper .ts-dropdown {
+        top: auto !important;
+        bottom: 100%;
+        margin: 0 0 .25rem;
+    }
     body:has(.manager-work-modal.show) .scrollup { display: none; }
     .manager-work-modal [data-work-field-error] {
         box-sizing: border-box;
@@ -22,14 +27,14 @@
         overscroll-behavior: contain;
     }
     .manager-work-modal [data-work-form-errors] {
-        block-size: 3.1em;
+        block-size: 1.55em;
         line-height: 1.55;
         overflow: auto;
         scrollbar-width: thin;
         overscroll-behavior: contain;
     }
     .manager-work-modal .transfer-intro {
-        block-size: 3.2em;
+        block-size: 1.6em;
         line-height: 1.6;
         overflow: auto;
         scrollbar-width: thin;
@@ -37,6 +42,6 @@
     }
     @media (max-width: 575.98px) {
         .manager-work-modal [data-work-field-error] { block-size: calc(3.1em + .25rem); }
-        .manager-work-modal .transfer-intro { block-size: 4.8em; }
+        .manager-work-modal .transfer-intro { block-size: 3.2em; }
     }
 </style>

@@ -3,6 +3,8 @@
 <?= $this->section('content') ?>
 
     <?= $this->include(\Modules\Backend\Tasks\Config\Views::ACTION_LINKS_STYLE_PARTIAL); ?>
+    <?= $this->include(\Modules\Backend\Tasks\Config\Views::SECTION_STYLE_PARTIAL); ?>
+    <?= $this->include(\Modules\Backend\Tasks\Config\Views::STEPS_STYLE_PARTIAL); ?>
 
     <div class="row">
         <div class="col-12">

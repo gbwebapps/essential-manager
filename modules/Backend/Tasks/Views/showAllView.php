@@ -229,5 +229,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('beforeLinksBarView') ?>
+    <?= $this->include(\Modules\Backend\Tasks\Config\Views::SECTION_STYLE_PARTIAL); ?>
+    <?= $this->include(\Modules\Backend\Tasks\Config\Views::OVERVIEW_STYLE_PARTIAL); ?>
     <div id="tasks-overview-container" class="mb-3"><?= $this->include(\Modules\Backend\Tasks\Config\Views::OVERVIEW_PARTIAL); ?></div>
 <?= $this->endSection() ?>

@@ -41,8 +41,8 @@
                                     </td>
                                     <td class="align-middle fw-bold text-break"><?= esc($application->name); ?></td>
                                     <td class="align-middle text-break"><?= esc($application->project_name ?? ''); ?></td>
-                                    <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($application->task_count ?? 0); ?></span></td>
-                                    <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($application->note_count ?? 0); ?></span></td>
+                                    <td class="align-middle text-center"><span data-count-kind="tasks" class="badge application-count"><?= (int) ($application->task_count ?? 0); ?></span></td>
+                                    <td class="align-middle text-center"><span data-count-kind="notes" class="badge application-count"><?= (int) ($application->note_count ?? 0); ?></span></td>
                                     <!-- Azioni dell’applicazione, allineate a destra -->
                                     <td class="align-middle text-end">
                                         <div class="d-flex flex-row flex-nowrap justify-content-end align-items-center gap-1">

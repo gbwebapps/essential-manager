@@ -156,6 +156,17 @@ class NotesModel extends BackendModel
     }
 
     /**
+     * Salva una nota autonoma dello Studio nella transazione comune delle note.
+     * @param array $posts Contenuto ed eventuale UUID non attendibili.
+     * @param string|null $adminUuid Autore autenticato.
+     * @return array Esito con record oppure errori dei campi.
+     */
+    public function saveForStudio(array $posts, ?string $adminUuid): array
+    {
+        return $this->saveForContext($posts, 'is_studio', '1', $adminUuid);
+    }
+
+    /**
      * Motore condiviso del metodo saveForProject per progetto e applicazione.
      * @param string $ownerColumn Colonna interna ammessa dalla whitelist ownerTable.
      * @param string $ownerUuid UUID del proprietario.
@@ -218,6 +229,18 @@ class NotesModel extends BackendModel
      */
     public function insertForTask(array $data,string $uuid,?string $admin): string { return $this->insertForContext($data,'task_uuid',$uuid,$admin); }
     /**
+     * Inserisce una nota del passo nella transazione del task, senza commit autonomo.
+     * @param array $data Contenuto già validato dal server.
+     * @param string $stepUuid UUID del passo verificato dal chiamante.
+     * @param string|null $adminUuid Amministratore autenticato.
+     * @return string UUID della nuova nota.
+     */
+    public function insertForStep(array $data, string $stepUuid, ?string $adminUuid): string
+    {
+        return $this->insertForContext($data, 'step_uuid', $stepUuid, $adminUuid);
+    }
+
+    /**
      * @param array $posts Contenuto e UUID.
      * @param string $uuid Task.
      * @param string|null $admin Identità server.
@@ -250,7 +273,7 @@ class NotesModel extends BackendModel
      */
     public function deleteForOwner(string $uuid, string $column, string $ownerUuid): array
     {
-        if ( ! in_array($column, ['project_uuid', 'application_uuid'], true)): throw new \InvalidArgumentException('Invalid note owner.'); endif;
+        if ( ! in_array($column, ['project_uuid', 'application_uuid', 'is_studio'], true)): throw new \InvalidArgumentException('Invalid note owner.'); endif;
         try {
             $this->db->transBegin();
             $this->lockNoteContext($column, $ownerUuid);
@@ -298,6 +321,10 @@ class NotesModel extends BackendModel
      */
     private function lockNoteContext(string $column,string $uuid): void
     {
+        if ($column==='is_studio'):
+            if ($uuid!=='1'): throw new \InvalidArgumentException('Invalid Studio owner.'); endif;
+            return;
+        endif;
         if ($column==='task_uuid'): model(\Modules\Backend\Tasks\Models\TasksModel::class)->lockTask($uuid);return; endif;
         if ($column==='step_uuid'):
             $step=$this->db->query('select task_uuid from task_steps where uuid=?',[$uuid])->getRow();
@@ -312,17 +339,18 @@ class NotesModel extends BackendModel
 
     /**
      * Traduce soltanto le colonne di contesto definite dal codice nei rispettivi proprietari.
-     * @param string $column project_uuid oppure application_uuid, mai un identificatore libero dal client.
-     * @return string Nome statico della tabella del proprietario.
+     * @param string $column project_uuid, application_uuid oppure is_studio, mai un identificatore libero dal client.
+     * @return string|null Nome statico della tabella del proprietario.
      * @throws \InvalidArgumentException Se il chiamante interno usa un contesto non previsto.
      */
-    private function ownerTable(string $column): string
+    private function ownerTable(string $column): ?string
     {
         return match ($column) {
             'project_uuid' => 'projects',
             'application_uuid' => 'applications',
             'task_uuid' => 'tasks',
             'step_uuid' => 'task_steps',
+            'is_studio' => null,
             default => throw new \InvalidArgumentException('Invalid work owner.'),
         };
     }

@@ -1,10 +1,23 @@
 <?php declare(strict_types = 1);
 
 return [
+    'modal' => [
+        'stepNotes' => '步骤备注',
+        'noNotes' => '暂无备注。',
+        'newNote' => '新备注',
+        'draftNotice' => '备注与任务一起保存。重置或关闭将放弃未保存的更改。',
+        'noteChanged' => '此备注已更改或不可用。请关闭并重新打开窗口后重试。',
+    ],
     'overview' => [
-        'open' => '待完成任务',
+        'todo' => '待办',
         'inProgress' => '进行中',
-        'remainingSteps' => '待完成步骤',
+        'completed' => '已完成',
+        'total' => '总计',
+        'remainingSteps' => '剩余步骤',
+        'summary' => '任务概览',
+        'noCurrent' => '当前没有任务',
+        'noCurrentHint' => '打开任务并选择“%s”即可开始。',
+        'openTask' => '打开任务',
     ],
     'titles' => [
         'index' => '任务',
@@ -36,6 +49,7 @@ return [
         'allRecords' => '全部',
     ],
     'labels' => [
+        'stepsCount' => '%s / %s',
         'step' => '步骤',
         'title' => '标题',
         'description' => '描述',
@@ -61,7 +75,6 @@ return [
         'completedAt' => 'Completed',
         'current' => 'Current task',
         'nextStep' => 'Next step',
-        'paused' => 'Paused',
         'note' => 'Note',
         'notes' => 'Notes',
         'taskNote' => 'Task note',
@@ -72,6 +85,8 @@ return [
         'restoredAt' => 'Restored',
     ],
     'placeholders' => [
+        'step' => '描述需要完成的步骤',
+        'initialNote' => '写下初始备注',
         'dateFromAdd' => '按添加开始日期搜索...',
         'dateToAdd' => '按添加结束日期搜索...',
         'dateFromEdit' => '按更新开始日期搜索...',
@@ -81,13 +96,12 @@ return [
         'searchTitle' => '标题',
     ],
     'actions' => [
+        'readNote' => '点击阅读',
         'addStep' => '添加步骤',
         'removeStep' => '移除步骤',
         'complete' => 'Complete task',
         'reopen' => 'Reopen task',
         'work' => 'Work on this',
-        'pause' => 'Pause',
-        'resume' => 'Resume',
         'addNote' => 'Add note',
         'close' => 'Close',
         'save' => 'Save',
@@ -111,6 +125,7 @@ return [
         'showSystemDetails' => '显示元数据',
     ],
     'messages' => [
+        'saveStepFirst' => '请先保存任务，然后再为此步骤添加备注。',
         'noteSaveNotice' => '备注将保存到选定的任务或步骤。',
         'confirmDeleteNote' => '永久删除此备注？',
         'noteDeleted' => '备注已永久删除。',
@@ -140,9 +155,7 @@ return [
         'softDeleteSuccess' => 'Task moved to trash.',
         'restoreDeleteSuccess' => 'Task restored.',
         'hardDeleteSuccess' => 'Task permanently deleted.',
-        'noCurrent' => 'There is no current task to pause or resume.',
         'currentCompleted' => 'A completed task cannot be selected as current.',
-        'currentChanged' => 'The current task changed. Reload and retry.',
         'confirmComplete' => 'Complete the task and all its steps?',
         'confirmReopen' => 'Reopen the task by reopening only its last step?',
         'confirmNote' => 'Confirm this note action?',

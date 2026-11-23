@@ -7,6 +7,21 @@ namespace Modules\Backend\Tasks\Libraries;
  */
 class TasksClass
 {
+    protected bool $studioContext = false;
+
+    /** @param bool $studio Contesto del task persistito. @return void Configura il ritorno alla sezione corretta. */
+    public function setStudioContext(bool $studio): void
+    {
+        $this->studioContext = $studio;
+    }
+
+    /** @param object $task Task persistito. @return string Destinazione leggibile senza campi tecnici per Studio. */
+    public static function contextLabel(object $task): string
+    {
+        if ((int) ($task->is_studio ?? 0) === 1): return lang('backend/studio.title'); endif;
+        return ($task->project_name ?? '') . (($task->application_name ?? null) !== null ? ' / ' . $task->application_name : '');
+    }
+
     /* LINKS BAR ----------------------------------------------------------------------------------- */
 
     /**
@@ -16,7 +31,7 @@ class TasksClass
     public function getLinksBarShowAll(): array
     {
         return [
-            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => 'backend/tasks/add'],
+            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => $this->studioContext ? 'backend/studio/tasks/add' : 'backend/tasks/add'],
         ];
     }
 
@@ -27,7 +42,7 @@ class TasksClass
     public function getLinksBarAdd(): array
     {
         return [
-            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => 'backend/tasks/showAll'],
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? 'backend/studio' : 'backend/tasks/showAll'],
         ];
     }
 
@@ -43,9 +58,9 @@ class TasksClass
         endif;
 
         return [
-            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => 'backend/tasks/showAll'],
-            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => 'backend/tasks/add'],
-            ['icon' => '<i class="fa-solid fa-eye"></i>', 'label' => lang('backend/tasks.linksBar.show'), 'route' => "backend/tasks/show/{$uuid}"],
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? 'backend/studio' : 'backend/tasks/showAll'],
+            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => $this->studioContext ? 'backend/studio/tasks/add' : 'backend/tasks/add'],
+            ['icon' => '<i class="fa-solid fa-eye"></i>', 'label' => lang('backend/tasks.linksBar.show'), 'route' => ($this->studioContext ? "backend/studio/tasks/show/{$uuid}" : "backend/tasks/show/{$uuid}")],
         ];
     }
 
@@ -61,9 +76,9 @@ class TasksClass
         endif;
 
         return [
-            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => 'backend/tasks/showAll'],
-            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => 'backend/tasks/add'],
-            ['icon' => '<i class="fa-solid fa-pen"></i>', 'label' => lang('backend/tasks.linksBar.edit'), 'route' => "backend/tasks/edit/{$uuid}"],
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? 'backend/studio' : 'backend/tasks/showAll'],
+            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => $this->studioContext ? 'backend/studio/tasks/add' : 'backend/tasks/add'],
+            ['icon' => '<i class="fa-solid fa-pen"></i>', 'label' => lang('backend/tasks.linksBar.edit'), 'route' => ($this->studioContext ? "backend/studio/tasks/edit/{$uuid}" : "backend/tasks/edit/{$uuid}")],
         ];
     }
 

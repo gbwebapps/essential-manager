@@ -1,10 +1,23 @@
 <?php declare(strict_types = 1);
 
 return [
+    'modal' => [
+        'stepNotes' => 'Notizen zum Schritt',
+        'noNotes' => 'Keine Notizen.',
+        'newNote' => 'Neue Notiz',
+        'draftNotice' => 'Notizen werden mit der Aufgabe gespeichert. Zurücksetzen und Schließen verwerfen ungespeicherte Änderungen.',
+        'noteChanged' => 'Diese Notiz wurde geändert oder ist nicht mehr verfügbar. Schließen und öffnen Sie den Dialog erneut.',
+    ],
     'overview' => [
-        'open' => 'Offene Aufgaben',
-        'inProgress' => 'In Bearbeitung',
-        'remainingSteps' => 'Offene Schritte',
+        'todo' => 'Zu erledigen',
+        'inProgress' => 'In Arbeit',
+        'completed' => 'Abgeschlossen',
+        'total' => 'Gesamt',
+        'remainingSteps' => 'Verbleibende Schritte',
+        'summary' => 'Aufgabenübersicht',
+        'noCurrent' => 'Keine aktuelle Aufgabe',
+        'noCurrentHint' => 'Öffne eine Aufgabe und wähle „%s“, um zu beginnen.',
+        'openTask' => 'Aufgabe öffnen',
     ],
     'titles' => [
         'index' => 'Aufgaben',
@@ -36,6 +49,7 @@ return [
         'allRecords' => 'Alle',
     ],
     'labels' => [
+        'stepsCount' => '%s von %s',
         'step' => 'Schritt',
         'title' => 'Titel',
         'description' => 'Beschreibung',
@@ -61,7 +75,6 @@ return [
         'completedAt' => 'Completed',
         'current' => 'Current task',
         'nextStep' => 'Next step',
-        'paused' => 'Paused',
         'note' => 'Note',
         'notes' => 'Notes',
         'taskNote' => 'Task note',
@@ -72,6 +85,8 @@ return [
         'restoredAt' => 'Restored',
     ],
     'placeholders' => [
+        'step' => 'Beschreibe den auszuführenden Schritt',
+        'initialNote' => 'Schreibe eine erste Notiz',
         'dateFromAdd' => 'Nach Startdatum des Hinzufügens suchen...',
         'dateToAdd' => 'Nach Enddatum des Hinzufügens suchen...',
         'dateFromEdit' => 'Nach Startdatum der Änderung suchen...',
@@ -81,13 +96,12 @@ return [
         'searchTitle' => 'Titel',
     ],
     'actions' => [
+        'readNote' => 'Zum Lesen klicken',
         'addStep' => 'Schritt hinzufügen',
         'removeStep' => 'Schritt entfernen',
         'complete' => 'Complete task',
         'reopen' => 'Reopen task',
         'work' => 'Work on this',
-        'pause' => 'Pause',
-        'resume' => 'Resume',
         'addNote' => 'Add note',
         'close' => 'Close',
         'save' => 'Save',
@@ -111,6 +125,7 @@ return [
         'showSystemDetails' => 'Metadaten anzeigen',
     ],
     'messages' => [
+        'saveStepFirst' => 'Speichere die Aufgabe, bevor du diesem Schritt eine Notiz hinzufügst.',
         'noteSaveNotice' => 'Die Notiz wird in der gewählten Aufgabe oder im Schritt gespeichert.',
         'confirmDeleteNote' => 'Diese Notiz endgültig löschen?',
         'noteDeleted' => 'Notiz endgültig gelöscht.',
@@ -140,9 +155,7 @@ return [
         'softDeleteSuccess' => 'Task moved to trash.',
         'restoreDeleteSuccess' => 'Task restored.',
         'hardDeleteSuccess' => 'Task permanently deleted.',
-        'noCurrent' => 'There is no current task to pause or resume.',
         'currentCompleted' => 'A completed task cannot be selected as current.',
-        'currentChanged' => 'The current task changed. Reload and retry.',
         'confirmComplete' => 'Complete the task and all its steps?',
         'confirmReopen' => 'Reopen the task by reopening only its last step?',
         'confirmNote' => 'Confirm this note action?',

@@ -1,4 +1,7 @@
 <?= view(\Modules\Backend\Tasks\Config\Views::ACTION_LINKS_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<?php if (($draftMode ?? false) === true): ?>
+    <?= view(\Modules\Backend\Projects\Config\Views::SECTION_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<?php endif; ?>
 <?php
     $isDraft = ($draftMode ?? false) === true;
     $hasProject = ! empty($project->uuid);
@@ -10,26 +13,26 @@
 ?>
 <style>
     .project-related-panel .card-header { gap: .5rem; flex-wrap: wrap; border-top: 1px solid var(--app-border) !important; }
-    .project-related-item + .project-related-item { border-top: 1px solid var(--app-border); }
-    .project-related-toggle { min-width: 0; display: flex; align-items: center; gap: .65rem; width: 100%; padding: .6rem .8rem; border: 0; text-align: left; color: inherit; background: transparent; }
-    .project-related-toggle:hover, .project-related-toggle:focus-visible { background: var(--app-surface-muted); }
-    .project-related-toggle > .fa-chevron-right { font-size: .75rem; transition: transform .3s ease; }
-    .project-related-toggle[aria-expanded="true"] > .fa-chevron-right { transform: rotate(90deg); }
-    .project-related-summary { min-width: 0; flex: 1; }
-    .project-related-title { display: block; overflow-wrap: anywhere; }
-    .project-related-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .7rem; margin-top: .15rem; font-size: .8rem; }
-    .project-related-detail { padding: 0 .8rem .7rem 2.2rem; font-size: .9rem; overflow-wrap: anywhere; }
-    .project-related-text { white-space: pre-wrap; margin-bottom: .5rem; }
-    .project-related-steps { margin: .4rem 0 .65rem; padding: 0; list-style: none; }
-    .project-related-steps li { display: flex; align-items: baseline; gap: .5rem; padding: .15rem 0; }
+    [data-project-draft-root] .project-related-item + .project-related-item { border-top: 1px solid var(--app-border); }
+    [data-project-draft-root] .project-related-toggle { min-width: 0; display: flex; align-items: center; gap: .65rem; width: 100%; padding: .6rem .8rem; border: 0; text-align: left; color: inherit; background: transparent; }
+    [data-project-draft-root] .project-related-toggle:hover, [data-project-draft-root] .project-related-toggle:focus-visible { background: var(--app-surface-muted); }
+    [data-project-draft-root] .project-related-toggle > .fa-chevron-right { font-size: .75rem; transition: transform .3s ease; }
+    [data-project-draft-root] .project-related-toggle[aria-expanded="true"] > .fa-chevron-right { transform: rotate(90deg); }
+    [data-project-draft-root] .project-related-summary { min-width: 0; flex: 1; }
+    [data-project-draft-root] .project-related-title { display: block; overflow-wrap: anywhere; }
+    [data-project-draft-root] .project-related-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .7rem; margin-top: .15rem; font-size: .8rem; }
+    [data-project-draft-root] .project-related-detail { padding: 0 .8rem .7rem 2.2rem; font-size: .9rem; overflow-wrap: anywhere; }
+    [data-project-draft-root] .project-related-text { white-space: pre-wrap; margin-bottom: .5rem; }
+    [data-project-draft-root] .project-related-steps { margin: .4rem 0 .65rem; padding: 0; list-style: none; }
+    [data-project-draft-root] .project-related-steps li { display: flex; align-items: baseline; gap: .5rem; padding: .15rem 0; }
     .project-related-panel .collapsing { transition: height .3s ease-in-out; }
     @media (prefers-reduced-motion: reduce) {
-        .project-related-toggle > .fa-chevron-right, .project-related-panel .collapsing { transition: none; }
+        [data-project-draft-root] .project-related-toggle > .fa-chevron-right, .project-related-panel .collapsing { transition: none; }
     }
 </style>
 <?php foreach ($relatedPanels as $relatedKind => $relatedPanel): ?>
     <?php if ( ! \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, $relatedPanel['permission'])): continue; endif; ?>
-    <section class="project-related-panel" data-project-related-panel="<?= $relatedKind; ?>" <?= $isDraft ? 'data-project-draft-panel' : ''; ?> data-read-only="<?= $relatedReadOnly ? 'true' : 'false'; ?>" data-project-uuid="<?= esc($project->uuid ?? '', 'attr'); ?>" data-project-name="<?= esc($project->name ?? '', 'attr'); ?>" data-reload-error="<?= esc(lang('backend/projects.related.reloadError'), 'attr'); ?>">
+    <section class="project-related-panel task-related-panel" data-project-related-panel="<?= $relatedKind; ?>" <?= $isDraft ? 'data-project-draft-panel' : ''; ?> data-read-only="<?= $relatedReadOnly ? 'true' : 'false'; ?>" data-project-uuid="<?= esc($project->uuid ?? '', 'attr'); ?>" data-project-name="<?= esc($project->name ?? '', 'attr'); ?>" data-reload-error="<?= esc(lang('backend/projects.related.reloadError'), 'attr'); ?>">
         <div class="card-header rounded-0 d-flex justify-content-between align-items-center">
             <h2 class="card-title text-start mb-0"><?= ui_text('backend/projects.related.' . $relatedKind . 's', [], false); ?></h2>
             <div class="d-flex flex-wrap gap-1">

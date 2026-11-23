@@ -2,6 +2,8 @@
 
 <?= $this->section('content') ?>
 
+    <?= $this->include(\Modules\Backend\Applications\Config\Views::SECTION_STYLE_PARTIAL); ?>
+
     <div class="row">
         <div class="col-12">
             <div id="edit-applications-container">

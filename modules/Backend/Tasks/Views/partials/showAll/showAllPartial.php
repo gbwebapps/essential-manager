@@ -2,6 +2,7 @@
     $canEditTasks = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'tasks_edit');
     $canShowTasks = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'tasks_show');
     $canDeleteTasks = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'tasks_delete');
+    $canWorkOnTasks = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'tasks_set_current') && ($canShowTasks || $canEditTasks);
     $canRestoreTasks = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'tasks_restore');
 ?>
 
@@ -24,7 +25,7 @@
                                         <?= ui_text('backend/tasks.labels.title', [], false); ?> <?= (($posts['column'] === 'title') ? '&nbsp;' . $icon : ''); ?>
                                     </a>
                                 </th>
-                                <th><?= ui_text('backend/tasks.labels.context', [], false); ?></th>
+                                <th class="text-nowrap"><?= ui_text('backend/tasks.labels.context', [], false); ?></th>
                                 <th class="text-center text-nowrap"><?= ui_text('backend/tasks.labels.status', [], false); ?></th>
                                 <th class="text-center text-nowrap"><?= ui_text('backend/tasks.labels.steps', [], false); ?></th>
                                 <th class="text-center text-nowrap"><?= ui_text('backend/tasks.related.notes', [], false); ?></th>
@@ -34,22 +35,33 @@
                         <tbody id="tasksBody">
                             <?php foreach($data['records'] as $task): ?>
                                 <?php $isTrashed = ( ! is_null($task->deleted_at)); ?>
-                                <tr class="border-end border-start" data-task-row="<?= esc($task->uuid, 'attr'); ?>">
+                                <tr class="border-end border-start" data-task-row="<?= esc($task->uuid, 'attr'); ?>" data-task-current="<?= ($currentTask->uuid ?? null) === $task->uuid ? 'true' : 'false'; ?>">
                                     <td class="align-middle fw-bold">
                                         <button <?= ui_binding('backend/tasks.buttons.showSystemDetails', 'title', [], true); ?> class="toggle-meta-btn btn btn-sm btn-link p-0 me-1 app-text shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#meta-<?= esc($task->uuid, 'attr'); ?>" aria-controls="meta-<?= esc($task->uuid, 'attr'); ?>" aria-expanded="false" title="<?= esc(lang('backend/tasks.buttons.showSystemDetails'), 'attr'); ?>">
                                             <i class="fa-solid fa-chevron-right"></i>
                                         </button>
                                     </td>
-                                    <td class="align-middle fw-bold"><span class="d-block text-truncate" style="width: 18rem; max-width: 35vw;" title="<?= esc($task->title, 'attr'); ?>"><?= esc($task->title); ?></span></td>
+                                    <td class="align-middle fw-bold"><span class="d-block text-truncate" style="width: 13rem; max-width: 30vw;" title="<?= esc($task->title, 'attr'); ?>"><?= esc(mb_strlen($task->title) > 50 ? mb_substr($task->title, 0, 49) . '…' : $task->title); ?></span></td>
                                     <?php $contextLabel = ($task->project_name ?? '') . ($task->application_name !== null ? ' / ' . $task->application_name : ''); ?>
-                                    <td class="align-middle text-nowrap"><span class="d-block text-truncate" style="max-width: 18rem;" title="<?= esc($contextLabel, 'attr'); ?>"><?= esc($contextLabel); ?></span></td>
-                                    <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= ui_text('backend/tasks.statuses.' . $task->status, [], false); ?></span><?php if (($currentTask->uuid ?? null) === $task->uuid): ?><div class="small app-text-muted"><?= ui_text('backend/tasks.labels.current', [], false); ?></div><?php endif; ?></td>
-                                    <td class="align-middle text-center text-nowrap"><?= (int) $task->completed_count; ?>/<?= (int) $task->step_count; ?></td>
-                                    <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($task->note_count ?? 0); ?></span></td>
+                                    <td class="align-middle text-nowrap"><span class="d-block text-truncate" style="max-width: 15rem;" title="<?= esc($contextLabel, 'attr'); ?>"><?= esc($contextLabel); ?></span></td>
+                                    <td class="align-middle text-center text-nowrap">
+                                        <span class="task-list-status">
+                                            <span class="task-list-pin-slot"><?php if (($currentTask->uuid ?? null) === $task->uuid): ?><span class="task-current-pin" role="img" aria-label="<?= esc(lang('backend/tasks.labels.current'), 'attr'); ?>" title="<?= esc(lang('backend/tasks.labels.current'), 'attr'); ?>"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i></span><?php endif; ?></span>
+                                            <?= view(\Modules\Backend\Tasks\Config\Views::STATUS_PARTIAL, ['task' => $task, 'currentTask' => $currentTask ?? null], ['saveData' => false]); ?>
+                                        </span>
+                                    </td>
+                                    <td class="align-middle text-center text-nowrap"><?= view(\Modules\Backend\Tasks\Config\Views::PROGRESS_PARTIAL, ['completedSteps' => $task->completed_count, 'totalSteps' => $task->step_count], ['saveData' => false]); ?></td>
+                                    <td class="align-middle text-center"><span class="badge task-notes-count"><?= (int) ($task->note_count ?? 0); ?></span></td>
                                     <!-- Azioni del task, allineate a destra -->
                                     <td class="align-middle text-end">
                                         <div class="d-flex flex-row flex-nowrap justify-content-end align-items-center gap-1">
                                             <?php if( ! $isTrashed): ?>
+                                                <?php if($canWorkOnTasks && $task->owner_deleted_at === null && $task->status !== 'completed' && ($currentTask->uuid ?? null) !== $task->uuid): ?>
+                                                    <form novalidate class="task-action m-0 p-0" data-endpoint="setCurrent">
+                                                        <input type="hidden" name="uuid" value="<?= esc($task->uuid, 'attr'); ?>">
+                                                        <button type="submit" class="btn btn-link btn-sm task-record-link text-nowrap"><i class="fa-solid fa-play fa-fw" aria-hidden="true"></i> <?= ui_text('backend/tasks.actions.work', [], false); ?></button>
+                                                    </form>
+                                                <?php endif; ?>
                                                 <?php if($canEditTasks && $task->owner_deleted_at === null): ?>
                                                     <a href="<?= esc(base_url('backend/tasks/edit/' . rawurlencode($task->uuid)), 'attr'); ?>" class="btn btn-sm app-btn-secondary text-nowrap">
                                                         <i class="fa-solid fa-pen fa-fw"></i> <?= ui_text('backend/tasks.actions.edit', [], false); ?>

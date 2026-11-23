@@ -6,7 +6,7 @@ return [
         'showAll' => 'Visualizza elenco',
         'show' => 'Visualizza dettaglio',
         'add' => 'Aggiungi task',
-        'edit' => 'Modifica task e passaggi',
+        'edit' => 'Modifica task e passi',
         'delete' => 'Elimina task',
         'restore' => 'Ripristina task',
         'complete' => 'Completa task',

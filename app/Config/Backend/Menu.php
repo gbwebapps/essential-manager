@@ -10,6 +10,13 @@ use CodeIgniter\Config\BaseConfig;
 class Menu extends BaseConfig
 {
     /**
+     * Voci del componente menuTopView, mostrate soltanto quando la vista viene inclusa in un hook.
+     * Le applicazioni le definiscono tramite Registrar, come gli altri array di menu.
+     * @var array
+     */
+    public array $top = [];
+
+    /**
      * Elenco delle voci di menu posizionate nell'area superiore destra
      * 
      * @var array 
@@ -72,7 +79,7 @@ class Menu extends BaseConfig
         parent::__construct();
 
         $features = config(Features::class);
-        foreach (['topRight', 'bottomLeft', 'bottomRight'] as $section):
+        foreach (['top', 'topRight', 'bottomLeft', 'bottomRight'] as $section):
             $this->{$section} = array_values(array_filter(
                 array_merge($this->prepend[$section] ?? [], $this->{$section}),
                 static fn (array $item): bool => $features->isSectionEnabled($item['controller'] ?? '')

@@ -98,6 +98,7 @@ abstract class BackendController extends BaseController
         $this->data['regexp'] = $this->regexp;
 
         /* Generazione degli arrays delle voci di menu per le viste */
+        $this->data['menuTop']        = config(\Config\Backend\Menu::class)->top;
         $this->data['menuTopRight']   = config(\Config\Backend\Menu::class)->topRight;
         $this->data['menuBottomLeft']  = config(\Config\Backend\Menu::class)->bottomLeft;
         $this->data['menuBottomRight'] = config(\Config\Backend\Menu::class)->bottomRight;

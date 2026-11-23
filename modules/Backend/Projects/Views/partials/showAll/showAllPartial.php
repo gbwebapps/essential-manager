@@ -42,9 +42,9 @@
                                     </td>
                                     <td class="align-middle fw-bold text-break"><?= esc($project->name); ?></td>
                                     <td class="align-middle text-break"><?= esc($project->parent_project_name ?? ''); ?></td>
-                                    <td class="align-middle text-center"><?php if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'applications_show_all')): ?><a class="badge app-bg-muted-subtle app-text-muted-emphasis border text-decoration-none" href="<?= esc(base_url('backend/applications/showAll') . '?project_uuid=' . rawurlencode($project->uuid), 'attr'); ?>"><?= (int) ($project->application_count ?? 0); ?></a><?php else: ?><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($project->application_count ?? 0); ?></span><?php endif; ?></td>
-                                    <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($project->task_count ?? 0); ?></span></td>
-                                    <td class="align-middle text-center"><span class="badge app-bg-muted-subtle app-text-muted-emphasis border"><?= (int) ($project->note_count ?? 0); ?></span></td>
+                                    <td class="align-middle text-center"><?php if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'applications_show_all')): ?><a data-count-kind="applications" class="badge project-count text-decoration-none" href="<?= esc(base_url('backend/applications/showAll') . '?project_uuid=' . rawurlencode($project->uuid), 'attr'); ?>"><?= (int) ($project->application_count ?? 0); ?></a><?php else: ?><span data-count-kind="applications" class="badge project-count"><?= (int) ($project->application_count ?? 0); ?></span><?php endif; ?></td>
+                                    <td class="align-middle text-center"><span data-count-kind="tasks" class="badge project-count"><?= (int) ($project->task_count ?? 0); ?></span></td>
+                                    <td class="align-middle text-center"><span data-count-kind="notes" class="badge project-count"><?= (int) ($project->note_count ?? 0); ?></span></td>
                                     <!-- Azioni del progetto, allineate a destra -->
                                     <td class="align-middle text-end">
                                         <div class="d-flex flex-row flex-nowrap justify-content-end align-items-center gap-1">

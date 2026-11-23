@@ -140,7 +140,10 @@ export class ProjectDraft {
             const chevron = draftElement('i', 'fa-solid fa-chevron-right');
             chevron.setAttribute('aria-hidden', 'true');
             const summary = draftElement('span', 'project-related-summary');
-            summary.append(draftElement('span', 'project-related-title fw-bold', kind === 'task' ? item.title : item.content.split(/\r?\n/)[0]));
+            const summaryText = (kind === 'task' ? item.title : item.content).replace(/\s+/gu, ' ').trim();
+            const summaryCharacters = Array.from(summaryText);
+            const preview = summaryCharacters.length > 50 ? summaryCharacters.slice(0, 49).join('') + '…' : summaryText;
+            summary.append(draftElement('span', 'project-related-title fw-bold text-truncate', preview));
             if (kind === 'task') {
                 const metadata = draftElement('span', 'project-related-meta app-text-muted');
                 metadata.append(draftElement('span', 'badge app-bg-muted-subtle app-text-muted-emphasis border', this.text('status_' + item.status)));
@@ -153,6 +156,7 @@ export class ProjectDraft {
             collapse.setAttribute('role', 'region');
             collapse.setAttribute('aria-labelledby', toggle.id);
             const detail = draftElement('div', 'project-related-detail');
+            if (kind === 'task' && summaryCharacters.length > 50) detail.append(draftElement('p', 'project-related-text fw-bold mb-2', item.title));
             if (kind === 'note' || item.description) detail.append(draftElement('p', 'project-related-text', kind === 'note' ? item.content : item.description));
             if (kind === 'task') {
                 const steps = draftElement('ol', 'ps-3 mb-2');

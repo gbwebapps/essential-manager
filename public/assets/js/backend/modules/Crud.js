@@ -414,6 +414,258 @@ export class ListManager {
     }
 }
 
+/**
+ * Lista SSR essenziale e indipendente da ListManager: ricerca, pagine, ordine e refresh.
+ * Il server valida lo stato e restituisce { output, state }; righe e paginazione restano viste SSR.
+ * @example
+ * new ListLightManager({ root: document.querySelector('#lista'), url: '/lista' }).load();
+ */
+export class ListLightManager {
+    /**
+     * @param {Object} config Root, URL, selettori opzionali, requestField e stato iniziale.
+     * storageKey distingue le preferenze persistenti; per default usa percorso URL e key.
+     * getState(state, instance) aggiunge eventuali dati del dominio; getListing(data) estrae il partial.
+     * sanitizeSearch(value) pulisce la digitazione, senza sostituire la validazione server.
+     * @param {Object} hooks onResponse(data, context, instance) può gestire risposte composte;
+     * onStateChange(state, instance) aggiorna i controlli esterni dopo il render.
+     */
+    constructor(config = {}, hooks = {}) {
+        this.config = {
+            key: '', storageKey: '', requestField: 'listState', debounceTime: 500, errorMessage: '',
+            state: {}, sanitizeSearch: value => value,
+            getState: state => state, getListing: data => data.list,
+            preserveExpanded: true, ...config
+        };
+        this.hooks = hooks;
+        this.root = typeof config.root === 'string' ? document.querySelector(config.root) : config.root;
+        if (!(this.root instanceof HTMLElement) || !config.url) {
+            throw new Error('ListLightManager: root e url sono obbligatori.');
+        }
+        const selectors = {
+            results: '[data-list-results]', search: '[data-list-search]',
+            clear: '[data-list-clear]', form: '[data-list-search-form]',
+            refresh: '[data-list-refresh]', sort: '[data-list-sort]',
+            pagination: '[data-list-pagination] a[data-page]', error: '[data-list-search-error]',
+            ...config.selectors
+        };
+        this.selectors = selectors;
+        for (const name of ['results', 'search', 'clear', 'form', 'refresh', 'sort', 'error']) {
+            this[name] = this.root.querySelector(selectors[name]);
+        }
+        if (!this.results) throw new Error('ListLightManager: contenitore risultati mancante.');
+        this.key = config.key || this.root.id;
+        this.storageKey = this.config.storageKey || `ListLightManager:${new URL(config.url, location.href).pathname}:${this.key}`;
+        this.state = { page: 1, search: '', direction: 'desc', ...this.config.state };
+        this.restoreState();
+        this.loaded = false;
+        this.destroyed = false;
+        this.generation = 0;
+        this.reads = Promise.resolve();
+        this.timer = null;
+        this.events = new AbortController();
+        this.bindEvents();
+        if (this.search) {
+            this.search.value = this.state.search;
+            this.syncSearchControl();
+            this.state.search = this.search.value;
+        }
+        this.persistState();
+    }
+
+    /** @returns {void} Ripristina solo ricerca, ordine e pagina; lo storage locale non è considerato attendibile. */
+    restoreState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(this.storageKey));
+            if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
+            if (Number.isSafeInteger(saved.page) && saved.page > 0 && saved.page <= 1000000) this.state.page = saved.page;
+            if (saved.direction === 'asc' || saved.direction === 'desc') this.state.direction = saved.direction;
+            if (typeof saved.search === 'string' && saved.search.length <= 4096) {
+                this.state.search = this.config.sanitizeSearch(saved.search);
+                if (this.state.search !== saved.search) this.state.page = 1;
+            }
+        } catch (_) {
+            // JSON corrotto o storage bloccato: la lista continua a funzionare con i valori iniziali.
+        }
+    }
+
+    /** @returns {void} Salva soltanto preferenze di lista; nessun record, contenuto o pannello aperto viene memorizzato. */
+    persistState() {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify({ page: this.state.page, search: this.state.search, direction: this.state.direction }));
+        } catch (_) {
+            // Quota esaurita o storage non disponibile non devono interrompere ricerca e navigazione.
+        }
+    }
+
+    /** @returns {void} Collega una volta i controlli; la paginazione usa delegazione sul root stabile. */
+    bindEvents() {
+        const options = { signal: this.events.signal };
+        this.search?.addEventListener('input', () => this.updateSearch(true), options);
+        this.clear?.addEventListener('click', event => {
+            event.preventDefault();
+            if (!this.search) return;
+            this.search.value = '';
+            this.updateSearch(false);
+            this.search.focus({ preventScroll: true });
+        }, options);
+        this.form?.addEventListener('submit', event => {
+            event.preventDefault(); this.updateSearch(false);
+        }, options);
+        this.refresh?.addEventListener('click', event => {
+            event.preventDefault(); this.load();
+        }, options);
+        this.sort?.addEventListener('click', event => {
+            event.preventDefault();
+            this.state.direction = this.state.direction === 'desc' ? 'asc' : 'desc';
+            this.state.page = 1; this.load();
+        }, options);
+        this.root.addEventListener('click', event => {
+            const link = event.target.closest(this.selectors.pagination);
+            if (!link || !this.root.contains(link)) return;
+            event.preventDefault();
+            const page = Number(link.dataset.page);
+            if (!Number.isSafeInteger(page) || page < 1) return;
+            this.state.page = page; this.load();
+        }, options);
+    }
+
+    /** @returns {void} Applica la pulizia configurata, conserva il cursore e sincronizza la X. */
+    syncSearchControl() {
+        if (!this.search) return;
+        const value = this.search.value;
+        const caret = this.search.selectionStart;
+        const clean = this.config.sanitizeSearch(value);
+        if (clean !== value) {
+            this.search.value = clean;
+            if (caret !== null) {
+                const position = this.config.sanitizeSearch(value.slice(0, caret)).length;
+                this.search.setSelectionRange(position, position);
+            }
+        }
+        if (this.clear) this.clear.style.display = clean ? 'flex' : 'none';
+    }
+
+    /** @param {boolean} debounce Attende il ritardo configurato. @returns {void} Invalida letture vecchie e riparte dalla prima pagina. */
+    updateSearch(debounce) {
+        if (this.destroyed || !this.search) return;
+        this.syncSearchControl();
+        this.state.search = this.search.value;
+        this.state.page = 1;
+        this.persistState();
+        ++this.generation;
+        clearTimeout(this.timer);
+        this.timer = null;
+        this.results.removeAttribute('aria-busy');
+        if (!this.state.search && this.error) this.error.textContent = '\u00a0';
+        if (debounce) this.timer = setTimeout(() => this.load(), this.config.debounceTime);
+        else this.load();
+    }
+
+    /** @returns {Object} Copia indipendente dello stato, arricchita dall'adattatore del dominio. */
+    snapshot() {
+        return this.config.getState(structuredClone(this.state), this);
+    }
+
+    /** @param {FormData} body Form dell'azione esterna. @returns {Object} Token da restituire ad apply con il partial della mutazione. */
+    attach(body) {
+        clearTimeout(this.timer);
+        this.timer = null;
+        this.results.removeAttribute('aria-busy');
+        body.set(this.config.requestField, JSON.stringify(this.snapshot()));
+        return { key: this.key, generation: ++this.generation, mutation: true };
+    }
+
+    /** @param {Object} context Token della richiesta. @returns {boolean} True solo per la risposta ancora attuale. */
+    isCurrent(context) {
+        return !this.destroyed && context?.key === this.key && context.generation === this.generation;
+    }
+
+    /** @returns {Promise<void>} Serializza le letture; il loader è quello predefinito di apiFetch. */
+    async load() {
+        if (this.destroyed) return;
+        clearTimeout(this.timer);
+        this.timer = null;
+        this.persistState();
+        const context = { key: this.key, generation: ++this.generation, mutation: false };
+        const body = new FormData();
+        body.set(this.config.requestField, JSON.stringify(this.snapshot()));
+        this.results.setAttribute('aria-busy', 'true');
+        this.reads = this.reads.catch(() => {}).then(() => this.fetchPage(context, body));
+        return this.reads;
+    }
+
+    /** @param {Object} context Token locale. @param {FormData} body Stato catturato. @returns {Promise<void>} Legge il partial e conserva focus e selezione della ricerca. */
+    async fetchPage(context, body) {
+        if (!this.isCurrent(context)) return;
+        const selection = this.search && document.activeElement === this.search
+            ? [this.search.selectionStart, this.search.selectionEnd, this.search.selectionDirection] : null;
+        try {
+            const response = await apiFetch(this.config.url, { method: 'POST', body });
+            const data = await response.json();
+            if (!this.isCurrent(context)) return;
+            if (this.error) this.error.textContent = data.errors?.search || '\u00a0';
+            if (data.result !== true) {
+                if (data.message || this.config.errorMessage) showAlert('danger', data.message || this.config.errorMessage);
+                return;
+            }
+            if (this.hooks.onResponse) await this.hooks.onResponse(data, context, this);
+            else await this.apply(this.config.getListing(data), context);
+        } catch (error) {
+            if (this.isCurrent(context)) {
+                if (this.config.errorMessage) showAlert('danger', this.config.errorMessage);
+                else console.error('Errore ListLightManager:', error);
+            }
+        } finally {
+            if (this.isCurrent(context)) this.results.removeAttribute('aria-busy');
+            // Il loader globale può togliere il focus: lo ripristina anche se la lettura è superata.
+            if (!this.destroyed && selection && this.search.isConnected && !this.search.disabled && document.activeElement === document.body) {
+                this.search.focus({ preventScroll: true });
+                this.search.setSelectionRange(...selection);
+            }
+        }
+    }
+
+    /** @param {Object} listing Partial {output, state} validato dal server. @param {Object} context Token locale. @returns {Promise<boolean>} Applica solo la risposta corrente con il renderer globale. */
+    async apply(listing, context) {
+        if (!this.isCurrent(context)) return false;
+        if (typeof listing?.output !== 'string' || !listing.state || typeof listing.state !== 'object') {
+            throw new Error('ListLightManager: risposta lista non valida.');
+        }
+        const template = document.createElement('template');
+        template.innerHTML = listing.output;
+        if (this.config.preserveExpanded) {
+            this.results.querySelectorAll('.collapse.show, .collapsing').forEach(previous => {
+                if (!previous.id) return;
+                const id = CSS.escape(previous.id);
+                if (this.results.querySelector(`[aria-controls="${id}"]`)?.getAttribute('aria-expanded') !== 'true') return;
+                const next = template.content.querySelector(`#${id}`);
+                if (!next) return;
+                next.classList.add('show');
+                template.content.querySelectorAll(`[aria-controls="${id}"]`).forEach(toggle => toggle.setAttribute('aria-expanded', 'true'));
+            });
+        }
+        smoothReplace(this.results, template.innerHTML);
+        this.state = structuredClone(listing.state);
+        this.persistState();
+        this.loaded = true;
+        this.results.removeAttribute('aria-busy');
+        await this.hooks.onStateChange?.(this.state, this);
+        return this.isCurrent(context);
+    }
+
+    /** @returns {void} Scollega i listener, annulla il debounce e ignora le risposte ancora in volo. */
+    destroy() {
+        if (this.destroyed) return;
+        this.destroyed = true;
+        ++this.generation;
+        clearTimeout(this.timer);
+        this.timer = null;
+        this.events.abort();
+        this.results.removeAttribute('aria-busy');
+    }
+}
+
+
 export class AddManager {
     static instances = new Map();
 

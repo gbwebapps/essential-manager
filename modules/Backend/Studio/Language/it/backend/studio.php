@@ -1,0 +1,22 @@
+<?php declare(strict_types = 1);
+
+return [
+    'noTasksFound' => 'Non sono stati trovati task.',
+    'noNotesFound' => 'Non sono state trovate note.',
+    'clearSearch' => 'Cancella ricerca',
+    'invalidSearch' => 'La ricerca contiene caratteri non consentiti.',
+    'searchTasks' => 'Cerca per titolo',
+    'searchNotes' => 'Cerca nelle note',
+    'newest' => 'Mostra prima i più recenti',
+    'oldest' => 'Mostra prima i meno recenti',
+    'unexpectedFields' => 'Parametri non ammessi: {0}.',
+    'title' => 'Studio',
+    'tasks' => 'Task',
+    'notes' => 'Note',
+    'newTask' => 'Nuovo task',
+    'newNote' => 'Nuova nota',
+    'taskNotes' => 'Note del task',
+    'saveNotice' => 'I dati vengono salvati nello Studio.',
+    'notFound' => 'Elemento non disponibile nello Studio.',
+    'confirmTaskDelete' => 'Eliminare definitivamente il task, i suoi passi e tutte le note collegate?',
+];

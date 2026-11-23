@@ -1,10 +1,23 @@
 <?php declare(strict_types = 1);
 
 return [
+    'modal' => [
+        'stepNotes' => 'Notes de l’étape',
+        'noNotes' => 'Aucune note.',
+        'newNote' => 'Nouvelle note',
+        'draftNotice' => 'Les notes sont enregistrées avec la tâche. Réinitialiser et fermer annulent les modifications non enregistrées.',
+        'noteChanged' => 'Cette note a changé ou n’est plus disponible. Fermez puis rouvrez la fenêtre avant de réessayer.',
+    ],
     'overview' => [
-        'open' => 'Tâches ouvertes',
+        'todo' => 'À faire',
         'inProgress' => 'En cours',
+        'completed' => 'Terminées',
+        'total' => 'Total',
         'remainingSteps' => 'Étapes restantes',
+        'summary' => 'Résumé des tâches',
+        'noCurrent' => 'Aucune tâche en cours',
+        'noCurrentHint' => 'Ouvrez une tâche et choisissez « %s » pour commencer.',
+        'openTask' => 'Ouvrir la tâche',
     ],
     'titles' => [
         'index' => 'Tâches',
@@ -36,6 +49,7 @@ return [
         'allRecords' => 'Toutes',
     ],
     'labels' => [
+        'stepsCount' => '%s sur %s',
         'step' => 'Étape',
         'title' => 'Titre',
         'description' => 'Description',
@@ -61,7 +75,6 @@ return [
         'completedAt' => 'Completed',
         'current' => 'Current task',
         'nextStep' => 'Next step',
-        'paused' => 'Paused',
         'note' => 'Note',
         'notes' => 'Notes',
         'taskNote' => 'Task note',
@@ -72,6 +85,8 @@ return [
         'restoredAt' => 'Restored',
     ],
     'placeholders' => [
+        'step' => 'Décrivez l’étape à effectuer',
+        'initialNote' => 'Écrivez une première note',
         'dateFromAdd' => 'Rechercher depuis la date d’ajout...',
         'dateToAdd' => 'Rechercher jusqu’à la date d’ajout...',
         'dateFromEdit' => 'Rechercher depuis la date de modification...',
@@ -81,13 +96,12 @@ return [
         'searchTitle' => 'Titre',
     ],
     'actions' => [
+        'readNote' => 'Cliquer pour lire',
         'addStep' => 'Ajouter une étape',
         'removeStep' => 'Supprimer une étape',
         'complete' => 'Complete task',
         'reopen' => 'Reopen task',
         'work' => 'Work on this',
-        'pause' => 'Pause',
-        'resume' => 'Resume',
         'addNote' => 'Add note',
         'close' => 'Close',
         'save' => 'Save',
@@ -111,6 +125,7 @@ return [
         'showSystemDetails' => 'Afficher les métadonnées',
     ],
     'messages' => [
+        'saveStepFirst' => 'Enregistrez la tâche avant d’ajouter une note à cette étape.',
         'noteSaveNotice' => 'La note est enregistrée dans la tâche ou l’étape indiquée.',
         'confirmDeleteNote' => 'Supprimer définitivement cette note ?',
         'noteDeleted' => 'Note supprimée définitivement.',
@@ -140,9 +155,7 @@ return [
         'softDeleteSuccess' => 'Task moved to trash.',
         'restoreDeleteSuccess' => 'Task restored.',
         'hardDeleteSuccess' => 'Task permanently deleted.',
-        'noCurrent' => 'There is no current task to pause or resume.',
         'currentCompleted' => 'A completed task cannot be selected as current.',
-        'currentChanged' => 'The current task changed. Reload and retry.',
         'confirmComplete' => 'Complete the task and all its steps?',
         'confirmReopen' => 'Reopen the task by reopening only its last step?',
         'confirmNote' => 'Confirm this note action?',

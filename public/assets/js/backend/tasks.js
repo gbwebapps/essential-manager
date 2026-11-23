@@ -4,6 +4,10 @@ import { urlbase, action, apiFetch, markUnsavedClean, showAlert, initOffcanvasAu
 import { ListManager, AddManager, EditManager, DeleteManager, GeneralDataManager, MetaDataManager } from './modules/Crud.js';
 
 
+// Il percorso è definito dalla vista del contesto, mai da un parametro del form.
+const taskRouteBase = document.querySelector('[data-task-route-base]')?.dataset.taskRouteBase || 'backend/tasks/';
+const taskEndpoint = name => urlbase + taskRouteBase + name;
+
 /** Cancella testo e associazioni di lingua degli errori del solo form Tasks. */
 function clearTaskError(node) {
     node.textContent = '\u00A0';
@@ -33,7 +37,7 @@ const actions = {
     showAll: function() {
         const listManager = new ListManager({
             controller: 'tasks',
-            url: urlbase + 'backend/tasks/showAll',
+            url: taskEndpoint('showAll'),
             rootId: 'tasks-list',
             containerId: 'showAll-tasks-container',
             searchFields: ['title', 'project_uuid', 'application_uuid', 'status'],
@@ -68,9 +72,9 @@ const actions = {
         new DeleteManager({
             controller: 'tasks',
             urls: {
-                softDelete: urlbase + 'backend/tasks/softDelete',
-                restoreDelete: urlbase + 'backend/tasks/restoreDelete',
-                hardDelete: urlbase + 'backend/tasks/hardDelete'
+                softDelete: taskEndpoint('softDelete'),
+                restoreDelete: taskEndpoint('restoreDelete'),
+                hardDelete: taskEndpoint('hardDelete')
             },
             listManager: listManager
         }).init();
@@ -82,18 +86,18 @@ const actions = {
 
     add: function() {
         new AddManager({
-            url: urlbase + 'backend/tasks/add',
+            url: taskEndpoint('add'),
             formSelector: '#tasks-add',
             resetSelector: '#add-reset',
             containerId: 'add-tasks-container'
         }, {
-            onResetAfter: data => { initTaskForm(); markUnsavedClean(document.querySelector('#tasks-add')); const count = data.navigationCounts?.tasks; if (Number.isSafeInteger(count)) document.querySelectorAll('[data-navigation-count="tasks"]').forEach(node => node.textContent = String(count)); }
+            onResetAfter: data => { initTaskForm(); markUnsavedClean(document.querySelector('#tasks-add')); document.querySelectorAll('[data-navigation-count]').forEach(node => { const count = data.navigationCounts?.[node.dataset.navigationCount]; if (Number.isSafeInteger(count)) node.textContent = String(count); }); }
         }).init();
     },
 
     edit: function() {
         new EditManager({
-            url: urlbase + 'backend/tasks/edit',
+            url: taskEndpoint('edit'),
             formSelector: '#tasks-edit',
             refreshSelector: '#edit-refresh',
             containerId: 'edit-tasks-container'
@@ -110,7 +114,7 @@ const actions = {
 
 function initPanels() {
     let openedSteps = [];
-    new GeneralDataManager({ url: urlbase + 'backend/tasks/getGeneralData', formSelector: '#getGeneralData' }, {
+    new GeneralDataManager({ url: taskEndpoint('getGeneralData'), formSelector: '#getGeneralData' }, {
         onGeneralDataBefore: () => {
             openedSteps = [...document.querySelectorAll('#generalData .collapse.show')].map(node => node.id);
             return action !== 'edit' || confirmDiscardChanges(document.querySelector('#tasks-edit'));
@@ -120,12 +124,12 @@ function initPanels() {
             openedSteps.forEach(id => {
                 const panel = document.getElementById(id);
                 panel?.classList.add('show');
-                document.querySelector(`[aria-controls="${id}"]`)?.setAttribute('aria-expanded', 'true');
+                document.querySelectorAll(`[aria-controls="${id}"]`).forEach(toggle => toggle.setAttribute('aria-expanded', 'true'));
             });
             if (action === 'edit') markUnsavedClean(document.querySelector('#tasks-edit'));
         }
     }).init();
-    new MetaDataManager({ url: urlbase + 'backend/tasks/getMetaData', formSelector: '#getMetaData', containerId: 'task-meta-content' }, {
+    new MetaDataManager({ url: taskEndpoint('getMetaData'), formSelector: '#getMetaData', containerId: 'task-meta-content' }, {
         onMetaDataBefore: () => {
             const panel = document.getElementById('metaData');
             panel.style.height = `${panel.getBoundingClientRect().height}px`;
@@ -147,7 +151,7 @@ function initPanels() {
     }).init();
 }
 
-async function replaceRelatedPanel(container, output) {
+export async function replaceRelatedPanel(container, output) {
     if (!container) return;
     const opened = new Set([...container.querySelectorAll('.collapse.show, .collapsing')].filter(element => {
         return container.querySelector(`[aria-controls="${element.id}"]`)?.getAttribute('aria-expanded') === 'true';
@@ -157,7 +161,7 @@ async function replaceRelatedPanel(container, output) {
     template.content.querySelectorAll('.collapse').forEach(element => {
         if ( ! opened.has(element.id)) return;
         element.classList.add('show');
-        template.content.querySelector(`[aria-controls="${element.id}"]`)?.setAttribute('aria-expanded', 'true');
+        template.content.querySelectorAll(`[aria-controls="${element.id}"]`).forEach(toggle => toggle.setAttribute('aria-expanded', 'true'));
     });
 
     if (container.innerHTML.trim() === template.innerHTML.trim()) return;
@@ -192,6 +196,20 @@ function initTaskForm() {
     if (form) initTaskSteps(form);
 }
 
+/** @param {FormData} body Payload del form. @returns {unknown} Contesto locale aggiunto dall'eventuale lista incorporata. */
+function taskRequestContext(body) {
+    const detail = { body, context: null };
+    document.dispatchEvent(new CustomEvent('essential:task-request', { detail }));
+    return detail.context;
+}
+/** @param {Object} data Risposta server. @param {unknown} context Stato locale della richiesta. @returns {Promise<boolean>} True se la lista ha consumato i partial senza altre chiamate. */
+async function consumeTaskResponse(data, context) {
+    const detail = { data, context, handled: false, pending: [] };
+    document.dispatchEvent(new CustomEvent('essential:task-response', { detail }));
+    await Promise.all(detail.pending);
+    return detail.handled;
+}
+
 let taskActionBusy = false;
 function lockTaskActions() {
     if (!taskActionBusy) return;
@@ -208,7 +226,7 @@ async function reloadNotes(panel = document.querySelector('[data-task-related-pa
     container.setAttribute('aria-busy', 'true');
     try {
         const body = new FormData(); body.set('uuid', panel.dataset.taskUuid);
-        const response = await apiFetch(urlbase + 'backend/tasks/getNotes', { method: 'POST', body, loader: button });
+        const response = await apiFetch(taskEndpoint('getNotes'), { method: 'POST', body, loader: button });
         const data = await response.json();
         if (data.result !== true || typeof data.output !== 'string') throw new Error('Invalid notes response');
         const replacements = [];
@@ -248,19 +266,28 @@ document.addEventListener('submit', async event => {
     try {
         if (form.dataset.confirm && !await askConfirm(form.dataset.confirm)) { if (checkbox) checkbox.checked = !checkbox.checked; return; }
         const body = new FormData(form);
-        if (form.id === 'tasks-delete-note' && event.submitter) body.set('uuid', event.submitter.value);
+        if (form.id === 'tasks-delete-note' && event.submitter) {
+            body.set('uuid', event.submitter.value);
+            if (event.submitter.dataset.taskUuid) body.set('task_uuid', event.submitter.dataset.taskUuid);
+        }
         if (checkbox) body.set('completed', checkbox.checked ? '1' : '0');
-        const response = await apiFetch(urlbase + 'backend/tasks/' + form.dataset.endpoint, { method: 'POST', body });
+        const context = taskRequestContext(body);
+        const response = await apiFetch(taskEndpoint(form.dataset.endpoint), { method: 'POST', body });
         const data = await response.json();
         if (data.result !== true) { if (checkbox) checkbox.checked = !checkbox.checked; showAlert('danger', data.message); return; }
-        if (form.dataset.endpoint === 'deleteNote') {
-            await reloadNotes();
-        } else {
-            const generalForm = document.getElementById('getGeneralData');
-            const metaForm = document.getElementById('getMetaData');
-            if (generalForm) await GeneralDataManager.instances.get('#getGeneralData')?.getGeneralData(new FormData(generalForm));
-            lockTaskActions();
-            if (metaForm) await MetaDataManager.instances.get('#getMetaData')?.getMetaData(new FormData(metaForm));
+        if (!await consumeTaskResponse(data, context)) {
+            if (form.dataset.endpoint === 'deleteNote') {
+                await reloadNotes();
+            } else if (action === 'showAll' && form.dataset.endpoint === 'setCurrent') {
+                await ListManager.instances['showAll-tasks-container']?.showAll();
+                lockTaskActions();
+            } else {
+                const generalForm = document.getElementById('getGeneralData');
+                const metaForm = document.getElementById('getMetaData');
+                if (generalForm) await GeneralDataManager.instances.get('#getGeneralData')?.getGeneralData(new FormData(generalForm));
+                lockTaskActions();
+                if (metaForm) await MetaDataManager.instances.get('#getMetaData')?.getMetaData(new FormData(metaForm));
+            }
         }
         if (data.message) showAlert('success', data.message);
     } catch (error) {
@@ -309,17 +336,18 @@ if (noteModal) {
         event.preventDefault();
         if (form.dataset.saving === 'true') return;
         const body = new FormData(form);
+        const context = taskRequestContext(body);
         const controls = [...form.querySelectorAll('input, textarea, button')].map(node => [node, node.disabled]);
         controls.forEach(([node]) => node.disabled = true); form.dataset.saving = 'true';
         const feedback = noteModal.querySelector('[data-note-feedback]');
         try {
-            const response = await apiFetch(urlbase + 'backend/tasks/saveNote', { method: 'POST', body });
+            const response = await apiFetch(taskEndpoint('saveNote'), { method: 'POST', body });
             const data = await response.json();
             showModalMessages(form, feedback, data.message, data.result === true ? 'success' : (data.changed === false ? 'neutral' : 'error'), data.errors || {});
             if (data.result === true) {
                 form.elements.namedItem('uuid').value = data.uuid;
                 resetRecord = { uuid: data.uuid, content: form.elements.namedItem('content').value, step_uuid: form.elements.namedItem('step_uuid').value };
-                await reloadNotes();
+                if (!await consumeTaskResponse(data, context)) await reloadNotes();
             }
         } catch (error) {
             showModalMessages(form, feedback, noteModal.dataset.saveError, 'error');

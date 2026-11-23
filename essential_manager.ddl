@@ -494,12 +494,17 @@ create table if not exists `essential_manager`.`applications` (
 -- tasks_restore
 -- tasks_complete
 -- tasks_set_current
--- Un task appartiene a un progetto oppure a una applicazione, mai a entrambi.
+-- MODULO Studio
+-- PERMESSI studio
+-- studio_show
+-- Studio usa i permessi Tasks e Notes per le rispettive azioni.
+-- Un task appartiene a Studio, a un progetto oppure a una applicazione: un solo contesto.
 create table if not exists `essential_manager`.`tasks` (
     `id` int unsigned auto_increment unique,
     `uuid` char(36) not null unique,
     `project_uuid` char(36) null default null,
     `application_uuid` char(36) null default null,
+    `is_studio` tinyint unsigned not null default 0,
     `title` varchar(255) not null,
     `description` text null,
     `status` enum('todo', 'in_progress', 'completed') not null default 'todo',
@@ -511,6 +516,7 @@ create table if not exists `essential_manager`.`tasks` (
     `restored_at` datetime null default null,
     primary key (`uuid`),
     index (`id`),
+    index `idx_tasks_studio_created_at` (`is_studio`, `created_at`),
     index (`created_by_admin_uuid`),
     unique key `unique_tasks_project_uuid` (`project_uuid`, `uuid`),
     unique key `unique_tasks_application_uuid` (`application_uuid`, `uuid`),
@@ -519,8 +525,10 @@ create table if not exists `essential_manager`.`tasks` (
     index `idx_tasks_status_created_at` (`status`, `created_at`),
     index `idx_tasks_updated_at` (`updated_at`),
     index `idx_tasks_deleted_at` (`deleted_at`),
+    constraint `chk_tasks_studio`
+        check (`is_studio` in (0, 1)),
     constraint `chk_tasks_context`
-        check ((`project_uuid` is not null) + (`application_uuid` is not null) = 1),
+        check ((`project_uuid` is not null) + (`application_uuid` is not null) + `is_studio` = 1),
     constraint `chk_tasks_completed_at`
         check ((`status` = 'completed' and `completed_at` is not null) or (`status` <> 'completed' and `completed_at` is null))
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
@@ -607,6 +615,7 @@ create table if not exists `essential_manager`.`notes` (
     `uuid` char(36) not null unique,
     `project_uuid` char(36) null default null,
     `application_uuid` char(36) null default null,
+    `is_studio` tinyint unsigned not null default 0,
     `task_uuid` char(36) null default null,
     `step_uuid` char(36) null default null,
     `content` text not null,
@@ -617,28 +626,33 @@ create table if not exists `essential_manager`.`notes` (
     `restored_at` datetime null default null,
     primary key (`uuid`),
     index (`id`),
+    index `idx_notes_studio_created_at` (`is_studio`, `created_at`),
     index (`created_by_admin_uuid`),
     index `idx_notes_application_created_at` (`application_uuid`, `created_at`),
     index `idx_notes_project_created_at` (`project_uuid`, `created_at`),
     index `idx_notes_task_created_at` (`task_uuid`, `created_at`),
     index `idx_notes_step_created_at` (`step_uuid`, `created_at`),
     index `idx_notes_deleted_at` (`deleted_at`),
+    constraint `chk_notes_studio`
+        check (`is_studio` in (0, 1)),
     constraint `chk_notes_context`
-        check ((`project_uuid` is not null) + (`application_uuid` is not null) + (`task_uuid` is not null) + (`step_uuid` is not null) = 1)
+        check ((`project_uuid` is not null) + (`application_uuid` is not null) + (`task_uuid` is not null) + (`step_uuid` is not null) + `is_studio` = 1)
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
 
 -- TABELLA admin_work_state
--- Usa tasks_set_current; ogni amministratore ha un solo task corrente.
+-- Usa tasks_set_current; ogni amministratore ha un task corrente per le attività e uno per Studio.
 -- Il prossimo passaggio si ricava dai passaggi non completati del task, ordinati per position.
 -- Il modulo Tasks esclude dalla selezione i task completati o eliminati.
 create table if not exists `essential_manager`.`admin_work_state` (
     `admin_uuid` char(36) not null,
+    `work_context` varchar(16) not null default 'activities',
     `task_uuid` char(36) null default null,
-    `paused_at` datetime null default null,
     `created_at` datetime not null,
     `updated_at` datetime null default null,
-    primary key (`admin_uuid`),
-    index (`task_uuid`)
+    primary key (`admin_uuid`, `work_context`),
+    index (`task_uuid`),
+    constraint `chk_admin_work_state_context`
+        check (`work_context` in ('activities', 'studio'))
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
 
 -- TABELLA operation_runs

@@ -6,7 +6,7 @@ return [
         'showAll' => 'Visualizza elenco',
         'show' => 'Visualizza dettaglio',
         'add' => 'Aggiungi checklist',
-        'edit' => 'Modifica checklist e passaggi',
+        'edit' => 'Modifica checklist e passi',
         'delete' => 'Elimina checklist',
         'restore' => 'Ripristina checklist',
         'apply' => 'Applica checklist al task',

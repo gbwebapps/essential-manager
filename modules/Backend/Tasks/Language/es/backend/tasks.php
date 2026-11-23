@@ -1,10 +1,23 @@
 <?php declare(strict_types = 1);
 
 return [
+    'modal' => [
+        'stepNotes' => 'Notas del paso',
+        'noNotes' => 'Sin notas.',
+        'newNote' => 'Nueva nota',
+        'draftNotice' => 'Las notas se guardan junto con la tarea. Restablecer y cerrar descartan los cambios sin guardar.',
+        'noteChanged' => 'Esta nota ha cambiado o ya no está disponible. Cierra y vuelve a abrir la ventana antes de intentarlo de nuevo.',
+    ],
     'overview' => [
-        'open' => 'Tareas pendientes',
+        'todo' => 'Por hacer',
         'inProgress' => 'En curso',
+        'completed' => 'Completadas',
+        'total' => 'Total',
         'remainingSteps' => 'Pasos pendientes',
+        'summary' => 'Resumen de tareas',
+        'noCurrent' => 'Ninguna tarea actual',
+        'noCurrentHint' => 'Abre una tarea y elige «%s» para empezar.',
+        'openTask' => 'Abrir tarea',
     ],
     'titles' => [
         'index' => 'Tareas',
@@ -36,6 +49,7 @@ return [
         'allRecords' => 'Todas',
     ],
     'labels' => [
+        'stepsCount' => '%s de %s',
         'step' => 'Paso',
         'title' => 'Título',
         'description' => 'Descripción',
@@ -61,7 +75,6 @@ return [
         'completedAt' => 'Completed',
         'current' => 'Current task',
         'nextStep' => 'Next step',
-        'paused' => 'Paused',
         'note' => 'Note',
         'notes' => 'Notes',
         'taskNote' => 'Task note',
@@ -72,6 +85,8 @@ return [
         'restoredAt' => 'Restored',
     ],
     'placeholders' => [
+        'step' => 'Describe el paso que debes realizar',
+        'initialNote' => 'Escribe una nota inicial',
         'dateFromAdd' => 'Buscar por fecha inicial de alta...',
         'dateToAdd' => 'Buscar por fecha final de alta...',
         'dateFromEdit' => 'Buscar por fecha inicial de actualización...',
@@ -81,13 +96,12 @@ return [
         'searchTitle' => 'Título',
     ],
     'actions' => [
+        'readNote' => 'Haz clic para leer',
         'addStep' => 'Añadir paso',
         'removeStep' => 'Eliminar paso',
         'complete' => 'Complete task',
         'reopen' => 'Reopen task',
         'work' => 'Work on this',
-        'pause' => 'Pause',
-        'resume' => 'Resume',
         'addNote' => 'Add note',
         'close' => 'Close',
         'save' => 'Save',
@@ -111,6 +125,7 @@ return [
         'showSystemDetails' => 'Mostrar metadatos',
     ],
     'messages' => [
+        'saveStepFirst' => 'Guarda la tarea antes de añadir una nota a este paso.',
         'noteSaveNotice' => 'La nota se guarda en la tarea o el paso indicado.',
         'confirmDeleteNote' => '¿Eliminar esta nota definitivamente?',
         'noteDeleted' => 'Nota eliminada definitivamente.',
@@ -140,9 +155,7 @@ return [
         'softDeleteSuccess' => 'Task moved to trash.',
         'restoreDeleteSuccess' => 'Task restored.',
         'hardDeleteSuccess' => 'Task permanently deleted.',
-        'noCurrent' => 'There is no current task to pause or resume.',
         'currentCompleted' => 'A completed task cannot be selected as current.',
-        'currentChanged' => 'The current task changed. Reload and retry.',
         'confirmComplete' => 'Complete the task and all its steps?',
         'confirmReopen' => 'Reopen the task by reopening only its last step?',
         'confirmNote' => 'Confirm this note action?',

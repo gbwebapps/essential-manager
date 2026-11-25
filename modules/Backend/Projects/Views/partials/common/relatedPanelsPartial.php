@@ -13,18 +13,6 @@
 ?>
 <style>
     .project-related-panel .card-header { gap: .5rem; flex-wrap: wrap; border-top: 1px solid var(--app-border) !important; }
-    [data-project-draft-root] .project-related-item + .project-related-item { border-top: 1px solid var(--app-border); }
-    [data-project-draft-root] .project-related-toggle { min-width: 0; display: flex; align-items: center; gap: .65rem; width: 100%; padding: .6rem .8rem; border: 0; text-align: left; color: inherit; background: transparent; }
-    [data-project-draft-root] .project-related-toggle:hover, [data-project-draft-root] .project-related-toggle:focus-visible { background: var(--app-surface-muted); }
-    [data-project-draft-root] .project-related-toggle > .fa-chevron-right { font-size: .75rem; transition: transform .3s ease; }
-    [data-project-draft-root] .project-related-toggle[aria-expanded="true"] > .fa-chevron-right { transform: rotate(90deg); }
-    [data-project-draft-root] .project-related-summary { min-width: 0; flex: 1; }
-    [data-project-draft-root] .project-related-title { display: block; overflow-wrap: anywhere; }
-    [data-project-draft-root] .project-related-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .7rem; margin-top: .15rem; font-size: .8rem; }
-    [data-project-draft-root] .project-related-detail { padding: 0 .8rem .7rem 2.2rem; font-size: .9rem; overflow-wrap: anywhere; }
-    [data-project-draft-root] .project-related-text { white-space: pre-wrap; margin-bottom: .5rem; }
-    [data-project-draft-root] .project-related-steps { margin: .4rem 0 .65rem; padding: 0; list-style: none; }
-    [data-project-draft-root] .project-related-steps li { display: flex; align-items: baseline; gap: .5rem; padding: .15rem 0; }
     .project-related-panel .collapsing { transition: height .3s ease-in-out; }
     @media (prefers-reduced-motion: reduce) {
         [data-project-draft-root] .project-related-toggle > .fa-chevron-right, .project-related-panel .collapsing { transition: none; }

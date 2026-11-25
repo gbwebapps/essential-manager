@@ -16,7 +16,8 @@
             </span></span>
         </button>
         <div class="studio-panel-actions">
-            <?php if ($canReadTaskDetails && ($currentTask->uuid ?? null) !== $studioTask->uuid && $studioTask->status !== 'completed' && \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'tasks_set_current')): ?>
+            <?= view('Modules\Backend\Tasks\Views\partials\common\archiveActionPartial', ['archiveButtonClass'=>'btn btn-link btn-sm task-record-link','task'=>$studioTask,'currentAdmin'=>$currentAdmin], ['saveData'=>false]); ?>
+            <?php if ($studioTask->archived_at === null && $canReadTaskDetails && ($currentTask->uuid ?? null) !== $studioTask->uuid && $studioTask->status !== 'completed' && \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'tasks_set_current')): ?>
                 <form novalidate class="task-action" data-endpoint="setCurrent">
                     <input type="hidden" name="uuid" value="<?= esc($studioTask->uuid, 'attr'); ?>">
                     <button type="submit" class="btn btn-link btn-sm task-record-link"><i class="fa-solid fa-play me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.actions.work', [], false); ?></button>
@@ -24,10 +25,11 @@
             <?php endif; ?>
 
             <?php if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'tasks_show')): ?><a class="btn btn-link btn-sm task-record-link" href="<?= esc(base_url('backend/studio/tasks/show/' . $studioTask->uuid), 'attr'); ?>"><i class="fa-solid fa-eye me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.actions.show', [], false); ?></a><?php endif; ?>
-            <?php if ($canEditTasks): ?><a class="btn btn-link btn-sm task-record-link" href="<?= esc(base_url('backend/studio/tasks/edit/' . $studioTask->uuid), 'attr'); ?>"><i class="fa-solid fa-pen me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.actions.edit', [], false); ?></a><?php endif; ?>
+            <?php if ($studioTask->archived_at === null && $canEditTasks): ?><a class="btn btn-link btn-sm task-record-link" href="<?= esc(base_url('backend/studio/tasks/edit/' . $studioTask->uuid), 'attr'); ?>"><i class="fa-solid fa-pen me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.actions.edit', [], false); ?></a><?php endif; ?>
             <?php if (($canDeleteTasks ?? false)): ?><form novalidate method="post" data-studio-delete-task data-confirm="<?= esc(lang('backend/studio.confirmTaskDelete'), 'attr'); ?>"><input type="hidden" name="uuid" value="<?= esc($studioTask->uuid, 'attr'); ?>"><button type="submit" class="btn btn-link btn-sm task-record-link app-text-danger"><i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.actions.softDelete', [], false); ?></button></form><?php endif; ?>
         </div>
     </div>
+    <?php if ( ! empty($studioTask->reference)): ?><div class="px-3 py-1 border-top"><?= view('Modules\Backend\Studio\Views\partials\referencePartial', ['task' => $studioTask, 'currentAdmin' => $currentAdmin], ['saveData' => false]); ?></div><?php endif; ?>
     <div id="<?= esc($panelId, 'attr'); ?>" class="collapse <?= $expanded ? 'show' : ''; ?>" data-studio-task-content data-loaded="<?= $expanded ? 'true' : 'false'; ?>">
         <?php if ($expanded && $task): ?>
             <?= view(\Modules\Backend\Studio\Config\Views::TASK_BODY_PARTIAL, ['task' => $task, 'currentAdmin' => $currentAdmin, 'canReadNotes' => $canReadNotes], ['saveData' => false]); ?>

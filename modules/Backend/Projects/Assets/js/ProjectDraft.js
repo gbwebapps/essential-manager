@@ -1,11 +1,5 @@
+import { renderDraftItems } from './DraftItems.js';
 import { askConfirm, markUnsavedClean, setUnsavedExternalState, showAlert } from './backend.js';
-
-function draftElement(tag, className = '', text = null) {
-    const element = document.createElement(tag);
-    element.className = className;
-    if (text !== null) element.textContent = String(text);
-    return element;
-}
 
 /** Bozza privata della pagina: nessuna sessione, storage o scrittura sul database. */
 export class ProjectDraft {
@@ -59,17 +53,20 @@ export class ProjectDraft {
         if ( ! original) return true;
         const fields = kind === 'task' ? ['title', 'description', 'status'] : ['content'];
         if (fields.some(field => original[field] !== values[field])) return true;
-        return kind === 'task' && (original.steps.length !== values.steps.length || original.steps.some((step, index) => step.title !== values.steps[index].title));
+        return kind === 'task' && (JSON.stringify(original.notes) !== JSON.stringify(values.notes || []) || JSON.stringify(original.steps) !== JSON.stringify(values.steps.map(step => ({ title: step.title, uuid: '', notes: step.notes || [] }))));
     }
 
-    upsert(kind, values, id = '') {
+    upsert(kind, values, id = '', previewOutput) {
         if ( ! Object.hasOwn(this.items, kind)) throw new Error('Invalid draft kind');
+        if (typeof previewOutput !== 'string' || !previewOutput.trim()) throw new Error('Missing validated draft preview');
         const index = this.items[kind].findIndex(item => item.draftId === id);
         const draftId = index >= 0 ? this.items[kind][index].draftId : `draft-${kind}-${++this.nextId}`;
         const item = kind === 'task' ? {
             draftId, title: values.title.trim(), description: values.description.trim(), status: values.status,
-            steps: values.steps.map(step => ({ title: step.title.trim(), uuid: '' }))
+            notes: (values.notes || []).map(note => ({ content: note.content })),
+            steps: values.steps.map(step => ({ title: step.title.trim(), uuid: '', notes: (step.notes || []).map(note => ({ content: note.content })) }))
         } : { draftId, content: values.content.trim() };
+        item.previewOutput = previewOutput;
         if (index >= 0) this.items[kind][index] = item;
         else this.items[kind].push(item);
         this.updateDirty();
@@ -85,7 +82,11 @@ export class ProjectDraft {
     appendTo(formData) {
         this.items.task.forEach((task, index) => {
             for (const field of ['title', 'description', 'status']) formData.set(`tasks[${index}][${field}]`, task[field]);
-            task.steps.forEach((step, position) => formData.set(`tasks[${index}][steps][${position}][title]`, step.title));
+            task.notes.forEach((note, noteIndex) => formData.set(`tasks[${index}][notes][${noteIndex}][content]`, note.content));
+            task.steps.forEach((step, position) => {
+                formData.set(`tasks[${index}][steps][${position}][title]`, step.title);
+                step.notes.forEach((note, noteIndex) => formData.set(`tasks[${index}][steps][${position}][notes][${noteIndex}][content]`, note.content));
+            });
         });
         this.items.note.forEach((note, index) => formData.set(`notes[${index}][content]`, note.content));
     }
@@ -121,63 +122,7 @@ export class ProjectDraft {
     }
 
     buildItems(kind) {
-        const fragment = document.createDocumentFragment();
-        if (this.items[kind].length === 0) {
-            fragment.append(draftElement('p', 'small app-text-muted px-3 py-2 mb-0', this.text(kind === 'task' ? 'noTasks' : 'noNotes')));
-            return fragment;
-        }
-        for (const item of this.items[kind]) {
-            const article = draftElement('article', 'project-related-item');
-            article.dataset.draftItem = item.draftId;
-            const collapseId = 'project-' + item.draftId;
-            const toggle = draftElement('button', 'project-related-toggle');
-            toggle.type = 'button';
-            toggle.id = collapseId + '-toggle';
-            toggle.dataset.bsToggle = 'collapse';
-            toggle.dataset.bsTarget = '#' + collapseId;
-            toggle.setAttribute('aria-controls', collapseId);
-            toggle.setAttribute('aria-expanded', 'false');
-            const chevron = draftElement('i', 'fa-solid fa-chevron-right');
-            chevron.setAttribute('aria-hidden', 'true');
-            const summary = draftElement('span', 'project-related-summary');
-            const summaryText = (kind === 'task' ? item.title : item.content).replace(/\s+/gu, ' ').trim();
-            const summaryCharacters = Array.from(summaryText);
-            const preview = summaryCharacters.length > 50 ? summaryCharacters.slice(0, 49).join('') + '…' : summaryText;
-            summary.append(draftElement('span', 'project-related-title fw-bold text-truncate', preview));
-            if (kind === 'task') {
-                const metadata = draftElement('span', 'project-related-meta app-text-muted');
-                metadata.append(draftElement('span', 'badge app-bg-muted-subtle app-text-muted-emphasis border', this.text('status_' + item.status)));
-                metadata.append(draftElement('span', '', this.text('stepsProgress').replace('%s', '0').replace('%s', String(item.steps.length))));
-                summary.append(metadata);
-            }
-            toggle.append(chevron, summary);
-            const collapse = draftElement('div', 'collapse');
-            collapse.id = collapseId;
-            collapse.setAttribute('role', 'region');
-            collapse.setAttribute('aria-labelledby', toggle.id);
-            const detail = draftElement('div', 'project-related-detail');
-            if (kind === 'task' && summaryCharacters.length > 50) detail.append(draftElement('p', 'project-related-text fw-bold mb-2', item.title));
-            if (kind === 'note' || item.description) detail.append(draftElement('p', 'project-related-text', kind === 'note' ? item.content : item.description));
-            if (kind === 'task') {
-                const steps = draftElement('ol', 'ps-3 mb-2');
-                item.steps.forEach(step => steps.append(draftElement('li', 'py-1', step.title)));
-                detail.append(steps);
-            }
-            const actions = draftElement('div', 'd-flex flex-wrap gap-1');
-            const edit = draftElement('button', 'btn btn-sm app-btn-secondary', this.text('edit'));
-            edit.type = 'button';
-            edit.dataset.bsToggle = 'modal';
-            edit.dataset.bsTarget = `#projects-add-${kind}-modal`;
-            edit.dataset.draftId = item.draftId;
-            const remove = draftElement('button', 'btn btn-sm app-btn-secondary', this.text('remove'));
-            remove.type = 'button';
-            remove.dataset.draftRemove = item.draftId;
-            actions.append(edit, remove);
-            detail.append(actions);
-            collapse.append(detail);
-            article.append(toggle, collapse);
-            fragment.append(article);
-        }
-        return fragment;
+        return renderDraftItems(this.items[kind], this.text(kind === 'task' ? 'noTasks' : 'noNotes'));
     }
+
 }

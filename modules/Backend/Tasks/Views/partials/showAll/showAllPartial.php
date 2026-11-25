@@ -56,13 +56,14 @@
                                     <td class="align-middle text-end">
                                         <div class="d-flex flex-row flex-nowrap justify-content-end align-items-center gap-1">
                                             <?php if( ! $isTrashed): ?>
-                                                <?php if($canWorkOnTasks && $task->owner_deleted_at === null && $task->status !== 'completed' && ($currentTask->uuid ?? null) !== $task->uuid): ?>
+                                                <?= view('Modules\Backend\Tasks\Views\partials\common\archiveActionPartial', ['task'=>$task,'currentAdmin'=>$currentAdmin], ['saveData'=>false]); ?>
+                                                <?php if($task->archived_at === null && $canWorkOnTasks && $task->owner_deleted_at === null && $task->status !== 'completed' && ($currentTask->uuid ?? null) !== $task->uuid): ?>
                                                     <form novalidate class="task-action m-0 p-0" data-endpoint="setCurrent">
                                                         <input type="hidden" name="uuid" value="<?= esc($task->uuid, 'attr'); ?>">
                                                         <button type="submit" class="btn btn-link btn-sm task-record-link text-nowrap"><i class="fa-solid fa-play fa-fw" aria-hidden="true"></i> <?= ui_text('backend/tasks.actions.work', [], false); ?></button>
                                                     </form>
                                                 <?php endif; ?>
-                                                <?php if($canEditTasks && $task->owner_deleted_at === null): ?>
+                                                <?php if($task->archived_at === null && $canEditTasks && $task->owner_deleted_at === null): ?>
                                                     <a href="<?= esc(base_url('backend/tasks/edit/' . rawurlencode($task->uuid)), 'attr'); ?>" class="btn btn-sm app-btn-secondary text-nowrap">
                                                         <i class="fa-solid fa-pen fa-fw"></i> <?= ui_text('backend/tasks.actions.edit', [], false); ?>
                                                     </a>

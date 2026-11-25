@@ -134,9 +134,10 @@ class ApplicationsModel extends BackendModel
      * Valida l’applicazione e ogni elemento annidato della bozza prima di iniziare le scritture.
      * @param array $posts Payload completo non attendibile.
      * @param bool $editing True per il form principale di modifica, che non accetta bozze annidate.
+     * @param array $taskNotePermissions Permessi server per le note annidate dei task.
      * @return array Esito con data normalizzato oppure errori indicizzati per campo.
      */
-    private function validatePayload(array $posts, bool $editing): array
+    private function validatePayload(array $posts, bool $editing, array $taskNotePermissions = []): array
     {
         $allowed = $editing ? $this->editAllowedFields : $this->addAllowedFields;
         if (array_diff(array_keys($posts), $allowed) !== []): return $this->validationFailure(['payload' => lang('backend/applications.messages.invalidData')]); endif;
@@ -155,7 +156,9 @@ class ApplicationsModel extends BackendModel
                 $data[$field] = [];
                 foreach ($items as $index => $item):
                     if ( ! is_array($item)): return $this->validationFailure([$field . '.' . $index => lang('backend/applications.messages.invalidData')]); endif;
-                    $checked = $model->validatePayload($item);
+                    $checked = $field === 'tasks'
+                        ? model(\Modules\Backend\Tasks\Models\TaskModalModel::class)->validateDraftPayload($item, $taskNotePermissions)
+                        : $model->validatePayload($item);
                     if ( ! $checked['result']):
                         $errors = [];
                         foreach ($checked['errors'] as $key => $error): $errors[$field . '.' . $index . '.' . $key] = $error; endforeach;
@@ -172,11 +175,12 @@ class ApplicationsModel extends BackendModel
      * Crea l’applicazione con task, passi e note nella stessa transazione.
      * @param array $posts Campi e bozza dell’applicazione.
      * @param string|null $adminUuid UUID dell'amministratore autenticato, stabilito dal controller.
+     * @param array $taskNotePermissions Permessi server delle note dei task e dei passi.
      * @return array Esito con uuid e row persistiti oppure errori; nessuna scrittura parziale.
      */
-    public function add(array $posts, ?string $adminUuid = null): array
+    public function add(array $posts, ?string $adminUuid = null, array $taskNotePermissions = []): array
     {
-        $validated = $this->validatePayload($posts, false);
+        $validated = $this->validatePayload($posts, false, $taskNotePermissions);
         if ( ! $validated['result']): return $validated; endif;
         $data = $validated['data'];
         try {
@@ -329,7 +333,7 @@ class ApplicationsModel extends BackendModel
     private function selectSql(): string
     {
         return 'select applications.*, origin.name as project_name,
-            (select count(*) from tasks where tasks.application_uuid = applications.uuid and tasks.deleted_at is null) as task_count,
+            (select count(*) from tasks where tasks.application_uuid = applications.uuid and tasks.deleted_at is null and tasks.archived_at is null) as task_count,
             (select count(*) from notes where notes.application_uuid = applications.uuid and notes.deleted_at is null) as note_count
             from applications inner join projects origin on origin.uuid = applications.project_uuid';
     }

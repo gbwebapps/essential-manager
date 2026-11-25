@@ -1,3 +1,6 @@
+import { disposeNoteCollapses } from './NoteCollapse.js';
+import { initOwnerStepActions } from './OwnerStepActions.js';
+import { fillTaskSteps } from './TaskSteps.js';
 import { TaskModalEditor } from './TaskModalEditor.js';
 import { updateNavigationCounts, showModalMessages } from './ManagerFeedback.js';
 import { urlbase, action, apiFetch, markUnsavedClean, showAlert, initOffcanvasAutoClose, initRangeDatePicker, askConfirm } from './backend.js';
@@ -109,7 +112,9 @@ function initProjectActions() {
             // TomSelect applica il reset nativo nel ciclo successivo.
             if (status) setTimeout(() => setControlValue(status, record?.status || 'todo'), 0);
             form.elements.namedItem('project_uuid').value = contextUuid;
-            form.querySelector('[data-project-action-name]').textContent = contextName;
+            const contextField = form.querySelector('[data-task-owner-name], [data-project-action-name]');
+            if (contextField instanceof HTMLInputElement) contextField.value = contextName;
+            else if (contextField) contextField.textContent = contextName;
         };
         modal.querySelector('[data-modal-reset]').addEventListener('click', resetForm);
         modal.addEventListener('show.bs.modal', event => {
@@ -141,7 +146,7 @@ function initProjectActions() {
             const draftMode = projectDraft && modal.dataset.draftMode === 'true';
             const kind = modal.dataset.projectActionKind;
             const body = new FormData(form);
-            if (!draftMode && kind === 'task') taskEditor.appendTo(body);
+            if (kind === 'task') taskEditor.appendTo(body);
             if (draftMode) {
                 body.delete('uuid');
                 body.delete('project_uuid');
@@ -167,7 +172,7 @@ function initProjectActions() {
                         showModalMessages(form, feedback, modal.dataset.noChanges);
                         return;
                     }
-                    form.dataset.draftId = projectDraft.upsert(kind, data.data, draftId);
+                    form.dataset.draftId = projectDraft.upsert(kind, data.data, draftId, data.previewOutput);
                     resetRecord = { ...structuredClone(data.data), draftId: form.dataset.draftId };
                     modal.querySelector('[data-project-action-submit-label]').textContent = projectDraft.text('updateButton');
                     showModalMessages(form, feedback, projectDraft.text('updatedFeedback'), 'success');
@@ -227,6 +232,7 @@ async function reloadRelatedPanel(panel, button) {
             const response = await apiFetch(urlbase + 'backend/projects/' + (kind === 'task' ? 'getTasks' : 'getNotes'), { method: 'POST', body, loader: button });
             const data = await response.json();
             if (data.result !== true || typeof data.output !== 'string') throw new Error('Invalid related panel response');
+            updateNavigationCounts(data);
             output = data.output;
         }
         if ( ! container.isConnected) return;
@@ -254,6 +260,7 @@ async function replaceRelatedPanel(container, output) {
     });
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        disposeNoteCollapses(container);
         container.replaceChildren(template.content);
         return;
     }
@@ -262,6 +269,7 @@ async function replaceRelatedPanel(container, output) {
     await container.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'ease-in', fill: 'forwards' }).finished;
     if ( ! container.isConnected) return;
     const focusId = container.contains(document.activeElement) ? document.activeElement.id : null;
+    disposeNoteCollapses(container);
     container.replaceChildren(template.content);
     const nextHeight = container.getBoundingClientRect().height;
     container.style.height = `${height}px`;
@@ -321,6 +329,7 @@ document.addEventListener('submit', async event => {
 
 initRelatedPanels();
 initProjectActions();
+initOwnerStepActions('[data-project-related-panel="task"]', reloadRelatedPanel);
 
 if (actions[action]) {
     actions[action]();

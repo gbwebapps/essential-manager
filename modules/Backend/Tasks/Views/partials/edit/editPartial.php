@@ -35,7 +35,6 @@
 
             </form>
 
-            <?= $this->include(\Modules\Backend\Tasks\Config\Views::NOTES_PANEL_PARTIAL); ?>
 
                 <!-- Meta Data -->
                 <div class="card-header rounded-0 d-flex justify-content-between align-items-center" style="border-top: var(--bs-card-border-width) solid var(--bs-card-border-color);">

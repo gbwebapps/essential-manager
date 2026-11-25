@@ -1,11 +1,21 @@
 <?php declare(strict_types = 1);
 
 return [
+    'archive' => [
+        'title' => 'Archivo de tareas',
+        'studioTitle' => 'Archivo de tareas del Estudio',
+        'active' => 'Tareas activas',
+        'action' => 'Archivar',
+        'recover' => 'Desarchivar',
+        'confirmArchive' => '¿Archivar esta tarea? Se conservarán su estado, pasos y notas.',
+        'confirmRecover' => '¿Devolver esta tarea a las listas activas?',
+        'saved' => 'Tarea archivada.',
+        'recovered' => 'Tarea recuperada del archivo.',
+        'readOnly' => 'Tarea archivada: desarchívala antes de editarla.',
+        'date' => 'Archivada el',
+    ],
     'modal' => [
-        'stepNotes' => 'Notas del paso',
-        'noNotes' => 'Sin notas.',
         'newNote' => 'Nueva nota',
-        'draftNotice' => 'Las notas se guardan junto con la tarea. Restablecer y cerrar descartan los cambios sin guardar.',
         'noteChanged' => 'Esta nota ha cambiado o ya no está disponible. Cierra y vuelve a abrir la ventana antes de intentarlo de nuevo.',
     ],
     'overview' => [
@@ -49,6 +59,7 @@ return [
         'allRecords' => 'Todas',
     ],
     'labels' => [
+        'noSteps' => 'Sin pasos',
         'stepsCount' => '%s de %s',
         'step' => 'Paso',
         'title' => 'Título',
@@ -65,7 +76,6 @@ return [
         'dateToEdit' => 'Fecha final de actualización',
         'context' => 'Project / Application',
         'chooseContext' => 'Select where the task belongs',
-        'initialNote' => 'Initial note (optional)',
         'project' => 'Project',
         'application' => 'Application',
         'allProjects' => 'All projects',
@@ -86,7 +96,6 @@ return [
     ],
     'placeholders' => [
         'step' => 'Describe el paso que debes realizar',
-        'initialNote' => 'Escribe una nota inicial',
         'dateFromAdd' => 'Buscar por fecha inicial de alta...',
         'dateToAdd' => 'Buscar por fecha final de alta...',
         'dateFromEdit' => 'Buscar por fecha inicial de actualización...',
@@ -125,14 +134,13 @@ return [
         'showSystemDetails' => 'Mostrar metadatos',
     ],
     'messages' => [
-        'saveStepFirst' => 'Guarda la tarea antes de añadir una nota a este paso.',
         'noteSaveNotice' => 'La nota se guarda en la tarea o el paso indicado.',
         'confirmDeleteNote' => '¿Eliminar esta nota definitivamente?',
         'noteDeleted' => 'Nota eliminada definitivamente.',
         'noDataChanged' => 'No se han realizado cambios.',
         'completionForbidden' => 'You do not have permission to complete or reopen this task.',
         'invalidData' => 'Check the task data.',
-        'stepsRequired' => 'Enter between 1 and 100 steps.',
+        'invalidSteps' => 'Se permite un máximo de 100 pasos.',
         'invalidStep' => 'Each step requires valid text up to 255 characters.',
         'foreignStep' => 'A supplied step does not belong to this task.',
         'stepInUse' => 'Este paso tiene operaciones vinculadas: elimina primero esos vínculos.',

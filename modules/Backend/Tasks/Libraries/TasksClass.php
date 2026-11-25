@@ -8,6 +8,10 @@ namespace Modules\Backend\Tasks\Libraries;
 class TasksClass
 {
     protected bool $studioContext = false;
+    protected bool $archiveContext = false;
+
+    /** @param bool $archived Vista dell’archivio oppure scheda di un task archiviato. */
+    public function setArchiveContext(bool $archived): void { $this->archiveContext = $archived; }
 
     /** @param bool $studio Contesto del task persistito. @return void Configura il ritorno alla sezione corretta. */
     public function setStudioContext(bool $studio): void
@@ -22,6 +26,26 @@ class TasksClass
         return ($task->project_name ?? '') . (($task->application_name ?? null) !== null ? ' / ' . $task->application_name : '');
     }
 
+    /**
+     * Prepara esclusivamente dati validati per l'anteprima condivisa della bozza.
+     * @param array $data Payload normalizzato dal model.
+     * @param string $kind task oppure note, stabilito dal controller.
+     * @return object Record di sola presentazione; nessun UUID persistito.
+     */
+    public static function draftRecord(array $data, string $kind): object
+    {
+        $record = (object) ($data + ['uuid'=>'preview', 'deleted_at'=>null]);
+        if ($kind === 'task'):
+            $record->notes = array_map(static fn(array $note): object => (object) $note, $data['notes']);
+            $record->steps = array_map(static function(array $step) use ($data): object {
+                $step['completed'] = $data['status'] === 'completed';
+                $step['notes'] = array_map(static fn(array $note): object => (object) $note, $step['notes']);
+                return (object) $step;
+            }, $data['steps']);
+        endif;
+        return $record;
+    }
+
     /* LINKS BAR ----------------------------------------------------------------------------------- */
 
     /**
@@ -32,6 +56,7 @@ class TasksClass
     {
         return [
             ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => $this->studioContext ? 'backend/studio/tasks/add' : 'backend/tasks/add'],
+            ['icon'=>'<i class="fa-solid fa-box-archive"></i>', 'label'=>lang('backend/tasks.archive.'.($this->archiveContext?'active':'title')), 'route'=>$this->studioContext ? ($this->archiveContext?'backend/studio':'backend/studio/archived') : ($this->archiveContext?'backend/tasks/showAll':'backend/tasks/archived')],
         ];
     }
 
@@ -42,7 +67,7 @@ class TasksClass
     public function getLinksBarAdd(): array
     {
         return [
-            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? 'backend/studio' : 'backend/tasks/showAll'],
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? ($this->archiveContext?'backend/studio/archived':'backend/studio') : ($this->archiveContext?'backend/tasks/archived':'backend/tasks/showAll')],
         ];
     }
 
@@ -58,7 +83,7 @@ class TasksClass
         endif;
 
         return [
-            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? 'backend/studio' : 'backend/tasks/showAll'],
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? ($this->archiveContext?'backend/studio/archived':'backend/studio') : ($this->archiveContext?'backend/tasks/archived':'backend/tasks/showAll')],
             ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => $this->studioContext ? 'backend/studio/tasks/add' : 'backend/tasks/add'],
             ['icon' => '<i class="fa-solid fa-eye"></i>', 'label' => lang('backend/tasks.linksBar.show'), 'route' => ($this->studioContext ? "backend/studio/tasks/show/{$uuid}" : "backend/tasks/show/{$uuid}")],
         ];
@@ -75,11 +100,13 @@ class TasksClass
             return [];
         endif;
 
-        return [
-            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? 'backend/studio' : 'backend/tasks/showAll'],
+        $links = [
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/tasks.linksBar.showAll'), 'route' => $this->studioContext ? ($this->archiveContext?'backend/studio/archived':'backend/studio') : ($this->archiveContext?'backend/tasks/archived':'backend/tasks/showAll')],
             ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/tasks.linksBar.add'), 'route' => $this->studioContext ? 'backend/studio/tasks/add' : 'backend/tasks/add'],
             ['icon' => '<i class="fa-solid fa-pen"></i>', 'label' => lang('backend/tasks.linksBar.edit'), 'route' => ($this->studioContext ? "backend/studio/tasks/edit/{$uuid}" : "backend/tasks/edit/{$uuid}")],
         ];
+        if ($this->archiveContext): array_pop($links); endif;
+        return $links;
     }
 
     /* JAVASCRIPT ---------------------------------------------------------------------------------- */

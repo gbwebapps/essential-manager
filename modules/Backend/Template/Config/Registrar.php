@@ -16,7 +16,6 @@ class Registrar
                 ['label' => lang('backend/permissions.projects.title'), 'route' => 'backend/projects/showAll', 'icon' => '<i class="fa-solid fa-folder-open"></i>', 'controller' => 'projects', 'permission' => 'projects_show_all'],
                 ['label' => lang('backend/permissions.applications.title'), 'route' => 'backend/applications/showAll', 'icon' => '<i class="fa-solid fa-desktop"></i>', 'controller' => 'applications', 'permission' => 'applications_show_all'],
                 ['label' => lang('backend/permissions.checklists.title'), 'route' => 'backend/checklists/showAll', 'icon' => '<i class="fa-solid fa-clipboard-check"></i>', 'controller' => 'checklists', 'permission' => 'checklists_show_all'],
-                ['label' => lang('backend/permissions.operations.title'), 'route' => 'backend/operations/showAll', 'icon' => '<i class="fa-solid fa-gears"></i>', 'controller' => 'operations', 'permission' => 'operations_show_all'],
             ],
         ];
     }

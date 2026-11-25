@@ -1,13 +1,13 @@
 <style>
     /* Ogni passo contiene visivamente anche le proprie note. */
-    [data-task-work-steps], [data-task-steps][data-standalone] [data-task-step-list] {
+    [data-task-work-steps], [data-task-steps] [data-task-step-list] {
         display: grid;
         gap: 1.25rem;
         align-content: start;
         margin: 0;
     }
     [data-task-work-steps] > [data-work-step],
-    [data-task-steps][data-standalone] [data-task-step-row] {
+    [data-task-steps] [data-task-step-row] {
         min-inline-size: 0;
         padding: .75rem;
         border: 1px solid color-mix(in srgb, var(--app-border) 35%, transparent);
@@ -16,8 +16,8 @@
     }
     [data-task-work-steps] { gap: .75rem; }
     [data-task-work-steps] label { line-height: 1.6; font-weight: 700; }
-    [data-task-steps][data-standalone] [data-step-title] { min-inline-size: 0; }
-    [data-task-steps][data-standalone] [data-task-step-list] + [data-task-step-add] { margin-block-start: .75rem !important; }
+    [data-task-steps] [data-step-title] { min-inline-size: 0; }
+    [data-task-steps] [data-task-step-list] + [data-task-step-add] { margin-block-start: .75rem !important; }
     [data-step-note-items] { margin-block-start: .5rem; margin-inline-start: 1.5rem; }
     [data-task-step-row] > [data-step-note-items] { margin-block-start: .5rem; margin-inline-start: 2.25rem; }
     [data-step-note-items]:not(:has(.task-related-item)) { margin: 0; }
@@ -85,7 +85,7 @@
     }
     @media (max-width: 575.98px) {
         [data-task-work-steps] > [data-work-step],
-        [data-task-steps][data-standalone] [data-task-step-row] { padding: .5rem; }
+        [data-task-steps] [data-task-step-row] { padding: .5rem; }
         .task-step-field-row { grid-template-columns: 1.75rem minmax(0, 1fr); }
         .task-step-field-row .task-step-actions { grid-column: 2; justify-content: flex-end; }
         [data-task-step-row] > [data-work-field-error] { block-size: calc(2.8em + .125rem); }
@@ -93,4 +93,6 @@
         [data-step-note-items] { margin-inline-start: .75rem; }
         [data-step-note-items] .task-related-detail { padding-inline: .75rem; }
     }
+    /* Il feedback di gruppo vuoto non aggiunge righe al margine finale del form. */
+    .step-editor-feedback:not([data-validation-alert-token]) { display: none; }
 </style>

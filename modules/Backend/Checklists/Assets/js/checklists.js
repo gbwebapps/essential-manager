@@ -1,52 +1,87 @@
-/* Struttura delle azioni del modulo; nessuna operazione ancora implementata. */
-import { action } from './backend.js';
+import { updateNavigationCounts } from './ManagerFeedback.js';
+import { initTaskSteps } from './TaskSteps.js';
+import { urlbase, action, markUnsavedClean, initOffcanvasAutoClose, initRangeDatePicker } from './backend.js';
+import { ListManager, AddManager, EditManager, DeleteManager, GeneralDataManager, MetaDataManager } from './modules/Crud.js';
 
 const actions = {
-    index: function() {
-        // TODO: implementare.
-    },
-
     showAll: function() {
-        // TODO: implementare.
+        const listManager = new ListManager({
+            controller: 'checklists',
+            url: urlbase + 'backend/checklists/showAll',
+            rootId: 'checklists-list',
+            containerId: 'showAll-checklists-container',
+            searchFields: ['name'],
+            searchDates: ['created_at', 'updated_at']
+        }, {
+            onShowAfter: async data => {
+                updateNavigationCounts(data);
+                const counts = data.trashCounts;
+                const filters = ['active', 'trashed', 'all'];
+                if (!counts || !filters.every(filter => Number.isSafeInteger(counts[filter]) && counts[filter] >= 0)) return;
+                listManager.root.querySelectorAll('[data-trash-count]').forEach(badge => {
+                    const filter = badge.dataset.trashCount;
+                    if (!filters.includes(filter)) return;
+                    badge.textContent = String(counts[filter]);
+                    badge.hidden = false;
+                });
+            }
+        });
+        listManager.init();
+
+        new DeleteManager({
+            controller: 'checklists',
+            urls: {
+                softDelete: urlbase + 'backend/checklists/softDelete',
+                restoreDelete: urlbase + 'backend/checklists/restoreDelete',
+                hardDelete: urlbase + 'backend/checklists/hardDelete'
+            },
+            listManager: listManager
+        }).init();
+
+        initRangeDatePicker('#wrapper-checklists-created_at-from', '#wrapper-checklists-created_at-to');
+        initRangeDatePicker('#wrapper-checklists-updated_at-from', '#wrapper-checklists-updated_at-to');
+        initOffcanvasAutoClose('checklists-actionsOffcanvas');
     },
 
     add: function() {
-        // TODO: implementare.
+        new AddManager({
+            url: urlbase + 'backend/checklists/add',
+            formSelector: '#checklists-add',
+            resetSelector: '#add-reset',
+            containerId: 'add-checklists-container'
+        }, {
+
+            onResetAfter: data => { initChecklistSteps(); updateNavigationCounts(data); },
+            onAddAfter: updateNavigationCounts
+        }).init();
     },
 
     edit: function() {
-        // TODO: implementare.
+        new EditManager({
+            url: urlbase + 'backend/checklists/edit',
+            formSelector: '#checklists-edit',
+            refreshSelector: '#edit-refresh',
+            containerId: 'edit-checklists-container'
+        }, {
+            onRefreshAfter: () => { initChecklistSteps(); markUnsavedClean(document.querySelector('#checklists-edit')); }
+        }).init();
+        initPanels();
     },
 
     show: function() {
-        // TODO: implementare.
-    },
-
-    getItems: function() {
-        // TODO: implementare.
-    },
-
-    addItem: function() {
-        // TODO: implementare.
-    },
-
-    editItem: function() {
-        // TODO: implementare.
-    },
-
-    deleteItem: function() {
-        // TODO: implementare.
-    },
-
-    reorderItems: function() {
-        // TODO: implementare.
-    },
-
-    applyToTask: function() {
-        // TODO: implementare.
-    },
+        initPanels();
+    }
 };
 
-if (typeof actions[action] === 'function') {
-    actions[action]();
+function initPanels() {
+    new GeneralDataManager({ url: urlbase + 'backend/checklists/getGeneralData', formSelector: '#getGeneralData' }, { onGeneralDataAfter: initChecklistSteps }).init();
+    new MetaDataManager({ url: urlbase + 'backend/checklists/getMetaData', formSelector: '#getMetaData' }).init();
 }
+
+
+function initChecklistSteps() {
+    const form = document.querySelector('#checklists-add, #checklists-edit');
+    if (form) initTaskSteps(form);
+}
+initChecklistSteps();
+if (actions[action]) actions[action]();

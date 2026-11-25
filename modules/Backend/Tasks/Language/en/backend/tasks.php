@@ -1,11 +1,21 @@
 <?php declare(strict_types = 1);
 
 return [
+    'archive' => [
+        'title' => 'Task archive',
+        'studioTitle' => 'Studio task archive',
+        'active' => 'Active tasks',
+        'action' => 'Archive',
+        'recover' => 'Unarchive',
+        'confirmArchive' => 'Archive this task? Its status, steps and notes will be kept.',
+        'confirmRecover' => 'Return this task to active lists?',
+        'saved' => 'Task archived.',
+        'recovered' => 'Task recovered from the archive.',
+        'readOnly' => 'Archived task: unarchive it before editing.',
+        'date' => 'Archived on',
+    ],
     'modal' => [
-        'stepNotes' => 'Step notes',
-        'noNotes' => 'No notes.',
         'newNote' => 'New note',
-        'draftNotice' => 'Notes are saved with the task. Reset and closing discard unsaved changes.',
         'noteChanged' => 'This note has changed or is no longer available. Close and reopen the modal before trying again.',
     ],
     'overview' => [
@@ -49,6 +59,7 @@ return [
         'allRecords' => 'All',
     ],
     'labels' => [
+        'noSteps' => 'No steps',
         'stepsCount' => '%s of %s',
         'step' => 'Step',
         'title' => 'Title',
@@ -65,7 +76,6 @@ return [
         'dateToEdit' => 'Update end date',
         'context' => 'Project / Application',
         'chooseContext' => 'Select where the task belongs',
-        'initialNote' => 'Initial note (optional)',
         'project' => 'Project',
         'application' => 'Application',
         'allProjects' => 'All projects',
@@ -86,7 +96,6 @@ return [
     ],
     'placeholders' => [
         'step' => 'Describe the step to complete',
-        'initialNote' => 'Write an initial note',
         'dateFromAdd' => 'Search by addition start date...',
         'dateToAdd' => 'Search by addition end date...',
         'dateFromEdit' => 'Search by update start date...',
@@ -125,14 +134,13 @@ return [
         'showSystemDetails' => 'Show metadata',
     ],
     'messages' => [
-        'saveStepFirst' => 'Save the task before adding a note to this step.',
         'noteSaveNotice' => 'The note is saved to the selected task or step.',
         'confirmDeleteNote' => 'Permanently delete this note?',
         'noteDeleted' => 'Note permanently deleted.',
         'noDataChanged' => 'No changes were made.',
         'completionForbidden' => 'You do not have permission to complete or reopen this task.',
         'invalidData' => 'Check the task data.',
-        'stepsRequired' => 'Enter between 1 and 100 steps.',
+        'invalidSteps' => 'A maximum of 100 steps is allowed.',
         'invalidStep' => 'Each step requires valid text up to 255 characters.',
         'foreignStep' => 'A supplied step does not belong to this task.',
         'stepInUse' => 'This step has linked operations: remove those links first.',

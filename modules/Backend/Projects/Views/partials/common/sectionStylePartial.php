@@ -12,11 +12,10 @@
     #projects-list .project-count[data-count-kind="notes"] { color: #146c43; background: #dceee3; border-color: #a3cfbb; }
     :is(#edit-projects-container, #show-projects-container) .card-header > .card-title { font-size: 1.4rem; font-weight: 700; line-height: 1.4; }
     :is(#edit-projects-container, #show-projects-container) .card-header { min-block-size: 3.25rem; padding-block: .625rem; }
-    .project-related-panel:not([data-project-draft-panel]) [data-related-items]:has(.task-related-item) { padding: .75rem; }
+    .project-related-panel [data-related-items]:has(.task-related-item) { padding: .75rem; }
     .project-related-panel .task-related-item { border: 1px solid color-mix(in srgb, var(--app-border) 30%, transparent); border-radius: .25rem; }
     .project-related-panel .task-related-item + .task-related-item { margin-block-start: .5rem; }
     .project-related-detail .project-related-text { white-space: pre-wrap; margin: 0; }
-    .project-related-detail .project-related-steps { margin: .75rem 0 0; padding: 0; list-style: none; }
-    .project-related-detail .project-related-steps li { display: flex; align-items: baseline; gap: .5rem; padding: .15rem 0; }
-    .project-related-detail .project-related-steps .fa-square-check { color: var(--bs-success); }
 </style>
+
+<?= view(\Modules\Backend\Tasks\Config\Views::BODY_STYLE_PARTIAL, [], ['saveData'=>false]); ?>

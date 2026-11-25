@@ -20,7 +20,7 @@
     .manager-postit[data-paper="green"] { --paper: #dcebd8; --fold: #bad0b4; }
     .manager-postit[data-paper="rose"] { --paper: #f0dce2; --fold: #d9b5c0; }
     .manager-postit[data-paper="violet"] { --paper: #e4def1; --fold: #c9bde0; }
-    .manager-postit::after { content: ''; position: absolute; bottom: 0; right: 0; inline-size: 1.65rem; block-size: 1.65rem; background: linear-gradient(135deg, var(--fold) 49%, var(--app-page-bg) 51%); filter: drop-shadow(-1px -1px 1px #50607018); pointer-events: none; }
+    .manager-postit::after { content: ''; position: absolute; top: 0; right: 0; inline-size: 1.65rem; block-size: 1.65rem; background: linear-gradient(45deg, var(--fold) 49%, var(--app-page-bg) 51%); filter: drop-shadow(-1px 1px 1px #50607018); pointer-events: none; }
     .manager-postit-date { display: flex; align-items: center; gap: .35rem; margin-bottom: .65rem; font-size: .75rem; }
     .manager-postit h3 { margin: 0 0 .5rem; font-size: .9rem; line-height: 1.6; font-weight: 700; overflow-wrap: anywhere; }
     .manager-postit .manager-desk-context { margin-bottom: .65rem; font-size: .75rem; }

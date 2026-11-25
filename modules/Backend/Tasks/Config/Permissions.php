@@ -14,6 +14,7 @@ return [
             'tasks_delete' => lang('backend/permissions.tasks.delete'),
             'tasks_restore' => lang('backend/permissions.tasks.restore'),
             'tasks_complete' => lang('backend/permissions.tasks.complete'),
+            'tasks_archive' => lang('backend/permissions.tasks.archive'),
             'tasks_set_current' => lang('backend/permissions.tasks.setCurrent'),
         ],
     ],

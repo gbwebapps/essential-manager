@@ -1,6 +1,10 @@
 <?php declare(strict_types = 1);
 
 return [
+    'reference' => '关联',
+    'noReference' => '无关联',
+    'retainedReference' => '现有关联',
+    'invalidReference' => '所选关联不可用。',
     'noTasksFound' => '未找到任务。',
     'noNotesFound' => '未找到笔记。',
     'clearSearch' => '清除搜索',

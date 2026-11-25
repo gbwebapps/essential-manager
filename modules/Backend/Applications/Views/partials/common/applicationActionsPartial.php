@@ -1,7 +1,10 @@
 <?= view(\Modules\Backend\Template\Config\Views::MODAL_STYLE_PARTIAL, [], ['saveData' => false]); ?>
 <?= view(\Modules\Backend\Tasks\Config\Views::MODAL_EDITOR_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<?= view(\Modules\Backend\Tasks\Config\Views::STEPS_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<?= view(\Modules\Backend\Tasks\Config\Views::SECTION_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<?= view(\Modules\Backend\Tasks\Config\Views::ACTION_LINKS_STYLE_PARTIAL, [], ['saveData' => false]); ?>
 <?php foreach (['task', 'note'] as $applicationAction): ?>
-    <div class="modal fade transfer-modal manager-work-modal applications-related-modal <?= $applicationAction === 'task' && ! ($draftMode ?? false) ? 'task-modal-complete' : ''; ?>" id="applications-add-<?= $applicationAction; ?>-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="applications-add-<?= $applicationAction; ?>-title" aria-hidden="true" data-application-action-modal data-save-label="<?= esc(lang('backend/applications.buttons.sendData'), 'attr'); ?>" data-application-action-kind="<?= $applicationAction; ?>" data-draft-mode="<?= ($draftMode ?? false) ? 'true' : 'false'; ?>" data-add-title="<?= esc(lang('backend/' . ($applicationAction === 'task' ? 'tasks' : 'notes') . '.titles.add'), 'attr'); ?>" data-edit-title="<?= esc(lang('backend/' . ($applicationAction === 'task' ? 'tasks' : 'notes') . '.titles.edit'), 'attr'); ?>" data-application-uuid="<?= esc($application->uuid ?? '', 'attr'); ?>" data-application-name="<?= esc($application->name ?? '', 'attr'); ?>" data-no-changes="<?= esc(lang('backend/applications.messages.noDataChanged'), 'attr'); ?>" data-save-error="<?= esc(lang('backend/applications.messages.saveError'), 'attr'); ?>" data-save-notice="<?= esc(lang('backend/applications.messages.saveNotice'), 'attr'); ?>">
+    <div class="modal fade transfer-modal manager-work-modal applications-related-modal <?= $applicationAction === 'task' ? 'task-modal-complete' : ''; ?>" id="applications-add-<?= $applicationAction; ?>-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="applications-add-<?= $applicationAction; ?>-title" aria-hidden="true" data-application-action-modal data-save-label="<?= esc(lang('backend/applications.buttons.sendData'), 'attr'); ?>" data-application-action-kind="<?= $applicationAction; ?>" data-draft-mode="<?= ($draftMode ?? false) ? 'true' : 'false'; ?>" data-add-title="<?= esc(lang('backend/' . ($applicationAction === 'task' ? 'tasks' : 'notes') . '.titles.add'), 'attr'); ?>" data-edit-title="<?= esc(lang('backend/' . ($applicationAction === 'task' ? 'tasks' : 'notes') . '.titles.edit'), 'attr'); ?>" data-application-uuid="<?= esc($application->uuid ?? '', 'attr'); ?>" data-application-name="<?= esc($application->name ?? '', 'attr'); ?>" data-no-changes="<?= esc(lang('backend/applications.messages.noDataChanged'), 'attr'); ?>" data-save-error="<?= esc(lang('backend/applications.messages.saveError'), 'attr'); ?>" data-save-notice="<?= esc(lang('backend/applications.messages.saveNotice'), 'attr'); ?>">
         <div class="modal-dialog modal-dialog-centered transfer-export-dialog">
             <div class="modal-content shadow">
                 <form novalidate method="post" data-application-action-form>
@@ -17,12 +20,14 @@
                     <div class="modal-body">
                         <input type="hidden" name="uuid" value="">
                         <input type="hidden" name="application_uuid" value="<?= esc($application->uuid ?? '', 'attr'); ?>">
+                        <?php if ($applicationAction !== 'task'): ?>
                         <div class="mb-3">
                             <div class="form-label"><?= ui_text('backend/applications.labels.name', [], false); ?></div>
                             <p id="applications-<?= $applicationAction; ?>-application" class="fw-bold text-break mb-0" data-application-action-name><?= esc($application->name ?? ''); ?></p>
                         </div>
+                        <?php endif; ?>
                         <?php if ($applicationAction === 'task'): ?>
-                            <?= view(\Modules\Backend\Tasks\Config\Views::FORM_FIELDS_PARTIAL, ['fieldPrefix' => 'applications-task', 'task' => null, 'completeEditor' => ! ($draftMode ?? false), 'currentAdmin' => $currentAdmin ?? null], ['saveData' => false]); ?>
+                            <?= view(\Modules\Backend\Tasks\Config\Views::FORM_FIELDS_PARTIAL, ['fieldPrefix' => 'applications-task', 'task' => null, 'taskOwnerName' => $application->name ?? '', 'currentAdmin' => $currentAdmin ?? null], ['saveData' => false]); ?>
                         <?php else: ?>
                             <?= view(\Modules\Backend\Notes\Config\Views::FORM_FIELDS_PARTIAL, ['fieldPrefix' => 'applications-note', 'note' => null], ['saveData' => false]); ?>
                         <?php endif; ?>

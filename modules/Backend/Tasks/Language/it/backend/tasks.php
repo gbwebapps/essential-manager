@@ -1,11 +1,21 @@
 <?php declare(strict_types = 1);
 
 return [
+    'archive' => [
+        'title' => 'Archivio task',
+        'studioTitle' => 'Archivio task Studio',
+        'active' => 'Task attivi',
+        'action' => 'Archivia',
+        'recover' => 'Togli dall’archivio',
+        'confirmArchive' => 'Archiviare questo task? Stato, passi e note saranno conservati.',
+        'confirmRecover' => 'Riportare questo task negli elenchi attivi?',
+        'saved' => 'Task archiviato.',
+        'recovered' => 'Task recuperato dall’archivio.',
+        'readOnly' => 'Task archiviato: recuperalo per modificarlo.',
+        'date' => 'Archiviato il',
+    ],
     'modal' => [
-        'stepNotes' => 'Note del passo',
-        'noNotes' => 'Nessuna nota.',
         'newNote' => 'Nuova nota',
-        'draftNotice' => 'Le note verranno salvate insieme al task. Reset e chiusura scartano le modifiche non salvate.',
         'noteChanged' => 'La nota è cambiata o non è più disponibile. Chiudi e riapri il modale prima di riprovare.',
     ],
     'overview' => [
@@ -49,6 +59,7 @@ return [
         'allRecords' => 'Tutti',
     ],
     'labels' => [
+        'noSteps' => 'Nessun passo',
         'stepsCount' => '%s di %s',
         'step' => 'Passo',
         'title' => 'Titolo',
@@ -65,7 +76,6 @@ return [
         'dateToEdit' => 'Data fine aggiornamento',
         'context' => 'Progetto / Applicazione',
         'chooseContext' => 'Seleziona il contesto del task',
-        'initialNote' => 'Nota iniziale (facoltativa)',
         'project' => 'Progetto',
         'application' => 'Applicazione',
         'allProjects' => 'Tutti i progetti',
@@ -86,7 +96,6 @@ return [
     ],
     'placeholders' => [
         'step' => 'Descrivi il passo da compiere',
-        'initialNote' => 'Scrivi una nota iniziale',
         'dateFromAdd' => 'Cerca per data inizio aggiunta...',
         'dateToAdd' => 'Cerca per data fine aggiunta...',
         'dateFromEdit' => 'Cerca per data inizio aggiornamento...',
@@ -125,14 +134,13 @@ return [
         'showSystemDetails' => 'Mostra metadati',
     ],
     'messages' => [
-        'saveStepFirst' => 'Salva il task prima di aggiungere una nota a questo passo.',
         'noteSaveNotice' => 'La nota viene salvata nel task o nel passo indicato.',
         'confirmDeleteNote' => 'Eliminare definitivamente questa nota?',
         'noteDeleted' => 'Nota eliminata definitivamente.',
         'noDataChanged' => 'Non sono state effettuate modifiche.',
         'completionForbidden' => 'Non hai il permesso per completare o riaprire il task.',
         'invalidData' => 'Controlla i dati del task.',
-        'stepsRequired' => 'Inserisci da 1 a 100 passi.',
+        'invalidSteps' => 'Sono consentiti al massimo 100 passi.',
         'invalidStep' => 'Ogni passo richiede un testo valido di massimo 255 caratteri.',
         'foreignStep' => 'Un passo indicato non appartiene al task.',
         'stepInUse' => 'Il passo è collegato a operazioni: rimuovi prima questi collegamenti.',

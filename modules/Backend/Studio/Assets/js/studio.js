@@ -10,7 +10,7 @@ const lists = new Map();
 /** @param {Object} data Risposta server. @returns {void} Aggiorna solo i conteggi autorizzati. */
 function counts(data) {
     updateNavigationCounts(data);
-    if (Number.isSafeInteger(data.navigationCounts?.studio)) document.querySelectorAll('[data-studio-task-count]').forEach(n => { n.textContent = String(data.navigationCounts.studio); });
+    if (Number.isSafeInteger(data.navigationCounts?.studio)) document.querySelectorAll('[data-studio-task-count]').forEach(n => { n.textContent = String(Number.isSafeInteger(data.studioList?.taskCount) ? data.studioList.taskCount : data.navigationCounts.studio); });
     if (Number.isSafeInteger(data.noteCount)) document.querySelectorAll('[data-studio-note-count]').forEach(n => { n.textContent = String(data.noteCount); });
 }
 
@@ -35,6 +35,7 @@ root?.querySelectorAll('[data-studio-list]').forEach(section => {
     const kind = section.dataset.studioList;
     const list = new ListLightManager({
         root: section, key: kind, url: endpoint(kind === 'tasks' ? 'getTasks' : 'getNotes'),
+        storageKey: root.dataset.archiveList === 'archived' ? `ListLightManager:${location.pathname}:${kind}` : '',
         requestField: 'studioList', errorMessage: root.dataset.saveError,
         selectors: {
             results: '[data-studio-results]', search: '[data-studio-search]',
@@ -44,7 +45,7 @@ root?.querySelectorAll('[data-studio-list]').forEach(section => {
         },
         sanitizeSearch: value => value.replace(/[<>"%'`\\\u0000-\u001f\u007f]/g, ''),
         getState: (state, instance) => ({
-            ...state,
+            ...state, archive: kind === 'tasks' ? root.dataset.archiveList : 'active',
             opened: kind === 'tasks' ? [...instance.results.querySelectorAll('[data-studio-task]')]
                 .filter(panel => panel.querySelector('[data-studio-toggle]')?.getAttribute('aria-expanded') === 'true')
                 .map(panel => panel.dataset.studioTask) : []
@@ -76,9 +77,7 @@ document.addEventListener('essential:task-response', event => {
 document.addEventListener('shown.bs.tab', event => {
     if (!root || !event.target.matches('.studio-tab')) return;
     const kind = event.target.id === 'studio-tasks-tab' ? 'tasks' : 'notes';
-    history.replaceState(history.state, '', urlbase + 'backend/studio' + (kind === 'notes' ? '/notes' : ''));
-    const overview = document.getElementById('studio-overview-container');
-    if (overview) overview.hidden = kind !== 'tasks';
+    history.replaceState(history.state, '', urlbase + 'backend/studio' + (kind === 'notes' ? '/notes' : (root.dataset.archiveList === 'archived' ? '/archived' : '')));
     if (!lists.get(kind)?.loaded) lists.get(kind)?.load();
 });
 

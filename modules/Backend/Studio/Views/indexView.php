@@ -6,14 +6,14 @@
     <?php if ($canReadTasks): ?>
         <?= $this->include(\Modules\Backend\Tasks\Config\Views::SECTION_STYLE_PARTIAL); ?>
         <?= $this->include(\Modules\Backend\Tasks\Config\Views::OVERVIEW_STYLE_PARTIAL); ?>
-        <div id="studio-overview-container" class="mb-3" <?= $studioTab!=='tasks'?'hidden':''; ?>><?= $studioOverview; ?></div>
+        <div id="studio-overview-container" class="mb-3"><?= $studioOverview; ?></div>
     <?php endif; ?>
 <?= $this->endSection(); ?>
 <?= $this->section('content'); ?>
     <?= $this->include(\Modules\Backend\Tasks\Config\Views::ACTION_LINKS_STYLE_PARTIAL); ?>
     <?= $this->include(\Modules\Backend\Tasks\Config\Views::SECTION_STYLE_PARTIAL); ?>
     <?= $this->include(\Modules\Backend\Tasks\Config\Views::STEPS_STYLE_PARTIAL); ?>
-    <div id="studio-workspace" data-task-route-base="backend/studio/tasks/" data-save-error="<?= esc(lang('backend/tasks.messages.saveError'),'attr'); ?>">
+    <div id="studio-workspace" data-archive-list="<?= ! empty($archiveList)?'archived':'active'; ?>" data-task-route-base="backend/studio/tasks/" data-save-error="<?= esc(lang('backend/tasks.messages.saveError'),'attr'); ?>">
         <div class="studio-tabs nav" role="tablist" aria-label="<?= esc(lang('backend/studio.title'),'attr'); ?>">
             <?php foreach (['tasks'=>$canReadTasks,'notes'=>$canReadNotes] as $kind=>$allowed): if (!$allowed): continue; endif; ?>
                 <button type="button" class="studio-tab nav-link <?= $studioTab===$kind?'active':''; ?>" id="studio-<?= $kind; ?>-tab" data-bs-toggle="tab" data-bs-target="#studio-<?= $kind; ?>" role="tab" aria-controls="studio-<?= $kind; ?>" aria-selected="<?= $studioTab===$kind?'true':'false'; ?>"><i class="fa-solid fa-<?= $kind==='tasks'?'list-check':'note-sticky'; ?> me-2" aria-hidden="true"></i><?= ui_text('backend/studio.'.$kind,[],false); ?> <span class="badge <?= $kind==='notes'?'task-notes-count':'app-bg-muted-subtle app-text-muted-emphasis border rounded-1'; ?>" data-studio-<?= $kind==='tasks'?'task':'note'; ?>-count><?= $kind==='tasks'?$taskCount:$noteCount; ?></span></button>

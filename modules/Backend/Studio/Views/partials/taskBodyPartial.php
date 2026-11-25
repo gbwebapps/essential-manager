@@ -15,7 +15,7 @@
     <?php if ($canReadNotes || \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'notes_add')): ?>
         <div class="studio-task-notes">
             <div class="d-flex justify-content-between align-items-center gap-2 mb-2"><h3><?= ui_text('backend/studio.taskNotes', [], false); ?></h3>
-                <?php if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'notes_add')): ?><button type="button" class="btn btn-link task-step-action" data-bs-toggle="modal" data-bs-target="#tasks-note-modal" data-task-uuid="<?= esc($task->uuid, 'attr'); ?>" data-task-title="<?= esc($task->title, 'attr'); ?>" aria-label="<?= esc(lang('backend/tasks.actions.addNote'), 'attr'); ?>"><i class="fa-solid fa-note-sticky" aria-hidden="true"></i></button><?php endif; ?>
+                <?php if ($task->archived_at === null && \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'notes_add')): ?><button type="button" class="btn btn-link task-step-action" data-bs-toggle="modal" data-bs-target="#tasks-note-modal" data-task-uuid="<?= esc($task->uuid, 'attr'); ?>" data-task-title="<?= esc($task->title, 'attr'); ?>" aria-label="<?= esc(lang('backend/tasks.actions.addNote'), 'attr'); ?>"><i class="fa-solid fa-note-sticky" aria-hidden="true"></i></button><?php endif; ?>
             </div>
             <?php if ($canReadNotes): ?><?= view(\Modules\Backend\Tasks\Config\Views::NOTES_PARTIAL, ['task' => $task, 'currentAdmin' => $currentAdmin, 'taskNotes' => $taskNotes, 'notesForStep' => false], ['saveData' => false]); ?><?php endif; ?>
         </div>

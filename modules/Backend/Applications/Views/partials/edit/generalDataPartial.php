@@ -19,13 +19,6 @@
                 <div class="error_project_uuid app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>
             </div>
         </div>
-        <div class="col-12 ">
-            <div class="mb-2">
-                <label for="description" class="form-label"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.description', [], false); ?></label>
-                <textarea <?= ui_binding('backend/applications.placeholders.description', 'placeholder', [], true); ?> name="description" id="description" rows="5" class="form-control" placeholder="<?= esc(lang('backend/applications.placeholders.description'), 'attr'); ?>"><?= esc($application->description ?? ''); ?></textarea>
-                <div class="error_description app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>
-            </div>
-        </div>
         <div class="col-12 col-lg-6">
             <div class="mb-2">
                 <label for="local_path" class="form-label"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.localPath', [], false); ?></label>
@@ -53,6 +46,13 @@
                 <label for="execute_name" class="form-label"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.executeName', [], false); ?></label>
                 <input <?= ui_binding('backend/applications.placeholders.executeName', 'placeholder', [], true); ?> type="text" name="execute_name" id="execute_name" value="<?= esc($application->execute_name ?? '', 'attr'); ?>" class="form-control" placeholder="<?= esc(lang('backend/applications.placeholders.executeName'), 'attr'); ?>">
                 <div class="error_execute_name app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>
+            </div>
+        </div>
+        <div class="col-12 ">
+            <div class="mb-2">
+                <label for="description" class="form-label"><i class="fa-solid fa-circle-arrow-down"></i><?= ui_text('backend/applications.labels.description', [], false); ?></label>
+                <textarea <?= ui_binding('backend/applications.placeholders.description', 'placeholder', [], true); ?> name="description" id="description" rows="5" class="form-control" placeholder="<?= esc(lang('backend/applications.placeholders.description'), 'attr'); ?>"><?= esc($application->description ?? ''); ?></textarea>
+                <div class="error_description app-text-danger fw-bold small pt-1" aria-live="polite">&nbsp;</div>
             </div>
         </div>
     </div>

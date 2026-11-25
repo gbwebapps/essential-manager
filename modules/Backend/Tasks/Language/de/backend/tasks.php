@@ -1,11 +1,21 @@
 <?php declare(strict_types = 1);
 
 return [
+    'archive' => [
+        'title' => 'Aufgabenarchiv',
+        'studioTitle' => 'Studio-Aufgabenarchiv',
+        'active' => 'Aktive Aufgaben',
+        'action' => 'Archivieren',
+        'recover' => 'Aus Archiv holen',
+        'confirmArchive' => 'Aufgabe archivieren? Status, Schritte und Notizen bleiben erhalten.',
+        'confirmRecover' => 'Aufgabe in die aktiven Listen zurückholen?',
+        'saved' => 'Aufgabe archiviert.',
+        'recovered' => 'Aufgabe aus dem Archiv zurückgeholt.',
+        'readOnly' => 'Archivierte Aufgabe: vor dem Bearbeiten aus dem Archiv holen.',
+        'date' => 'Archiviert am',
+    ],
     'modal' => [
-        'stepNotes' => 'Notizen zum Schritt',
-        'noNotes' => 'Keine Notizen.',
         'newNote' => 'Neue Notiz',
-        'draftNotice' => 'Notizen werden mit der Aufgabe gespeichert. Zurücksetzen und Schließen verwerfen ungespeicherte Änderungen.',
         'noteChanged' => 'Diese Notiz wurde geändert oder ist nicht mehr verfügbar. Schließen und öffnen Sie den Dialog erneut.',
     ],
     'overview' => [
@@ -49,6 +59,7 @@ return [
         'allRecords' => 'Alle',
     ],
     'labels' => [
+        'noSteps' => 'Keine Schritte',
         'stepsCount' => '%s von %s',
         'step' => 'Schritt',
         'title' => 'Titel',
@@ -65,7 +76,6 @@ return [
         'dateToEdit' => 'Ende des Änderungszeitraums',
         'context' => 'Project / Application',
         'chooseContext' => 'Select where the task belongs',
-        'initialNote' => 'Initial note (optional)',
         'project' => 'Project',
         'application' => 'Application',
         'allProjects' => 'All projects',
@@ -86,7 +96,6 @@ return [
     ],
     'placeholders' => [
         'step' => 'Beschreibe den auszuführenden Schritt',
-        'initialNote' => 'Schreibe eine erste Notiz',
         'dateFromAdd' => 'Nach Startdatum des Hinzufügens suchen...',
         'dateToAdd' => 'Nach Enddatum des Hinzufügens suchen...',
         'dateFromEdit' => 'Nach Startdatum der Änderung suchen...',
@@ -125,14 +134,13 @@ return [
         'showSystemDetails' => 'Metadaten anzeigen',
     ],
     'messages' => [
-        'saveStepFirst' => 'Speichere die Aufgabe, bevor du diesem Schritt eine Notiz hinzufügst.',
         'noteSaveNotice' => 'Die Notiz wird in der gewählten Aufgabe oder im Schritt gespeichert.',
         'confirmDeleteNote' => 'Diese Notiz endgültig löschen?',
         'noteDeleted' => 'Notiz endgültig gelöscht.',
         'noDataChanged' => 'Es wurden keine Änderungen vorgenommen.',
         'completionForbidden' => 'You do not have permission to complete or reopen this task.',
         'invalidData' => 'Check the task data.',
-        'stepsRequired' => 'Enter between 1 and 100 steps.',
+        'invalidSteps' => 'Es sind höchstens 100 Schritte erlaubt.',
         'invalidStep' => 'Each step requires valid text up to 255 characters.',
         'foreignStep' => 'A supplied step does not belong to this task.',
         'stepInUse' => 'Dieser Schritt hat verknüpfte Vorgänge. Entfernen Sie zuerst diese Verknüpfungen.',

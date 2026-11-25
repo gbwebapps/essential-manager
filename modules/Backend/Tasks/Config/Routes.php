@@ -5,6 +5,9 @@
 $routes->group('backend',['filter'=>'authorization'],function($routes){
     $routes->group('tasks',function($routes){
         $routes->get('/','\Modules\Backend\Tasks\Controllers\TasksController::index',['filter'=>'permission:tasks_show_all']);
+        $routes->match(['GET','POST'],'archived','\Modules\Backend\Tasks\Controllers\TasksController::archived',['filter'=>'permission:tasks_show_all']);
+        $routes->post('archive','\Modules\Backend\Tasks\Controllers\TasksController::archive',['filter'=>'permission:tasks_archive']);
+        $routes->post('unarchive','\Modules\Backend\Tasks\Controllers\TasksController::unarchive',['filter'=>'permission:tasks_archive']);
         $routes->match(['GET','POST'],'showAll','\Modules\Backend\Tasks\Controllers\TasksController::showAll',['filter'=>'permission:tasks_show_all']);
         $routes->match(['GET','POST'],'add','\Modules\Backend\Tasks\Controllers\TasksController::add',['filter'=>'permission:tasks_add']);
         $routes->get('edit/(:uuid)','\Modules\Backend\Tasks\Controllers\TasksController::edit/$1',['filter'=>'permission:tasks_edit']);

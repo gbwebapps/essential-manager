@@ -1,43 +1,38 @@
 <?php
     $fieldPrefix = $fieldPrefix ?? 'task';
-    $completeEditor = $completeEditor ?? false;
-    $canAddNotes = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'notes_add');
-    $canShowNotes = \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin ?? null, 'notes_show');
-    $stepView = $completeEditor ? \Modules\Backend\Tasks\Config\Views::MODAL_STEP_PARTIAL : \Modules\Backend\Tasks\Config\Views::STEP_FIELD_PARTIAL;
 ?>
-<div class="mb-3">
-    <label for="<?= esc($fieldPrefix, 'attr'); ?>-title" class="form-label required-field"><?= ui_text('backend/tasks.labels.title', [], false); ?></label>
-    <input type="text" id="<?= esc($fieldPrefix, 'attr'); ?>-title" name="title" class="form-control" placeholder="<?= esc(lang('backend/tasks.placeholders.title'), 'attr'); ?>" value="<?= esc($task->title ?? '', 'attr'); ?>">
-    <div class="app-text-danger fw-bold small pt-1" data-work-field-error="title" aria-live="polite"></div>
-</div>
-<div class="mb-3">
-    <label for="<?= esc($fieldPrefix, 'attr'); ?>-description" class="form-label"><?= ui_text('backend/tasks.labels.description', [], false); ?></label>
-    <textarea id="<?= esc($fieldPrefix, 'attr'); ?>-description" name="description" class="form-control" rows="3" placeholder="<?= esc(lang('backend/tasks.placeholders.description'), 'attr'); ?>"><?= esc($task->description ?? ''); ?></textarea>
-    <div class="app-text-danger fw-bold small pt-1" data-work-field-error="description" aria-live="polite"></div>
-</div>
-<fieldset class="mb-3" data-task-steps data-field-prefix="<?= esc($fieldPrefix, 'attr'); ?>" data-step-label="<?= esc(lang('backend/tasks.labels.step'), 'attr'); ?>">
-    <legend class="form-label fs-6 float-none mb-1"><?= ui_text('backend/tasks.labels.steps', [], false); ?></legend>
-    <div data-task-step-list>
-        <?php foreach ($task->steps ?? [(object) ['title' => '']] as $stepIndex => $taskStep): ?>
-            <?= view($stepView, ['canAddNotes' => $canAddNotes, 'canShowNotes' => $canShowNotes, 'fieldPrefix' => $fieldPrefix, 'stepIndex' => $stepIndex, 'stepTitle' => $taskStep->title, 'stepUuid' => $taskStep->uuid ?? ''], ['saveData' => false]); ?>
-        <?php endforeach; ?>
+<div class="row">
+    <div class="col-12 col-lg-6">
+        <?= view(\Modules\Backend\Tasks\Config\Views::TITLE_FIELD_PARTIAL, ['fieldPrefix' => $fieldPrefix, 'task' => $task ?? null], ['saveData' => false]); ?>
     </div>
-    <button type="button" class="btn btn-sm app-btn-secondary mt-1" data-task-step-add><i class="fa-solid fa-plus me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.actions.addStep', [], false); ?></button>
-    <template data-task-step-template>
-        <?= view($stepView, ['canAddNotes' => $canAddNotes, 'canShowNotes' => $canShowNotes, 'fieldPrefix' => $fieldPrefix, 'stepIndex' => '__new__', 'stepTitle' => '', 'stepUuid' => ''], ['saveData' => false]); ?>
-    </template>
-    <div class="app-text-danger fw-bold small pt-1" data-work-field-error="steps" aria-live="polite"></div>
-</fieldset>
+    <div class="col-12 col-lg-6">
+        <?= view(\Modules\Backend\Tasks\Config\Views::OWNER_FIELD_PARTIAL, ['fieldPrefix' => $fieldPrefix, 'taskOwnerName' => $taskOwnerName ?? ''], ['saveData' => false]); ?>
+    </div>
+    <div class="col-12 col-lg-6">
+        <?= view('Modules\Backend\Checklists\Views\partials\common\pickerPartial', ['currentAdmin' => $currentAdmin ?? null, 'pickerId' => $fieldPrefix . '-checklist'], ['saveData' => false]); ?>
+    </div>
+    <div class="col-12 col-lg-6">
+        <?= view(\Modules\Backend\Tasks\Config\Views::STATUS_FIELD_PARTIAL, ['fieldPrefix' => $fieldPrefix, 'modalStatus' => true], ['saveData' => false]); ?>
+    </div>
+    <div class="col-12">
+        <?= view(\Modules\Backend\Tasks\Config\Views::DESCRIPTION_FIELD_PARTIAL, ['fieldPrefix' => $fieldPrefix, 'task' => $task ?? null], ['saveData' => false]); ?>
+    </div>
+    <div class="col-12">
+        <fieldset class="mb-2 task-editor-field" data-task-steps data-optional-steps="true" data-field-prefix="<?= esc($fieldPrefix, 'attr'); ?>" data-step-label="<?= esc(lang('backend/tasks.labels.step'), 'attr'); ?>">
+            <legend class="form-label fs-6 float-none"><i class="fa-solid fa-list-check fa-fw me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.labels.steps', [], false); ?></legend>
+            <div data-task-step-list>
+                <?php foreach ($task->steps ?? [] as $stepIndex => $taskStep): ?>
+                    <?= view(\Modules\Backend\Tasks\Config\Views::EDITOR_STEP_PARTIAL, ['currentAdmin' => $currentAdmin ?? null, 'fieldPrefix' => $fieldPrefix, 'stepNotesMode' => 'draft', 'stepIndex' => $stepIndex, 'stepTitle' => $taskStep->title, 'stepUuid' => $taskStep->uuid ?? '', 'task' => null], ['saveData' => false]); ?>
+                <?php endforeach; ?>
+            </div>
+            <?= view(\Modules\Backend\Tasks\Config\Views::EDITOR_ACTIONS_PARTIAL, ['currentAdmin' => $currentAdmin ?? null, 'persistedNoteAction' => false, 'showAddStepAction' => true, 'showAddNoteAction' => false], ['saveData' => false]); ?>
+            <template data-task-step-template><?= view(\Modules\Backend\Tasks\Config\Views::EDITOR_STEP_PARTIAL, ['currentAdmin' => $currentAdmin ?? null, 'fieldPrefix' => $fieldPrefix, 'stepNotesMode' => 'draft', 'stepIndex' => '__new__', 'stepTitle' => '', 'stepUuid' => '', 'task' => null], ['saveData' => false]); ?></template>
+            <div class="app-text-danger fw-bold small pt-1" data-work-field-error="steps" aria-live="polite">&nbsp;</div>
+        </fieldset>
+    </div>
 
-<div>
-    <label for="<?= esc($fieldPrefix, 'attr'); ?>-status" class="form-label"><?= ui_text('backend/tasks.labels.status', [], false); ?></label>
-    <select id="<?= esc($fieldPrefix, 'attr'); ?>-status" name="status" class="form-select">
-        <?php foreach (['todo', 'in_progress', 'completed'] as $taskStatus): ?>
-            <option <?= ui_binding('backend/tasks.statuses.' . $taskStatus, 'text', [], false); ?> value="<?= $taskStatus; ?>" <?= ($task->status ?? 'todo') === $taskStatus ? 'selected' : ''; ?>><?= esc(lang('backend/tasks.statuses.' . $taskStatus)); ?></option>
-        <?php endforeach; ?>
-    </select>
-    <div class="app-text-danger fw-bold small pt-1" data-work-field-error="status" aria-live="polite"></div>
+    <div class="col-12">
+        <?= view(\Modules\Backend\Tasks\Config\Views::NOTES_EDITOR_FIELD_PARTIAL, ['task'=>null, 'currentAdmin'=>$currentAdmin ?? null, 'persistedNotes'=>false], ['saveData'=>false]); ?>
+    </div>
+
 </div>
-<?php if ($completeEditor): ?>
-    <?= view(\Modules\Backend\Tasks\Config\Views::MODAL_NOTES_PARTIAL, ['currentAdmin' => $currentAdmin ?? null], ['saveData' => false]); ?>
-<?php endif; ?>

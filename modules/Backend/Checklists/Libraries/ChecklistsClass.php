@@ -3,80 +3,112 @@
 namespace Modules\Backend\Checklists\Libraries;
 
 /**
- * Struttura della libreria Checklists; collegamenti, asset e opzioni da implementare.
+ * Prepara barre dei collegamenti e asset specifici del modulo Checklists.
  */
 class ChecklistsClass
 {
     /* LINKS BAR ----------------------------------------------------------------------------------- */
 
     /**
-     * Predispone i collegamenti della vista.
+     * Collegamento al nuovo modello.
+     * @return array Configurazione della vista.
      */
     public function getLinksBarShowAll(): array
     {
-        // TODO: implementare.
-        throw new \BadMethodCallException(__METHOD__ . ' non ancora implementato.');
+        return [
+            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/checklists.linksBar.add'), 'route' => 'backend/checklists/add'],
+        ];
     }
 
     /**
-     * Predispone i collegamenti della vista.
+     * Collegamento alla lista.
+     * @return array Configurazione della vista.
      */
     public function getLinksBarAdd(): array
     {
-        // TODO: implementare.
-        throw new \BadMethodCallException(__METHOD__ . ' non ancora implementato.');
+        return [
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/checklists.linksBar.showAll'), 'route' => 'backend/checklists/showAll'],
+        ];
     }
 
     /**
-     * Predispone i collegamenti della vista.
+     * Lista, nuovo modello e dettaglio.
+     * @param string|null $uuid Record corrente.
+     * @return array Configurazione della vista.
      */
     public function getLinksBarEdit(?string $uuid = null): array
     {
-        // TODO: implementare.
-        throw new \BadMethodCallException(__METHOD__ . ' non ancora implementato.');
+        if ( ! $uuid):
+            return [];
+        endif;
+
+        return [
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/checklists.linksBar.showAll'), 'route' => 'backend/checklists/showAll'],
+            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/checklists.linksBar.add'), 'route' => 'backend/checklists/add'],
+            ['icon' => '<i class="fa-solid fa-eye"></i>', 'label' => lang('backend/checklists.linksBar.show'), 'route' => "backend/checklists/show/{$uuid}"],
+        ];
     }
 
     /**
-     * Predispone i collegamenti della vista.
+     * Lista, nuovo modello e modifica.
+     * @param string|null $uuid Record corrente.
+     * @return array Configurazione della vista.
      */
     public function getLinksBarShow(?string $uuid = null): array
     {
-        // TODO: implementare.
-        throw new \BadMethodCallException(__METHOD__ . ' non ancora implementato.');
+        if ( ! $uuid):
+            return [];
+        endif;
+
+        return [
+            ['icon' => '<i class="fa-solid fa-list"></i>', 'label' => lang('backend/checklists.linksBar.showAll'), 'route' => 'backend/checklists/showAll'],
+            ['icon' => '<i class="fa-solid fa-plus"></i>', 'label' => lang('backend/checklists.linksBar.add'), 'route' => 'backend/checklists/add'],
+            ['icon' => '<i class="fa-solid fa-pen"></i>', 'label' => lang('backend/checklists.linksBar.edit'), 'route' => "backend/checklists/edit/{$uuid}"],
+        ];
     }
 
     /* JAVASCRIPT ---------------------------------------------------------------------------------- */
 
     /**
-     * Predispone gli asset JavaScript della vista.
+     * Asset per i filtri data della lista.
+     * @return array Configurazione della vista.
+     */
+    /**
+     * Asset di stampa/esportazione del dettaglio.
+     * @return array Configurazione della vista.
      */
     public function getJsShowAll(): array
     {
-        // TODO: implementare.
-        throw new \BadMethodCallException(__METHOD__ . ' non ancora implementato.');
+        $lang = service('request')->getLocale();
+        $locale = ($lang === 'en' ? 'default' : $lang);
+
+        return [
+            ['id' => 'flatpickr-js', 'path' => 'assets/vendor/flatpickr/js/flatpickr.min.js', 'position' => 'before', 'target' => 'checklists-js'],
+            ['id' => $locale . '-js', 'path' => 'assets/vendor/flatpickr/js/' . $locale . '.js', 'position' => 'after', 'target' => 'flatpickr-js'],
+        ];
     }
 
     /**
-     * Predispone gli asset JavaScript della vista.
+     * Asset di stampa/esportazione del dettaglio.
+     * @return array Configurazione della vista.
      */
     public function getJsShow(): array
     {
-        // TODO: implementare.
-        throw new \BadMethodCallException(__METHOD__ . ' non ancora implementato.');
+        return [
+            ['id' => 'html2pdf-js', 'path' => 'assets/vendor/html2pdf/js/html2pdf.bundle.min.js', 'position' => 'before', 'target' => 'checklists-js'],
+        ];
     }
 
     /* CSS ----------------------------------------------------------------------------------------- */
 
     /**
-     * Predispone gli asset CSS dell'elenco.
+     * Stile dei filtri data.
+     * @return array Configurazione della vista.
      */
     public function getCssShowAll(): array
     {
-        // TODO: implementare.
-        throw new \BadMethodCallException(__METHOD__ . ' non ancora implementato.');
+        return [
+            ['id' => 'flatpickr-css', 'path' => 'assets/vendor/flatpickr/css/flatpickr.min.css', 'position' => 'before', 'target' => 'backend-css'],
+        ];
     }
-
-    /* OPTIONS ------------------------------------------------------------------------------------- */
-
-    // TODO: dichiarare le opzioni specifiche quando saranno definiti i form.
 }

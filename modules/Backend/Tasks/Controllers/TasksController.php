@@ -10,6 +10,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use Modules\Backend\Tasks\Config\Views;
 use Modules\Backend\Tasks\Libraries\TasksClass;
 use Modules\Backend\Tasks\Models\TasksModel;
+use Modules\Backend\Tasks\Models\TaskModalModel;
 use Modules\Backend\Notes\Models\NotesModel;
 use Psr\Log\LoggerInterface;
 
@@ -17,6 +18,7 @@ use Psr\Log\LoggerInterface;
 class TasksController extends BackendController
 {
     protected bool $studioContext = false;
+    protected bool $archiveList = false;
     protected TasksModel $tasksModel;
     protected TasksClass $tasksClass;
     protected NotesModel $notesModel;
@@ -39,6 +41,13 @@ class TasksController extends BackendController
      */
     public function index(): string|ResponseInterface { return $this->showAll(); }
 
+    /** @return string|ResponseInterface Stessa lista CRUD, limitata ai task archiviati. */
+    public function archived(): string|ResponseInterface
+    {
+        $this->archiveList = true;
+        return $this->showAll();
+    }
+
     /**
      * @return string|ResponseInterface Lista CRUD a larghezza piena con riepilogo aggiornato.
      */
@@ -46,13 +55,13 @@ class TasksController extends BackendController
     {
         if ( ! $this->allows('tasks_show_all')): return $this->denied(); endif;
         $this->prepareView('showAll');
-        $this->tasksModel->restrictContexts($this->projectAccess(),$this->applicationAccess());
+        $this->tasksModel->restrictContexts($this->projectAccess(),$this->applicationAccess(),$this->archiveList);
         if ($this->request->is('post')):
             $validated=$this->tasksModel->validateList($this->request->getPost());
             if ( ! $validated['result']): return $this->jsonResponse($this->format($validated)); endif;
             $this->data['posts']=$validated['data'];$this->data['data']=$this->tasksModel->getData($validated['data']);
             if ( ! $this->data['data']['result']): return $this->jsonResponse($this->data['data']); endif;
-            return $this->jsonResponse(['result'=>true,'output'=>view(Views::SHOW_ALL_PARTIAL,$this->data),'navigationCounts'=>$this->data['navigationCounts'],'overviewOutput'=>view(Views::OVERVIEW_PARTIAL,$this->data),'trashCounts'=>$this->tasksModel->getTrashCounts($this->projectAccess(),$this->applicationAccess())]);
+            return $this->jsonResponse(['result'=>true,'output'=>view(Views::SHOW_ALL_PARTIAL,$this->data),'navigationCounts'=>$this->data['navigationCounts'],'overviewOutput'=>view(Views::OVERVIEW_PARTIAL,$this->data),'trashCounts'=>$this->tasksModel->getTrashCounts($this->projectAccess(),$this->applicationAccess(),$this->archiveList)]);
         endif;
         return $this->render(Views::SHOW_ALL_VIEW,$this->data);
     }
@@ -73,8 +82,8 @@ class TasksController extends BackendController
                 $posts['context']='studio'; $context=['is_studio','1'];
             endif;
             if ($context && (($context[0]==='is_studio')!==$this->studioContext || ! $this->contextAccess($context[0]))): return $this->denied(); endif;
-            if ( ! empty($posts['initial_note']) && ! $this->allows('notes_add')): return $this->denied(); endif;
-            $result=$this->tasksModel->add($posts,$this->currentAdmin->uuid??null,$this->allows('tasks_complete'));
+            if ( ! $this->referenceAccess($posts)): return $this->denied(); endif;
+            $result=model(TaskModalModel::class)->saveForm($posts,null,$this->currentAdmin->uuid??null,$this->allows('tasks_complete'),$this->notePermissions());
             if ($result['result']): $this->audit('ADD_TASKS',$result['uuid']); endif;
             unset($result['record']);return $this->jsonResponse($this->format($result));
         endif;
@@ -92,16 +101,17 @@ class TasksController extends BackendController
             $posts=$this->request->getPost();
             if ( ! $this->validateData($posts,$this->tasksModel->delValidationRules())): return $this->validation('action'); endif;
             $task=$this->taskOr404($posts['uuid']);
-            if ($task->deleted_at!==null || $task->owner_deleted_at!==null): return $this->jsonResponse(['result'=>false,'message'=>lang('backend/tasks.messages.contextInactive')]); endif;
+            if ($task->deleted_at!==null || $task->owner_deleted_at!==null || $task->archived_at!==null): return $this->jsonResponse(['result'=>false,'message'=>lang('backend/tasks.messages.contextInactive')]); endif;
             if (($posts['action']??null)==='refresh'):
                 $this->data['task']=$task;$this->prepareView('edit');return $this->jsonResponse(['result'=>true,'output'=>view(Views::EDIT_PARTIAL,$this->data)]);
             endif;
-            $result=$this->tasksModel->edit($posts,$this->currentAdmin->uuid??null,$this->allows('tasks_complete'));
+            if ( ! $this->referenceAccess($posts)): return $this->denied(); endif;
+            $result=model(TaskModalModel::class)->saveForm($posts,$task,$this->currentAdmin->uuid??null,$this->allows('tasks_complete'),$this->notePermissions());
             if ($result['result']): $this->audit('EDIT_TASKS',$posts['uuid']); endif;
             unset($result['record']);return $this->jsonResponse($this->format($result));
         endif;
         $this->data['task']=$this->taskOr404($uuid);
-        if ($this->data['task']->deleted_at!==null || $this->data['task']->owner_deleted_at!==null): throw PageNotFoundException::forPageNotFound(); endif;
+        if ($this->data['task']->deleted_at!==null || $this->data['task']->owner_deleted_at!==null || $this->data['task']->archived_at!==null): throw PageNotFoundException::forPageNotFound(); endif;
         $this->prepareView('edit');return $this->render($this->taskView('EDIT_VIEW'),$this->data);
     }
 
@@ -215,7 +225,8 @@ class TasksController extends BackendController
         foreach (['uuid','step_uuid'] as $key): if (array_key_exists($key,$posts) && ! is_string($posts[$key])): return $this->jsonResponse($this->format(['result'=>false,'errors'=>[$key=>lang('backend/tasks.messages.invalidData')]],'action')); endif; endforeach;
         if ( ! $this->validateData($posts,$rules)): return $this->validation('action'); endif;
         if ( ! $this->readAccess() || ! $this->allows(empty($posts['uuid'])?'notes_add':'notes_edit')): return $this->denied(); endif;
-        $this->taskOr404($posts['task_uuid']);
+        $noteOwner=$this->taskOr404($posts['task_uuid']);
+        if ($noteOwner->archived_at !== null): return $this->jsonResponse(['result'=>false,'message'=>lang('backend/tasks.archive.readOnly')]); endif;
         if ( ! empty($posts['step_uuid']) && ! $this->stepBelongs($posts['step_uuid'],$posts['task_uuid'])): return $this->denied(); endif;
         $taskUuid=$posts['task_uuid'];$stepUuid=$posts['step_uuid']??'';unset($posts['task_uuid'],$posts['step_uuid']);
         $result=$stepUuid!==''?$this->notesModel->saveForStep($posts,$stepUuid,$this->currentAdmin->uuid??null):$this->notesModel->saveForTask($posts,$taskUuid,$this->currentAdmin->uuid??null);
@@ -236,9 +247,40 @@ class TasksController extends BackendController
         if (array_diff(array_keys($posts), ['uuid','task_uuid'])): return $this->jsonResponse(['result'=>false,'message'=>lang('backend/tasks.messages.invalidData')]); endif;
         $rules=$this->tasksModel->delValidationRules()+['task_uuid'=>$this->tasksModel->delValidationRules()['uuid']];
         if ( ! $this->validateData($posts,$rules)): return $this->validation('action'); endif;
-        $this->taskOr404($posts['task_uuid']);
+        $noteOwner=$this->taskOr404($posts['task_uuid']);
+        if ($noteOwner->archived_at !== null): return $this->jsonResponse(['result'=>false,'message'=>lang('backend/tasks.archive.readOnly')]); endif;
         $result=$this->notesModel->deleteTaskNote($posts['uuid'],$posts['task_uuid']);
         if ($result['result']): $this->audit('DELETE_TASK_NOTE',$posts['uuid']); endif;
+        return $this->actionResponse($result);
+    }
+
+    /** @return ResponseInterface Archivia un task autorizzato, anche non completato. */
+    public function archive(): ResponseInterface { return $this->archiveAction(true); }
+    /** @return ResponseInterface Recupera il task conservandone stato e contenuti. */
+    public function unarchive(): ResponseInterface { return $this->archiveAction(false); }
+
+    /**
+     * Valida tutti i parametri nascosti prima di avviare la transazione.
+     * @param bool $archive Azione fissata dalla rotta, mai dal payload.
+     * @return ResponseInterface Errori dettagliati nell'alert oppure esito e dati aggiornati.
+     */
+    private function archiveAction(bool $archive): ResponseInterface
+    {
+        if ( ! $this->allows('tasks_archive') || ! $this->readAccess()): return $this->denied(); endif;
+        $posts=$this->request->getPost();
+        if ($failure=$this->prepareAction($posts)): return $failure; endif;
+        if (array_diff(array_keys($posts), ['uuid'])): return $this->jsonResponse(['result'=>false,'message'=>lang('backend/tasks.messages.invalidData')]); endif;
+        if ( ! $this->validateData($posts,$this->tasksModel->delValidationRules())): return $this->validation('action'); endif;
+        $this->taskOr404($posts['uuid']);
+        $result=$this->tasksModel->changeArchive($posts['uuid'],$archive);
+        if ($result['result']): $this->audit($archive?'ARCHIVE_TASKS':'UNARCHIVE_TASKS',$posts['uuid']); endif;
+        if ($result['result']):
+            $this->data['task']=$result['record']; $this->prepareView('show');
+            $result['notesPanelOutput']=view(Views::NOTES_PANEL_PARTIAL,$this->data,['saveData'=>false]);
+            $result['linksBarOutput']=view('backend/template/linksBarView',['linksBar'=>$this->tasksClass->getLinksBarShow($posts['uuid'])],['saveData'=>false]);
+        endif;
+        unset($result['record']);
+        $result['navigationCounts']=\Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin);
         return $this->actionResponse($result);
     }
 
@@ -297,13 +339,16 @@ class TasksController extends BackendController
     private function prepareView(string $action): void
     {
         $this->data['navigationCounts']=\Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin);
+        $this->data['archiveList']=$this->archiveList;
+        $this->tasksClass->setArchiveContext($this->archiveList || ($this->data['task']->archived_at ?? null) !== null);
         $this->data['action']=$action;$this->data['title']=lang('backend/tasks.titles.'.$action);$this->data['icon']='<i class="fa-solid fa-list-check"></i>';$this->data['options']='';
+        if ($this->archiveList): $this->data['title']=lang('backend/tasks.archive.title'); endif;
         $task=$this->data['task']??null;$this->data['uuid']=$task->uuid??null;
         $isStudio=$this->studioContext;
         $this->data['studioTaskContext']=$isStudio;
         $this->data['navigationSection']=$isStudio?'studio':'tasks';
         $this->tasksClass->setStudioContext($isStudio);
-        $this->data['ownerOptions']=$isStudio?[]:$this->tasksModel->ownerOptions($this->projectAccess(),$this->applicationAccess());
+        $this->data['ownerOptions']=$this->tasksModel->ownerOptions($this->projectAccess(),$this->applicationAccess());
         $this->data['taskNotes']=[]; $this->data['stepNotes']=[];
         if ($task && $this->allows('notes_show')):
             foreach ($this->notesModel->getTaskNotes($task->uuid) as $note):
@@ -350,6 +395,27 @@ class TasksController extends BackendController
     {
         foreach ($this->tasksModel->getByUUID($taskUuid)['row']->steps as $step): if ($step->uuid===$stepUuid): return true; endif; endforeach;return false;
     }
+    /**
+     * Verifica il permesso sul riferimento scelto senza consentire cambi di proprietario.
+     * @param array $posts Form ricevuto; il model aggrega gli errori di formato.
+     * @return bool False solo per un riferimento valido ma non autorizzato.
+     */
+    private function referenceAccess(array $posts): bool
+    {
+        if ( ! array_key_exists('reference', $posts)): return true; endif;
+        $reference = model(\Modules\Backend\Studio\Models\StudioReferencesModel::class)->parse($posts['reference']);
+        if ($reference === null || $reference[0] === ''): return true; endif;
+        if ( ! $this->studioContext): return false; endif;
+        $original = $this->data['task'] ?? null;
+        if (isset($posts['uuid'])):
+            $row = $this->tasksModel->getByUUID($posts['uuid']);
+            $original = $row['result'] ? $row['row'] : null;
+        endif;
+        // Consente di conservare un riferimento esistente anche dopo una revoca dei permessi.
+        if (($original->reference->value ?? null) === $posts['reference']): return true; endif;
+        return $reference[0] === 'project' ? $this->projectAccess() : $this->applicationAccess();
+    }
+
     /**
      * @return bool Accesso minimo alla scheda.
      */
@@ -398,6 +464,8 @@ class TasksController extends BackendController
             $mapped=[];
             foreach ($result['errors'] as $field=>$error):
                 if (preg_match('/^steps\.(\d+)\.title$/',(string)$field,$match)): $key='step_'.$match[1].'_title';
+                elseif (preg_match('/^steps\.\d+\.notes\.\d+\.content$/',(string)$field)): $key=str_replace('.', '_', (string)$field);
+                elseif (preg_match('/^notes\.\d+\.content$/',(string)$field)): $key=str_replace('.', '_', (string)$field);
                 elseif (str_starts_with((string)$field,'steps.')): $key='steps';
                 else: $key=preg_replace('/^(searchFields|searchDates)\./','',(string)$field); endif;
                 $mapped[$key]=isset($mapped[$key])?$mapped[$key].' '.$error:$error;
@@ -405,6 +473,12 @@ class TasksController extends BackendController
         endif;
         $result['message']=lang('backend/tasks.messages.validationErrors');return $result;
     }
+    /** @return array<string, bool> Permessi delle note ricavati esclusivamente dall'amministratore corrente. */
+    private function notePermissions(): array
+    {
+        return ['add'=>$this->allows('notes_add'), 'edit'=>$this->allows('notes_edit'), 'delete'=>$this->allows('notes_delete'), 'show'=>$this->allows('notes_show')];
+    }
+
     /**
      * @param string $action Operazione completata.
      * @param string $uuid Identificativo reale.

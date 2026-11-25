@@ -29,7 +29,7 @@ class DashboardModel extends BackendModel
                 coalesce(sum(progress.remaining_steps), 0) remaining_steps
                 {$this->contextFrom()}
                 left join (select task_uuid, sum(completed_at is null) remaining_steps from task_steps group by task_uuid) progress on progress.task_uuid = tasks.uuid
-                where tasks.deleted_at is null and {$scope}")->getRowArray());
+                where tasks.deleted_at is null and tasks.archived_at is null and {$scope}")->getRowArray());
             $records = $this->readTasks($adminUuid, false, $projects, $applications, $notes, self::PREVIEW_SIZE);
             $current = $this->readTasks($adminUuid, false, $projects, $applications, $notes, 1, true)[0] ?? null;
             if ($current): $current->next_step = $current->next_step_title !== null ? (object) ['title' => $current->next_step_title] : null; endif;
@@ -84,7 +84,7 @@ class DashboardModel extends BackendModel
     private function readTasks(string $adminUuid, bool $studio, bool $projects, bool $applications, bool $notes, int $limit, bool $currentOnly = false, bool $currentFirst = false): array
     {
         $scope = $this->scope($studio, $projects, $applications);
-        $studioTotal = $studio ? '(select count(*) from tasks studio_tasks where studio_tasks.is_studio = 1 and studio_tasks.deleted_at is null)' : '0';
+        $studioTotal = $studio ? '(select count(*) from tasks studio_tasks where studio_tasks.is_studio = 1 and studio_tasks.deleted_at is null and studio_tasks.archived_at is null)' : '0';
         $noteSelect = $notes ? 'coalesce(note_totals.note_count, 0)' : '0';
         $noteJoin = $notes ? 'left join (
             select owner_uuid, count(*) note_count from (
@@ -107,7 +107,7 @@ class DashboardModel extends BackendModel
             left join task_steps next_step on next_step.task_uuid = tasks.uuid and next_step.position = progress.next_position
             {$noteJoin}
             left join admin_work_state work on work.task_uuid = tasks.uuid and work.admin_uuid = ? and work.work_context = ?
-            where tasks.deleted_at is null and {$scope}";
+            where tasks.deleted_at is null and tasks.archived_at is null and {$scope}";
         if ($currentOnly): $sql .= " and work.task_uuid is not null and tasks.status <> 'completed'"; endif;
         $sql .= $currentFirst ? ' order by is_current desc, tasks.created_at desc, tasks.id desc' : ' order by tasks.created_at desc, tasks.id desc';
         $sql .= ' limit ?';

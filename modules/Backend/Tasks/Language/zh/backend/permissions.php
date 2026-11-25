@@ -10,6 +10,7 @@ return [
         'delete' => '删除任务',
         'restore' => '恢复任务',
         'complete' => '完成任务',
+        'archive' => '归档和恢复任务',
         'setCurrent' => '设为当前任务',
     ],
 ];

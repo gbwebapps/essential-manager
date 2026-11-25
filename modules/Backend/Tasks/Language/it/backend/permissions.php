@@ -10,6 +10,7 @@ return [
         'delete' => 'Elimina task',
         'restore' => 'Ripristina task',
         'complete' => 'Completa task',
+        'archive' => 'Archivia e recupera task',
         'setCurrent' => 'Imposta lavoro corrente',
     ],
 ];

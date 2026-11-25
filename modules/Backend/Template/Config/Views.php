@@ -12,6 +12,7 @@ class Views extends BaseConfig
     public const DASHBOARD_TASK_PARTIAL = 'Modules\\Backend\\Template\\Views\\partials\\dashboard\\taskPartial';
     public const DASHBOARD_STUDIO_PARTIAL = 'Modules\\Backend\\Template\\Views\\partials\\dashboard\\studioPartial';
     public const MAIN_VIEW = 'Modules\\Backend\\Template\\Views\\mainView';
+    public const FORM_STYLE_PARTIAL = 'Modules\\Backend\\Template\\Views\\partials\\formStylePartial';
     public const MODAL_STYLE_PARTIAL = 'Modules\\Backend\\Template\\Views\\partials\\modalStylePartial';
     public const NAVIGATION_PARTIAL = 'Modules\\Backend\\Template\\Views\\partials\\navigationPartial';
 }

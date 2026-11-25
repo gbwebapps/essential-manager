@@ -1,11 +1,21 @@
 <?php declare(strict_types = 1);
 
 return [
+    'archive' => [
+        'title' => 'Archives des tâches',
+        'studioTitle' => 'Archives des tâches du Studio',
+        'active' => 'Tâches actives',
+        'action' => 'Archiver',
+        'recover' => 'Désarchiver',
+        'confirmArchive' => 'Archiver cette tâche ? Son état, ses étapes et ses notes seront conservés.',
+        'confirmRecover' => 'Remettre cette tâche dans les listes actives ?',
+        'saved' => 'Tâche archivée.',
+        'recovered' => 'Tâche retirée des archives.',
+        'readOnly' => 'Tâche archivée : désarchivez-la avant de la modifier.',
+        'date' => 'Archivée le',
+    ],
     'modal' => [
-        'stepNotes' => 'Notes de l’étape',
-        'noNotes' => 'Aucune note.',
         'newNote' => 'Nouvelle note',
-        'draftNotice' => 'Les notes sont enregistrées avec la tâche. Réinitialiser et fermer annulent les modifications non enregistrées.',
         'noteChanged' => 'Cette note a changé ou n’est plus disponible. Fermez puis rouvrez la fenêtre avant de réessayer.',
     ],
     'overview' => [
@@ -49,6 +59,7 @@ return [
         'allRecords' => 'Toutes',
     ],
     'labels' => [
+        'noSteps' => 'Aucune étape',
         'stepsCount' => '%s sur %s',
         'step' => 'Étape',
         'title' => 'Titre',
@@ -65,7 +76,6 @@ return [
         'dateToEdit' => 'Fin de la période de modification',
         'context' => 'Project / Application',
         'chooseContext' => 'Select where the task belongs',
-        'initialNote' => 'Initial note (optional)',
         'project' => 'Project',
         'application' => 'Application',
         'allProjects' => 'All projects',
@@ -86,7 +96,6 @@ return [
     ],
     'placeholders' => [
         'step' => 'Décrivez l’étape à effectuer',
-        'initialNote' => 'Écrivez une première note',
         'dateFromAdd' => 'Rechercher depuis la date d’ajout...',
         'dateToAdd' => 'Rechercher jusqu’à la date d’ajout...',
         'dateFromEdit' => 'Rechercher depuis la date de modification...',
@@ -125,14 +134,13 @@ return [
         'showSystemDetails' => 'Afficher les métadonnées',
     ],
     'messages' => [
-        'saveStepFirst' => 'Enregistrez la tâche avant d’ajouter une note à cette étape.',
         'noteSaveNotice' => 'La note est enregistrée dans la tâche ou l’étape indiquée.',
         'confirmDeleteNote' => 'Supprimer définitivement cette note ?',
         'noteDeleted' => 'Note supprimée définitivement.',
         'noDataChanged' => 'Aucune modification n\'a été effectuée.',
         'completionForbidden' => 'You do not have permission to complete or reopen this task.',
         'invalidData' => 'Check the task data.',
-        'stepsRequired' => 'Enter between 1 and 100 steps.',
+        'invalidSteps' => 'Un maximum de 100 étapes est autorisé.',
         'invalidStep' => 'Each step requires valid text up to 255 characters.',
         'foreignStep' => 'A supplied step does not belong to this task.',
         'stepInUse' => 'Cette étape est liée à des opérations : supprimez ces liens au préalable.',

@@ -4,7 +4,7 @@
 
     <?= $this->include(\Modules\Backend\Tasks\Config\Views::ACTION_LINKS_STYLE_PARTIAL); ?>
 
-    <div id="tasks-list" class="tasks crud-list">
+    <div id="tasks-list" data-archive-list="<?= ! empty($archiveList)?'archived':'active'; ?>" class="tasks crud-list">
 
         <div class="row">
             <div class="col-12">

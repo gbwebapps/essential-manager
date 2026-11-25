@@ -11,6 +11,10 @@ use Modules\Backend\Tasks\Models\TasksModel;
 class StudioClass
 {
     private ?array $viewData = null;
+    private bool $archiveContext = false;
+
+    /** @param bool $archived Configura il collegamento alla lista opposta. */
+    public function setArchiveContext(bool $archived): void { $this->archiveContext=$archived; }
 
     /** @param object|null $admin Identità autenticata, mai ricevuta dal form. */
     public function __construct(protected ?object $admin = null) {}
@@ -21,6 +25,7 @@ class StudioClass
         $links=[];
         if ($this->allows('tasks_add')): $links[]=['icon'=>'<i class="fa-solid fa-plus"></i>','label'=>lang('backend/studio.newTask'),'route'=>'backend/studio/tasks/add']; endif;
         if ($this->allows('notes_add')): $links[]=['icon'=>'<i class="fa-solid fa-note-sticky"></i>','label'=>lang('backend/studio.newNote'),'route'=>'backend/studio#add-note']; endif;
+        if ($this->allows('tasks_show_all') || $this->allows('tasks_show') || $this->allows('tasks_edit')): $links[]=['icon'=>'<i class="fa-solid fa-box-archive"></i>','label'=>lang('backend/tasks.archive.'.($this->archiveContext?'active':'title')),'route'=>$this->archiveContext?'backend/studio':'backend/studio/archived']; endif;
         return $links;
     }
 
@@ -58,9 +63,9 @@ class StudioClass
         if ( ! ($kind==='tasks'?$data['canReadTasks']:$data['canReadNotes'])): throw new \LogicException('Unauthorized Studio list.'); endif;
         $listing=model(StudioModel::class)->listing($kind,$state);
         $output=view(Views::LIST_PARTIAL,array_merge($data,[
-            'kind'=>$kind,'listing'=>$listing,'openedTasks'=>$data['canReadTaskDetails']?$state['opened']:[],
+            'archiveList'=>($state['archive']??'active')==='archived','kind'=>$kind,'listing'=>$listing,'openedTasks'=>$data['canReadTaskDetails']?$state['opened']:[],
         ]),['saveData'=>false]);
-        return ['kind'=>$kind,'state'=>$listing['state'],'output'=>$output];
+        return ['kind'=>$kind,'state'=>$listing['state'],'output'=>$output, 'taskCount'=>$kind==='tasks'?model(StudioModel::class)->taskCount(($state['archive']??'active')==='archived'):null];
     }
 
     /** @param object $task Task Studio verificato. @return string Pannello richiesto esplicitamente dall'utente. */

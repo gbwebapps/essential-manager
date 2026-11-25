@@ -4,7 +4,7 @@ namespace Modules\Backend\Tasks\Models;
 
 use Modules\Backend\Notes\Models\NotesModel;
 
-/** Salvataggio atomico del task e delle note modificate nei modali dei proprietari. */
+/** Salvataggio atomico del task e delle note in bozza, nei modali e nei form dedicati. */
 class TaskModalModel extends TasksModel
 {
     /**
@@ -54,26 +54,50 @@ class TaskModalModel extends TasksModel
     public function saveModal(array $posts, string $column, string $ownerUuid, ?string $adminUuid, bool $canComplete, array $permissions): array
     {
         $this->modalOwnerTable($column);
-        $editing = is_string($posts['uuid'] ?? null) && $posts['uuid'] !== '';
-        $errors = []; $seen = []; $total = 0;
-        $notes = $this->validateNotes(array_key_exists('notes', $posts) ? $posts['notes'] : [], 'notes', $editing, $permissions, $errors, $seen, $total);
-        unset($posts['notes']);
-        $stepNotes = [];
-        if (is_array($posts['steps'] ?? null) && array_is_list($posts['steps']) && count($posts['steps']) <= 100):
-            foreach ($posts['steps'] as $index => &$step):
-                if ( ! is_array($step)): continue; endif;
-                $stepNotes[$index] = $this->validateNotes(array_key_exists('notes', $step) ? $step['notes'] : [], "steps.{$index}.notes", $editing && is_string($step['uuid'] ?? null) && $step['uuid'] !== '', $permissions, $errors, $seen, $total);
-                unset($step['notes']);
-            endforeach;
-            unset($step);
-        endif;
-        if ( ! $editing && ($posts['uuid'] ?? null) === ''): unset($posts['uuid']); endif;
-        $validated = $this->validatePayload($posts, $editing);
+        return $this->saveEditor($posts, $column, $ownerUuid, $adminUuid, $canComplete, $permissions, false);
+    }
+
+    /**
+     * Salva il form completo con contesto, riferimento Studio, nota iniziale e note dei nuovi passi.
+     * @param array $posts Dati non attendibili, validati insieme alle note prima della transazione.
+     * @param object|null $original Task autorizzato dal controller, null per Add.
+     * @param string|null $adminUuid Amministratore autenticato.
+     * @param bool $canComplete Permesso effettivo di completamento.
+     * @param array<string, bool> $permissions Permessi delle note, stabiliti dal server.
+     * @return array Esito atomico oppure errori di tutti i campi.
+     */
+    public function saveForm(array $posts, ?object $original, ?string $adminUuid, bool $canComplete, array $permissions): array
+    {
+        return $this->saveEditor($posts, '', '', $adminUuid, $canComplete, $permissions, true, $original);
+    }
+
+    /**
+     * Valida le operazioni sulle note e le applica nella stessa transazione di task e passi.
+     * @param array $posts Payload dell'editor.
+     * @param string $column Contesto interno del modale; ricavato dal form nelle pagine dedicate.
+     * @param string $ownerUuid Proprietario autorizzato.
+     * @param string|null $adminUuid Identità autenticata.
+     * @param bool $canComplete Permesso di completamento.
+     * @param array $permissions Permessi server delle note.
+     * @param bool $standalone True per il form completo Add/Edit.
+     * @param object|null $original Task autorizzato in modifica.
+     * @return array Esito senza scritture parziali.
+     */
+    private function saveEditor(array $posts, string $column, string $ownerUuid, ?string $adminUuid, bool $canComplete, array $permissions, bool $standalone, ?object $original = null): array
+    {
+        $editing = $standalone ? $original !== null : (is_string($posts['uuid'] ?? null) && $posts['uuid'] !== '');
+        $errors = [];
+        [$notes, $stepNotes] = $this->extractNotes($posts, $editing, $permissions, $errors);
+        if ( ! $standalone && ! $editing && ($posts['uuid'] ?? null) === ''): unset($posts['uuid']); endif;
+        $validated = $standalone ? $this->validateForm($posts, $original) : $this->validatePayload($posts, $editing);
         $errors += $validated['errors'] ?? [];
         if ($errors !== []): return $this->invalidNotes($errors); endif;
+        if ($standalone): [$column, $ownerUuid] = $validated['context']; endif;
         try {
             $this->db->transBegin();
-            $saved = match ($column) {
+            $saved = $standalone
+                ? ($editing ? parent::edit($posts, $adminUuid, $canComplete) : parent::add($posts, $adminUuid, $canComplete))
+                : match ($column) {
                 'is_studio' => parent::saveForStudio($posts, $adminUuid, $canComplete),
                 'project_uuid' => parent::saveForProject($posts, $ownerUuid, $adminUuid, $canComplete),
                 'application_uuid' => parent::saveForApplication($posts, $ownerUuid, $adminUuid, $canComplete),
@@ -103,6 +127,51 @@ class TaskModalModel extends TasksModel
             log_message('error', 'TaskModal::saveModal - ' . $error->getMessage());
             return ['result' => false, 'message' => lang('backend/tasks.messages.saveError')];
         }
+    }
+
+    /**
+     * Valida una nuova bozza completa senza scrivere record o accettare identificativi persistiti.
+     * @param array $posts Campi del task con eventuali note del task e dei passi.
+     * @param array<string, bool> $permissions Permessi server delle note.
+     * @return array Dati normalizzati riapribili nell'editor oppure errori aggregati.
+     */
+    public function validateDraftPayload(array $posts, array $permissions): array
+    {
+        $errors = [];
+        [$notes, $stepNotes] = $this->extractNotes($posts, false, $permissions, $errors);
+        $checked = $this->validatePayload($posts);
+        $errors += $checked['errors'] ?? [];
+        if ($errors !== []): return $this->invalidNotes($errors); endif;
+        $data = $checked['data'];
+        $data['notes'] = $notes;
+        foreach ($data['steps'] as $index => &$step): $step['notes'] = $stepNotes[$index] ?? []; endforeach;
+        unset($step);
+        return ['result' => true, 'data' => $data];
+    }
+
+    /**
+     * Separa e valida tutte le note lasciando al validatore Tasks i campi del task e dei passi.
+     * @param array $posts Payload modificato per riferimento, privato delle note.
+     * @param bool $editing True soltanto per proprietari già persistiti.
+     * @param array $permissions Permessi server, mai letti dal payload.
+     * @param array $errors Errori aggregati per riferimento.
+     * @return array{0:array,1:array} Operazioni sul task e sui passi, indicizzate per posizione.
+     */
+    private function extractNotes(array &$posts, bool $editing, array $permissions, array &$errors): array
+    {
+        $seen = []; $total = 0;
+        $notes = $this->validateNotes(array_key_exists('notes', $posts) ? $posts['notes'] : [], 'notes', $editing, $permissions, $errors, $seen, $total);
+        unset($posts['notes']);
+        $stepNotes = [];
+        if (is_array($posts['steps'] ?? null) && array_is_list($posts['steps']) && count($posts['steps']) <= 100):
+            foreach ($posts['steps'] as $index => &$step):
+                if ( ! is_array($step)): continue; endif;
+                $stepNotes[$index] = $this->validateNotes(array_key_exists('notes', $step) ? $step['notes'] : [], "steps.{$index}.notes", $editing && is_string($step['uuid'] ?? null) && $step['uuid'] !== '', $permissions, $errors, $seen, $total);
+                unset($step['notes']);
+            endforeach;
+            unset($step);
+        endif;
+        return [$notes, $stepNotes];
     }
 
     /**

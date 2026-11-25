@@ -11,10 +11,10 @@ class StudioModel extends BackendModel
     public const PAGE_SIZE = 10;
     protected ?string $module = 'studio';
 
-    /** @return int Numero totale dei task attivi, indipendente dalla ricerca. */
-    public function taskCount(): int
+    /** @param bool $archived Seleziona il solo archivio. @return int Numero dei task della sezione, indipendente dalla ricerca. */
+    public function taskCount(bool $archived = false): int
     {
-        return $this->db->table('tasks')->where('is_studio', 1)->where('deleted_at', null)->countAllResults();
+        return $this->db->table('tasks')->where('is_studio', 1)->where('deleted_at', null)->where('archived_at ' . ($archived ? 'is not null' : 'is null'), null, false)->countAllResults();
     }
 
     /** @return int Numero totale delle note autonome attive. */
@@ -38,7 +38,7 @@ class StudioModel extends BackendModel
             return ['result'=>false, 'errors'=>['list'=>lang('backend/tasks.messages.invalidData')]];
         endif;
         $errors = [];
-        if (array_diff(array_keys($payload), ['page','search','direction','opened'])):
+        if (array_diff(array_keys($payload), ['page','search','direction','opened','archive'])):
             $errors['list'] = lang('backend/tasks.messages.invalidData');
         endif;
         $validation = service('validation');
@@ -47,9 +47,11 @@ class StudioModel extends BackendModel
             'page'=>['rules'=>['required','is_natural_no_zero','less_than_equal_to[1000000]']],
             'search'=>['rules'=>['permit_empty','string','max_length[150]']],
             'direction'=>['rules'=>['required','string','in_list[asc,desc]']],
+            'archive'=>['rules'=>['required','string','in_list[active,archived]']],
         ]);
+        $payload['archive'] = $payload['archive'] ?? 'active';
         $fields=$payload;
-        foreach (['page','search','direction'] as $field):
+        foreach (['page','search','direction','archive'] as $field):
             if (array_key_exists($field,$fields) && ! is_string($fields[$field]) && ! ($field==='page' && is_int($fields[$field]))):
                 $errors[$field]=lang('backend/tasks.messages.invalidData'); $fields[$field]='';
             endif;
@@ -72,7 +74,7 @@ class StudioModel extends BackendModel
             endforeach;
         endif;
         if ($errors): return ['result'=>false,'errors'=>$errors]; endif;
-        return ['result'=>true,'state'=>['page'=>(int)$payload['page'], 'search'=>trim($payload['search'] ?? ''), 'direction'=>$payload['direction'], 'opened'=>array_values(array_unique($opened))]];
+        return ['result'=>true,'state'=>['page'=>(int)$payload['page'], 'search'=>trim($payload['search'] ?? ''), 'direction'=>$payload['direction'], 'archive'=>$payload['archive'], 'opened'=>array_values(array_unique($opened))]];
     }
 
     /**
@@ -85,6 +87,7 @@ class StudioModel extends BackendModel
     {
         if ( ! in_array($kind, ['tasks','notes'], true)): throw new \InvalidArgumentException('Invalid Studio list.'); endif;
         $query=$this->db->table($kind)->where('is_studio',1)->where('deleted_at',null);
+        if ($kind === 'tasks'): $query->where('archived_at ' . (($state['archive'] ?? 'active') === 'archived' ? 'is not null' : 'is null'), null, false); endif;
         if ($state['search'] !== ''): $query->like($kind==='tasks'?'title':'content', $state['search']); endif;
         $total=$query->countAllResults(false);
         $state['page']=min($state['page'],max(1,(int)ceil($total/self::PAGE_SIZE)));
@@ -95,6 +98,7 @@ class StudioModel extends BackendModel
                 (select count(*) from notes n where n.deleted_at is null and (n.task_uuid=tasks.uuid or n.step_uuid in (select uuid from task_steps where task_uuid=tasks.uuid))) note_count', false);
         endif;
         $records=$query->orderBy('created_at',$state['direction'])->orderBy('id',$state['direction'])->get(self::PAGE_SIZE,($state['page']-1)*self::PAGE_SIZE)->getResult();
+        if ($kind === 'tasks'): model(StudioReferencesModel::class)->attach($records); endif;
         return ['records'=>$records, 'state'=>$state, 'pagination'=>['page'=>$state['page'],'limit'=>self::PAGE_SIZE,'totalRows'=>$total]];
     }
 
@@ -104,7 +108,7 @@ class StudioModel extends BackendModel
         return array_map('intval', $this->db->query("select count(*) total,
             coalesce(sum(status<>'completed'),0) open, coalesce(sum(status='in_progress'),0) in_progress,
             coalesce(sum((select count(*) from task_steps where task_uuid=tasks.uuid and completed_at is null)),0) remaining_steps
-            from tasks where is_studio=1 and deleted_at is null")->getRowArray());
+            from tasks where is_studio=1 and deleted_at is null and archived_at is null")->getRowArray());
     }
 
     /** @param string $uuid UUID validato. @return object|null Task attivo appartenente esclusivamente allo Studio. */

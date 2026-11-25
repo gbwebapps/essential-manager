@@ -10,6 +10,7 @@ return [
         'delete' => 'Aufgabe löschen',
         'restore' => 'Aufgabe wiederherstellen',
         'complete' => 'Aufgabe abschließen',
+        'archive' => 'Aufgaben archivieren und zurückholen',
         'setCurrent' => 'Aktuelle Aufgabe festlegen',
     ],
 ];

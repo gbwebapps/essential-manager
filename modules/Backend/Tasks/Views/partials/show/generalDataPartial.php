@@ -1,4 +1,4 @@
-<?php $workable = $task->deleted_at === null && $task->owner_deleted_at === null; $isCurrent = ($currentTask->uuid ?? null) === $task->uuid; ?>
+<?php $workable = $task->deleted_at === null && $task->owner_deleted_at === null && $task->archived_at === null; $isCurrent = ($currentTask->uuid ?? null) === $task->uuid; ?>
 <div class="card-body">
     <div class="row">
         <div class="col-12 col-lg-6 mb-3">
@@ -13,6 +13,9 @@
                 <li class="list-group-item fw-bold text-break"><?= esc(\Modules\Backend\Tasks\Libraries\TasksClass::contextLabel($task)); ?></li>
             </ul>
         </div>
+        <?php if ((int) ($task->is_studio ?? 0) === 1 && ! empty($task->reference)): ?>
+            <div class="col-12 mb-3"><?= view('Modules\Backend\Studio\Views\partials\referencePartial', ['task' => $task, 'currentAdmin' => $currentAdmin], ['saveData' => false]); ?></div>
+        <?php endif; ?>
         <?php if (trim((string) ($task->description ?? '')) !== ''): ?>
         <div class="col-12 mb-3">
             <ul class="list-group list-group-flush">
@@ -33,10 +36,11 @@
                 <li class="list-group-item fw-bold"><?= view(\Modules\Backend\Tasks\Config\Views::PROGRESS_PARTIAL, ['completedSteps' => $task->completed_count, 'totalSteps' => $task->step_count], ['saveData' => false]); ?></li>
             </ul>
         </div>
-        <?php if ( ! $workable): ?><div class="col-12"><p class="app-text-danger fw-bold"><?= ui_text('backend/tasks.messages.contextInactive', [], false); ?></p></div><?php endif; ?>
+        <?php if ($task->archived_at !== null): ?><div class="col-12"><p class="fw-bold mb-2"><i class="fa-solid fa-box-archive me-1"></i><?= ui_text('backend/tasks.archive.readOnly', [], false); ?></p></div><?php elseif ( ! $workable): ?><div class="col-12"><p class="app-text-danger fw-bold"><?= ui_text('backend/tasks.messages.contextInactive', [], false); ?></p></div><?php endif; ?>
     </div>
-    <?php if ($workable): ?>
-        <div class="d-flex flex-row flex-wrap justify-content-end align-items-center gap-1">
+    <div class="d-flex flex-row flex-wrap justify-content-end align-items-center gap-1">
+        <?= view('Modules\Backend\Tasks\Views\partials\common\archiveActionPartial', ['task'=>$task,'currentAdmin'=>$currentAdmin], ['saveData'=>false]); ?>
+        <?php if ($workable): ?>
             <?php if ( ! $isCurrent && $task->status !== 'completed' && \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'tasks_set_current')): ?>
                 <form novalidate class="task-action" data-endpoint="setCurrent">
                     <input type="hidden" name="uuid" value="<?= esc($task->uuid, 'attr'); ?>">
@@ -49,7 +53,7 @@
                     <button type="submit" class="btn btn-sm app-btn-secondary text-nowrap"><i class="fa-solid fa-<?= $task->status === 'completed' ? 'rotate-left' : 'check'; ?> fa-fw"></i> <?= ui_text('backend/tasks.actions.' . ($task->status === 'completed' ? 'reopen' : 'complete'), [], false); ?></button>
                 </form>
             <?php endif; ?>
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 </div>
 <?= $this->include(\Modules\Backend\Tasks\Config\Views::STEPS_PARTIAL); ?>

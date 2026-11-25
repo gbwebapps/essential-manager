@@ -8,13 +8,15 @@
             $summary = trim(preg_replace('/\s+/u', ' ', $isTask ? $relatedItem->title : $relatedItem->content));
             $record = $isTask ? ['uuid' => $relatedItem->uuid, 'title' => $relatedItem->title, 'description' => $relatedItem->description, 'status' => $relatedItem->status, 'steps' => $relatedItem->steps] : ['uuid' => $relatedItem->uuid, 'content' => $relatedItem->content];
             $completed = $isTask ? count(array_filter($relatedItem->steps, static fn (object $step): bool => $step->completed)) : 0;
-            $relatedActions = view(\Modules\Backend\Projects\Config\Views::RELATED_ACTIONS_PARTIAL, [
+            $relatedActions = ($relatedDraft ?? false)
+                ? view(\Modules\Backend\Tasks\Config\Views::DRAFT_ACTIONS_PARTIAL, ['ownerModule'=>'projects', 'relatedKind'=>$relatedKind], ['saveData'=>false])
+                : view(\Modules\Backend\Projects\Config\Views::RELATED_ACTIONS_PARTIAL, [
                 'relatedKind' => $relatedKind, 'isTask' => $isTask, 'record' => $record,
                 'relatedReadOnly' => $relatedReadOnly ?? false, 'relatedItem' => $relatedItem,
                 'relatedProject' => $relatedProject, 'currentAdmin' => $currentAdmin ?? null,
             ], ['saveData' => false]);
         ?>
-        <article class="project-related-item task-related-item">
+        <article class="project-related-item task-related-item" <?= ($relatedDraft ?? false) ? 'data-draft-item="preview"' : ''; ?>>
             <div class="project-related-header task-note-header d-flex align-items-center gap-1">
             <button type="button" id="<?= esc($collapseId, 'attr'); ?>-toggle" class="project-related-toggle task-related-toggle flex-grow-1" data-bs-toggle="collapse" data-bs-target="#<?= esc($collapseId, 'attr'); ?>" aria-controls="<?= esc($collapseId, 'attr'); ?>" aria-expanded="false">
                 <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
@@ -39,7 +41,7 @@
                         <?php if (mb_strlen($summary) > 50): ?>
                             <p class="project-related-text fw-bold mb-2"><?= esc($relatedItem->title); ?></p>
                         <?php endif; ?>
-                        <?= view(\Modules\Backend\Tasks\Config\Views::DETAIL_PARTIAL, ['task' => $relatedItem]); ?>
+                        <?= view(\Modules\Backend\Tasks\Config\Views::DETAIL_PARTIAL, ['task' => $relatedItem, 'taskBodyDraft'=>$relatedDraft ?? false, 'ownerStepActions'=>! ($relatedDraft ?? false) && ($relatedProject->deleted_at ?? null) === null, 'currentAdmin'=>$currentAdmin ?? null], ['saveData'=>false]); ?>
                     <?php else: ?>
                         <?= view(\Modules\Backend\Notes\Config\Views::DETAIL_PARTIAL, ['note' => $relatedItem]); ?>
                     <?php endif; ?>

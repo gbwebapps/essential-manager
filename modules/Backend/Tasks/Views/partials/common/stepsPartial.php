@@ -1,4 +1,5 @@
-<?php $workable = $task->deleted_at === null && $task->owner_deleted_at === null; ?>
+<?php if ($task->steps !== []): ?>
+<?php $workable = $task->deleted_at === null && $task->owner_deleted_at === null && $task->archived_at === null; ?>
 <div class="card-header rounded-0 d-flex justify-content-between align-items-center" style="border-top: var(--bs-card-border-width) solid var(--bs-card-border-color);">
     <h2 class="card-title text-start mb-0"><?= ui_text('backend/tasks.panels.steps', [], false); ?></h2>
 </div>
@@ -27,3 +28,5 @@
         <?php endforeach; ?>
     </ul>
 </div>
+
+<?php endif; ?>

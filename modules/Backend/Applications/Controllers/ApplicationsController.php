@@ -94,7 +94,7 @@ class ApplicationsController extends BackendController
                     if (is_array($task) && ($task['status'] ?? null) === 'completed'): return $this->forbidden(); endif;
                 endforeach;
             endif;
-            $result = $this->applicationsModel->add($posts, $this->currentAdmin->uuid ?? null);
+            $result = $this->applicationsModel->add($posts, $this->currentAdmin->uuid ?? null, $this->taskNotePermissions());
             if ($result['result']): $this->audit('ADD_APPLICATIONS', $result['uuid'], $result['row']->name); endif;
             unset($result['row']);
             if ($result['result']): $result['navigationCounts'] = \Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin); endif;
@@ -275,7 +275,7 @@ class ApplicationsController extends BackendController
         return $this->jsonResponse(['result' => true, 'output' => view(Views::RELATED_ITEMS_PARTIAL, [
             'relatedKind' => $kind,
             'relatedReadOnly' => $posts['context'] === 'show',
-            'relatedItems' => $kind === 'task' ? $this->tasksModel->getForApplication($application->uuid) : $this->notesModel->getForApplication($application->uuid),
+            'relatedItems' => $kind === 'task' ? $this->tasksModel->getForApplication($application->uuid, $this->allows('notes_show')) : $this->notesModel->getForApplication($application->uuid),
             'relatedApplication' => $application,
             'currentAdmin' => $this->currentAdmin,
         ], ['saveData' => false])]);
@@ -310,8 +310,17 @@ class ApplicationsController extends BackendController
         if ( ! $this->allows('applications_add') || ! $this->allows($module . '_add')): return $this->forbidden(); endif;
         $posts = $this->request->getPost();
         if ($kind === 'task' && ($posts['status'] ?? null) === 'completed' && ! $this->allows('tasks_complete')): return $this->forbidden(); endif;
-        $model = $kind === 'task' ? $this->tasksModel : $this->notesModel;
-        return $this->jsonResponse($this->withValidationMessage($model->validatePayload($posts), 'modal'));
+        $result = $kind === 'task'
+            ? model(\Modules\Backend\Tasks\Models\TaskModalModel::class)->validateDraftPayload($posts, $this->taskNotePermissions())
+            : $this->notesModel->validatePayload($posts);
+        if ($result['result']):
+            $result['previewOutput'] = view(Views::RELATED_ITEMS_PARTIAL, [
+                'relatedKind'=>$kind, 'relatedDraft'=>true, 'relatedReadOnly'=>false,
+                'relatedItems'=>[\Modules\Backend\Tasks\Libraries\TasksClass::draftRecord($result['data'], $kind)],
+                'relatedApplication'=>null, 'currentAdmin'=>$this->currentAdmin,
+            ], ['saveData'=>false]);
+        endif;
+        return $this->jsonResponse($this->withValidationMessage($result, 'modal'));
     }
 
     /**
@@ -406,7 +415,7 @@ class ApplicationsController extends BackendController
 
         $this->data['projectOptions'] = $this->applicationsModel->getProjectOptions();
         $this->data['navigationCounts'] = \Modules\Backend\Template\Libraries\NavigationClass::counts($this->currentAdmin);
-        $this->data['applicationTasks'] = $application && $this->allows('tasks_show') ? $this->tasksModel->getForApplication($application->uuid) : [];
+        $this->data['applicationTasks'] = $application && $this->allows('tasks_show') ? $this->tasksModel->getForApplication($application->uuid, $this->allows('notes_show')) : [];
         $this->data['applicationNotes'] = $application && $this->allows('notes_show') ? $this->notesModel->getForApplication($application->uuid) : [];
     }
 

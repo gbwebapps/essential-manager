@@ -18,7 +18,7 @@ class NavigationClass
     public static function counts(?object $admin): array
     {
         $counts = [];
-        foreach (['projects' => ProjectsModel::class, 'applications' => ApplicationsModel::class] as $section => $model):
+        foreach (['projects' => ProjectsModel::class, 'applications' => ApplicationsModel::class, 'checklists' => \Modules\Backend\Checklists\Models\ChecklistsModel::class] as $section => $model):
             if (AuthorizationClass::allows($admin, $section . '_show_all')): $counts[$section] = model($model)->activeCount(); endif;
         endforeach;
         if (AuthorizationClass::allows($admin, 'tasks_show_all')):

@@ -10,6 +10,7 @@ return [
         'delete' => 'Supprimer une tâche',
         'restore' => 'Restaurer une tâche',
         'complete' => 'Terminer une tâche',
+        'archive' => 'Archiver et désarchiver les tâches',
         'setCurrent' => 'Définir la tâche en cours',
     ],
 ];

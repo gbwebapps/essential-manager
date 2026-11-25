@@ -10,6 +10,7 @@ return [
         'delete' => 'Eliminar tarea',
         'restore' => 'Restaurar tarea',
         'complete' => 'Completar tarea',
+        'archive' => 'Archivar y recuperar tareas',
         'setCurrent' => 'Establecer tarea actual',
     ],
 ];

@@ -13,18 +13,6 @@
 ?>
 <style>
     .application-related-panel .card-header { gap: .5rem; flex-wrap: wrap; border-top: 1px solid var(--app-border) !important; }
-    [data-application-draft-root] .application-related-item + .application-related-item { border-top: 1px solid var(--app-border); }
-    [data-application-draft-root] .application-related-toggle { min-width: 0; display: flex; align-items: center; gap: .65rem; width: 100%; padding: .6rem .8rem; border: 0; text-align: left; color: inherit; background: transparent; }
-    [data-application-draft-root] .application-related-toggle:hover, [data-application-draft-root] .application-related-toggle:focus-visible { background: var(--app-surface-muted); }
-    [data-application-draft-root] .application-related-toggle > .fa-chevron-right { font-size: .75rem; transition: transform .3s ease; }
-    [data-application-draft-root] .application-related-toggle[aria-expanded="true"] > .fa-chevron-right { transform: rotate(90deg); }
-    [data-application-draft-root] .application-related-summary { min-width: 0; flex: 1; }
-    [data-application-draft-root] .application-related-title { display: block; overflow-wrap: anywhere; }
-    [data-application-draft-root] .application-related-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .7rem; margin-top: .15rem; font-size: .8rem; }
-    [data-application-draft-root] .application-related-detail { padding: 0 .8rem .7rem 2.2rem; font-size: .9rem; overflow-wrap: anywhere; }
-    [data-application-draft-root] .application-related-text { white-space: pre-wrap; margin-bottom: .5rem; }
-    [data-application-draft-root] .application-related-steps { margin: .4rem 0 .65rem; padding: 0; list-style: none; }
-    [data-application-draft-root] .application-related-steps li { display: flex; align-items: baseline; gap: .5rem; padding: .15rem 0; }
     .application-related-panel .collapsing { transition: height .3s ease-in-out; }
     @media (prefers-reduced-motion: reduce) {
         [data-application-draft-root] .application-related-toggle > .fa-chevron-right, .application-related-panel .collapsing { transition: none; }

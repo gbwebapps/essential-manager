@@ -3,6 +3,7 @@
 /** @var \CodeIgniter\Router\RouteCollection $routes Rotte del contesto Studio autorizzato. */
 $routes->group('backend', ['filter' => 'authorization'], function ($routes) {
     $routes->group('studio', ['filter' => 'permission:studio_show'], function ($routes) {
+        $routes->get('archived', '\Modules\Backend\Studio\Controllers\StudioController::archived');
         $routes->get('/', '\Modules\Backend\Studio\Controllers\StudioController::index');
         $routes->get('notes', '\Modules\Backend\Studio\Controllers\StudioController::index/notes', ['filter'=>'permission:notes_show']);
         $routes->group('tasks', function ($routes) {
@@ -16,6 +17,9 @@ $routes->group('backend', ['filter' => 'authorization'], function ($routes) {
             endforeach;
             foreach (['complete','reopen','completeStep','reopenStep'] as $method):
                 $routes->post($method, $controller . $method, ['filter'=>'permission:tasks_complete']);
+            endforeach;
+            foreach (['archive','unarchive'] as $method):
+                $routes->post($method, $controller . $method, ['filter'=>'permission:tasks_archive']);
             endforeach;
             $routes->post('setCurrent', $controller . 'setCurrent', ['filter'=>'permission:tasks_set_current']);
         });

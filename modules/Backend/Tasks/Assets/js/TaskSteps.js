@@ -1,3 +1,5 @@
+import { initChecklistPicker } from './ChecklistPicker.js';
+
 function focusStep(input) {
     if ( ! input) return;
     input.focus({ preventScroll: true });
@@ -26,7 +28,7 @@ function updateStepRows(editor) {
         const label = row.querySelector('[data-step-label]');
         label.htmlFor = id;
         label.textContent = `${editor.dataset.stepLabel} ${index + 1}`;
-        row.querySelector('[data-task-step-remove]').disabled = editor.dataset.busy === 'true' || rows.length === 1;
+        row.querySelector('[data-task-step-remove]').disabled = editor.dataset.busy === 'true' || (editor.dataset.optionalSteps !== 'true' && rows.length === 1);
     });
     editor.querySelector('[data-task-step-add]').disabled = editor.dataset.busy === 'true';
     editor.dispatchEvent(new CustomEvent('tasksteps:change', { bubbles: true }));
@@ -43,9 +45,10 @@ function createStepRow(editor, step = {}) {
 
 export function fillTaskSteps(editor, steps) {
     if ( ! editor) return;
+    editor.dataset.checklistRevision = String(Number(editor.dataset.checklistRevision || 0) + 1);
     editor.dataset.nextStepKey = '0';
     delete editor.dataset.busy;
-    const items = Array.isArray(steps) && steps.length ? steps : [{}];
+    const items = Array.isArray(steps) && steps.length ? steps : (editor.dataset.optionalSteps === 'true' ? [] : [{}]);
     editor.querySelector('[data-task-step-list]').replaceChildren(...items.map(step => createStepRow(editor, step)));
     updateStepRows(editor);
 }
@@ -97,6 +100,7 @@ export function initTaskSteps(form) {
     const editor = form.querySelector('[data-task-steps]');
     if ( ! editor || editor.dataset.bound === 'true') return;
     editor.dataset.bound = 'true';
+    initChecklistPicker(editor, steps => appendTaskSteps(editor, steps));
     [...editor.querySelectorAll('[data-task-step-list] > [data-task-step-row]')].forEach((row,index)=>row.dataset.stepKey=String(index));
     editor.dataset.nextStepKey=String(editor.querySelectorAll('[data-task-step-list] > [data-task-step-row]').length);
     updateStepRows(editor);
@@ -114,7 +118,7 @@ export function initTaskSteps(form) {
         }
         if (( ! add && ! remove) || editor.dataset.busy === 'true') return;
         const list = editor.querySelector('[data-task-step-list]');
-        if (remove && list.children.length <= 1) return;
+        if (remove && list.children.length <= 1 && editor.dataset.optionalSteps !== 'true') return;
         editor.dataset.busy = 'true';
         updateStepRows(editor);
         try {
@@ -141,3 +145,27 @@ export function initTaskSteps(form) {
     });
 }
 
+
+/**
+ * Accoda copie dei titoli senza rimuovere passi compilati, UUID o note esistenti.
+ * @param {HTMLElement} editor Editor inizializzato, anche nei modali.
+ * @param {Array<{title:string}>} steps Copie restituite dal backend.
+ * @returns {Promise<boolean>} False se il limite o una transizione impediscono l'applicazione.
+ */
+async function appendTaskSteps(editor, steps) {
+    if (editor.dataset.busy === 'true' || !Array.isArray(steps) || !steps.length) return false;
+    const list = editor.querySelector('[data-task-step-list]');
+    const first = list.children.length === 1 ? list.firstElementChild : null;
+    const placeholder = first && !first.querySelector('[data-step-title]').value.trim() && !first.querySelector('[data-step-uuid]').value && !first.querySelector('[data-modal-note-row]');
+    if (list.children.length - (placeholder ? 1 : 0) + steps.length > 100) return false;
+    editor.dataset.busy = 'true'; updateStepRows(editor);
+    try {
+        await animateStepChange(list, () => {
+            if (placeholder) first.remove();
+            steps.forEach(step => list.append(createStepRow(editor, { title: step.title })));
+            updateStepRows(editor);
+        });
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+    } finally { delete editor.dataset.busy; updateStepRows(editor); }
+}

@@ -24,6 +24,12 @@
                 </ul>
             </div>
         <?php endif; ?>
+        <?php if ( ! empty($task->archived_at)): ?>
+            <div class="col-12 col-lg-6"><ul class="list-group list-group-flush">
+                <li class="list-group-item fw-bold"><i class="fa-solid fa-box-archive fa-fw me-1" aria-hidden="true"></i><?= ui_text('backend/tasks.archive.date', [], false); ?></li>
+                <li class="list-group-item"><?= ui_date(esc($task->archived_at), 'conversational'); ?></li>
+            </ul></div>
+        <?php endif; ?>
         <?php if( ! empty($task->restored_at)): ?>
             <div class="col-12 col-lg-6">
                 <ul class="list-group list-group-flush">

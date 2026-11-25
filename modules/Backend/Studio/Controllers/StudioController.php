@@ -37,16 +37,22 @@ class StudioController extends BackendController
     }
 
     /** @param string $tab Sezione imposta dalla rotta. @return string|ResponseInterface Struttura delle liste AJAX; pannelli inizialmente chiusi. */
-    public function index(string $tab = 'tasks'): string|ResponseInterface
+    public function index(string $tab = 'tasks', bool $archived = false): string|ResponseInterface
     {
         if ( ! $this->allows('studio_show')): return $this->denied(); endif;
+        $this->studioClass->setArchiveContext($archived);
         $data=$this->studioClass->data();
+        $data['archiveList']=$archived;
+        if ($archived): $this->data['title']=lang('backend/tasks.archive.studioTitle'); $data['canReadNotes']=false; endif;
         $data['studioTab']=$tab==='notes' && $data['canReadNotes'] ? 'notes' : ($data['canReadTasks']?'tasks':'notes');
         $data['studioOverview']=$data['canReadTasks']?$this->studioClass->overview():'';
-        $data['taskCount']=$data['canReadTasks']?$this->studioModel->taskCount():0;
+        $data['taskCount']=$data['canReadTasks']?$this->studioModel->taskCount($archived):0;
         $data['noteCount']=$data['canReadNotes']?$this->studioModel->noteCount():0;
         return $this->render(Views::INDEX_VIEW,$data);
     }
+
+    /** @return string|ResponseInterface Archivio dei soli task Studio, con ricerca e paginazione comuni. */
+    public function archived(): string|ResponseInterface { return $this->index('tasks',true); }
 
     /** @return ResponseInterface Pagina di task con ricerca letterale nel titolo e ordinamento per data. */
     public function getTasks(): ResponseInterface { return $this->getItems('tasks'); }

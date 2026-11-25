@@ -1,7 +1,10 @@
 <?= view(\Modules\Backend\Template\Config\Views::MODAL_STYLE_PARTIAL, [], ['saveData' => false]); ?>
 <?= view(\Modules\Backend\Tasks\Config\Views::MODAL_EDITOR_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<?= view(\Modules\Backend\Tasks\Config\Views::STEPS_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<?= view(\Modules\Backend\Tasks\Config\Views::SECTION_STYLE_PARTIAL, [], ['saveData' => false]); ?>
+<?= view(\Modules\Backend\Tasks\Config\Views::ACTION_LINKS_STYLE_PARTIAL, [], ['saveData' => false]); ?>
 <?php foreach (['task', 'note'] as $projectAction): ?>
-    <div class="modal fade transfer-modal manager-work-modal projects-related-modal <?= $projectAction === 'task' && ! ($draftMode ?? false) ? 'task-modal-complete' : ''; ?>" id="projects-add-<?= $projectAction; ?>-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="projects-add-<?= $projectAction; ?>-title" aria-hidden="true" data-project-action-modal data-save-label="<?= esc(lang('backend/projects.buttons.sendData'), 'attr'); ?>" data-project-action-kind="<?= $projectAction; ?>" data-draft-mode="<?= ($draftMode ?? false) ? 'true' : 'false'; ?>" data-add-title="<?= esc(lang('backend/' . ($projectAction === 'task' ? 'tasks' : 'notes') . '.titles.add'), 'attr'); ?>" data-edit-title="<?= esc(lang('backend/' . ($projectAction === 'task' ? 'tasks' : 'notes') . '.titles.edit'), 'attr'); ?>" data-project-uuid="<?= esc($project->uuid ?? '', 'attr'); ?>" data-project-name="<?= esc($project->name ?? '', 'attr'); ?>" data-no-changes="<?= esc(lang('backend/projects.messages.noDataChanged'), 'attr'); ?>" data-save-error="<?= esc(lang('backend/projects.messages.saveError'), 'attr'); ?>" data-save-notice="<?= esc(lang('backend/projects.messages.saveNotice'), 'attr'); ?>">
+    <div class="modal fade transfer-modal manager-work-modal projects-related-modal <?= $projectAction === 'task' ? 'task-modal-complete' : ''; ?>" id="projects-add-<?= $projectAction; ?>-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="projects-add-<?= $projectAction; ?>-title" aria-hidden="true" data-project-action-modal data-save-label="<?= esc(lang('backend/projects.buttons.sendData'), 'attr'); ?>" data-project-action-kind="<?= $projectAction; ?>" data-draft-mode="<?= ($draftMode ?? false) ? 'true' : 'false'; ?>" data-add-title="<?= esc(lang('backend/' . ($projectAction === 'task' ? 'tasks' : 'notes') . '.titles.add'), 'attr'); ?>" data-edit-title="<?= esc(lang('backend/' . ($projectAction === 'task' ? 'tasks' : 'notes') . '.titles.edit'), 'attr'); ?>" data-project-uuid="<?= esc($project->uuid ?? '', 'attr'); ?>" data-project-name="<?= esc($project->name ?? '', 'attr'); ?>" data-no-changes="<?= esc(lang('backend/projects.messages.noDataChanged'), 'attr'); ?>" data-save-error="<?= esc(lang('backend/projects.messages.saveError'), 'attr'); ?>" data-save-notice="<?= esc(lang('backend/projects.messages.saveNotice'), 'attr'); ?>">
         <div class="modal-dialog modal-dialog-centered transfer-export-dialog">
             <div class="modal-content shadow">
                 <form novalidate method="post" data-project-action-form>
@@ -17,12 +20,14 @@
                     <div class="modal-body">
                         <input type="hidden" name="uuid" value="">
                         <input type="hidden" name="project_uuid" value="<?= esc($project->uuid ?? '', 'attr'); ?>">
+                        <?php if ($projectAction !== 'task'): ?>
                         <div class="mb-3">
                             <div class="form-label"><?= ui_text('backend/projects.labels.name', [], false); ?></div>
                             <p id="projects-<?= $projectAction; ?>-project" class="fw-bold text-break mb-0" data-project-action-name><?= esc($project->name ?? ''); ?></p>
                         </div>
+                        <?php endif; ?>
                         <?php if ($projectAction === 'task'): ?>
-                            <?= view(\Modules\Backend\Tasks\Config\Views::FORM_FIELDS_PARTIAL, ['fieldPrefix' => 'projects-task', 'task' => null, 'completeEditor' => ! ($draftMode ?? false), 'currentAdmin' => $currentAdmin ?? null], ['saveData' => false]); ?>
+                            <?= view(\Modules\Backend\Tasks\Config\Views::FORM_FIELDS_PARTIAL, ['fieldPrefix' => 'projects-task', 'task' => null, 'taskOwnerName' => $project->name ?? '', 'currentAdmin' => $currentAdmin ?? null], ['saveData' => false]); ?>
                         <?php else: ?>
                             <?= view(\Modules\Backend\Notes\Config\Views::FORM_FIELDS_PARTIAL, ['fieldPrefix' => 'projects-note', 'note' => null], ['saveData' => false]); ?>
                         <?php endif; ?>

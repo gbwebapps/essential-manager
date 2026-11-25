@@ -1,4 +1,4 @@
-<?php $workable = $task->deleted_at === null && $task->owner_deleted_at === null; ?>
+<?php $workable = $task->deleted_at === null && $task->owner_deleted_at === null && $task->archived_at === null; ?>
 <?php if (empty($taskNotes)): ?>
     <?php if (empty($notesForStep)): ?><p class="small app-text-muted px-3 py-2 mb-0"><?= ui_text('backend/tasks.related.noNotes', [], false); ?></p><?php endif; ?>
 <?php else: ?>
@@ -16,7 +16,7 @@
                     <?php if ($note->deleted_at === null && $workable && \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'notes_edit')): ?>
                         <button type="button" class="btn btn-link btn-sm p-1 border-0 shadow-none task-record-link" data-bs-toggle="modal" data-bs-target="#tasks-note-modal" data-task-step-title="<?= esc($note->step_title ?? '', 'attr'); ?>" aria-label="<?= esc(lang('backend/tasks.actions.edit'), 'attr'); ?>" data-task-note-record="<?= esc(json_encode($record, JSON_THROW_ON_ERROR), 'attr'); ?>" data-task-uuid="<?= esc($task->uuid, 'attr'); ?>" data-task-title="<?= esc($task->title, 'attr'); ?>"><i class="fa-solid fa-pen fa-fw" aria-hidden="true"></i><span class="d-none d-sm-inline"> <?= ui_text('backend/tasks.actions.edit', [], false); ?></span></button>
                     <?php endif; ?>
-                    <?php if (\App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'notes_delete')): ?>
+                    <?php if ($workable && \App\Libraries\Backend\AuthorizationClass::allows($currentAdmin, 'notes_delete')): ?>
                         <button type="submit" form="tasks-delete-note" data-task-uuid="<?= esc($task->uuid, 'attr'); ?>" aria-label="<?= esc(lang('backend/tasks.actions.hardDelete'), 'attr'); ?>" name="uuid" value="<?= esc($note->uuid, 'attr'); ?>" class="btn btn-link btn-sm p-1 border-0 shadow-none task-record-link app-text-danger text-nowrap"><i class="fa-solid fa-trash-can fa-fw" aria-hidden="true"></i><span class="d-none d-sm-inline"> <?= ui_text('backend/tasks.actions.hardDelete', [], false); ?></span></button>
                     <?php endif; ?>
                 </div>

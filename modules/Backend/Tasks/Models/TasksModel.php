@@ -63,8 +63,9 @@ class TasksModel extends BackendModel
             endif;
         endforeach;
         $data['description'] = $data['description'] ?? '';
-        if ( ! isset($data['steps']) || ! is_array($data['steps']) || ! array_is_list($data['steps']) || count($data['steps']) < 1 || count($data['steps']) > 100):
-            $errors['steps'] = lang('backend/tasks.messages.stepsRequired');
+        if ( ! array_key_exists('steps', $data)): $data['steps'] = []; endif;
+        if ( ! is_array($data['steps']) || ! array_is_list($data['steps']) || count($data['steps']) > 100):
+            $errors['steps'] = lang('backend/tasks.messages.invalidSteps');
         else:
             $seen = [];
             foreach ($data['steps'] as $index => $step):
@@ -105,11 +106,13 @@ class TasksModel extends BackendModel
      * Restringe la lista ai contesti autorizzati dal controller, mai da flag del browser.
      * @param bool $projects Accesso ai task dei progetti.
      * @param bool $applications Accesso ai task delle applicazioni.
+     * @param bool $archived True per il solo archivio; false per il lavoro operativo.
      * @return void
      */
-    public function restrictContexts(bool $projects, bool $applications): void
+    public function restrictContexts(bool $projects, bool $applications, bool $archived = false): void
     {
         $scope = $projects && $applications ? '(tasks.project_uuid is not null or tasks.application_uuid is not null)' : ($projects ? 'tasks.project_uuid is not null' : ($applications ? 'tasks.application_uuid is not null' : '1 = 0'));
+        $scope .= ' and tasks.is_studio = 0 and tasks.archived_at is ' . ($archived ? 'not null' : 'null');
         $this->getDataQuery = $this->taskSelect() . ' where ' . $scope;
         $this->getNumRowsQuery = 'select count(*) as count from tasks where ' . $scope;
     }
@@ -191,7 +194,7 @@ class TasksModel extends BackendModel
     }
 
     /**
-     * Raccoglie insieme gli errori del contesto, del task, dei passi e della nota iniziale.
+     * Raccoglie insieme gli errori del contesto, del task e dei passi.
      * @param array $posts Campi non attendibili del form completo.
      * @param object|null $original Task persistito, soltanto per Edit.
      * @return array Esito con dati normalizzati oppure tutti gli errori dei campi.
@@ -206,31 +209,27 @@ class TasksModel extends BackendModel
         elseif ($editing):
             if ($context !== self::ownerContext($original)): $errors['context'] = lang('backend/tasks.messages.contextFixed'); endif;
         endif;
+        $reference = null;
+        if (array_key_exists('reference', $posts)):
+            $reference = model(\Modules\Backend\Studio\Models\StudioReferencesModel::class)->parse($posts['reference']);
+            if ($context !== ['is_studio', '1'] || $reference === null || (($original->reference->value ?? '') !== $posts['reference'] && ! model(\Modules\Backend\Studio\Models\StudioReferencesModel::class)->available($reference))): $errors['reference'] = lang('backend/studio.invalidReference'); endif;
+            unset($posts['reference']);
+        elseif ($context === ['is_studio', '1'] && ! $editing):
+            $reference = ['', ''];
+        endif;
         unset($posts['context']);
-        $noteData = null;
-        if ( ! $editing):
-            $note = $posts['initial_note'] ?? '';
-            unset($posts['initial_note']);
-            if (array_key_exists('uuid', $posts)):
-                $errors['payload'] = lang('backend/tasks.messages.invalidData');
-                unset($posts['uuid']);
-            endif;
-            if ( ! is_string($note)):
-                $errors['initial_note'] = lang('backend/tasks.messages.invalidData');
-            elseif (trim($note, " \t\n\r") !== ''):
-                $checkedNote = model(\Modules\Backend\Notes\Models\NotesModel::class)->validatePayload(['content' => $note]);
-                if ( ! $checkedNote['result']): $errors['initial_note'] = implode(' ', $checkedNote['errors']);
-                else: $noteData = $checkedNote['data']; endif;
-            endif;
+        if ( ! $editing && array_key_exists('uuid', $posts)):
+            $errors['payload'] = lang('backend/tasks.messages.invalidData');
+            unset($posts['uuid']);
         endif;
         $checkedTask = $this->validatePayload($posts, $editing);
         if ( ! $checkedTask['result']): $errors += $checkedTask['errors']; endif;
         if ($errors !== []): return $this->validationFailure($errors); endif;
-        return ['result' => true, 'data' => $checkedTask['data'], 'context' => $context, 'initialNote' => $noteData];
+        return ['result' => true, 'data' => $checkedTask['data'], 'context' => $context, 'reference' => $reference];
     }
 
     /**
-     * Salva task, passi e nota iniziale solo dopo la validazione completa del form.
+     * Salva task e passi solo dopo la validazione completa del form.
      * @param array $posts Form Add non attendibile.
      * @param string|null $adminUuid Identità stabilita dal server.
      * @param bool $canComplete Permesso effettivo di completamento.
@@ -240,7 +239,7 @@ class TasksModel extends BackendModel
     {
         $checked = $this->validateForm($posts);
         if ( ! $checked['result']): return $checked; endif;
-        return $this->saveForContext($checked['data'], $checked['context'][0], $checked['context'][1], $adminUuid, $canComplete, $checked['initialNote']);
+        return $this->saveForContext($checked['data'], $checked['context'][0], $checked['context'][1], $adminUuid, $canComplete, $checked['reference']);
     }
 
     /**
@@ -257,7 +256,7 @@ class TasksModel extends BackendModel
         if ( ! $record['result']): return $record; endif;
         $checked = $this->validateForm($posts, $record['row']);
         if ( ! $checked['result']): return $checked; endif;
-        return $this->saveForContext($checked['data'], $checked['context'][0], $checked['context'][1], $adminUuid, $canComplete);
+        return $this->saveForContext($checked['data'], $checked['context'][0], $checked['context'][1], $adminUuid, $canComplete, $checked['reference']);
     }
 
 
@@ -273,6 +272,7 @@ class TasksModel extends BackendModel
         [$column,$ownerUuid]=self::ownerContext($initial);
         if ($active): $this->lockOwner($column,$ownerUuid); endif;
         $row=$this->db->query('select * from tasks where uuid=? for update',[$uuid])->getRow();
+        if ($active && $row !== null && $row->archived_at !== null): throw new \DomainException(lang('backend/tasks.archive.readOnly')); endif;
         if ( ! $row || $row->{$column}!==$ownerUuid || ($active && $row->deleted_at!==null)): throw new \DomainException(lang('backend/tasks.messages.notFound')); endif;
         return $row;
     }
@@ -289,7 +289,14 @@ class TasksModel extends BackendModel
         try {
             $this->db->transBegin();$task=$this->lockTask($uuid);
             $steps=$this->db->query('select * from task_steps where task_uuid=? order by position for update',[$uuid])->getResult();
-            if ( ! $steps): throw new \DomainException(lang('backend/tasks.messages.stepsRequired')); endif;
+            if ( ! $steps):
+                if ($stepUuid !== null): throw new \DomainException(lang('backend/tasks.messages.foreignStep')); endif;
+                if (($task->status === 'completed') === $complete): return $this->unchangedTransaction(); endif;
+                $now = date('Y-m-d H:i:s');
+                $this->execute('update tasks set status=?,completed_at=?,updated_at=? where uuid=?', [$complete ? 'completed' : 'in_progress', $complete ? $now : null, $now, $uuid]);
+                if ($complete): $this->clearCurrent($uuid); endif;
+                return $this->finishTask($uuid);
+            endif;
             $targets=$stepUuid===null?$steps:array_values(array_filter($steps,static fn(object $step):bool=>$step->uuid===$stepUuid));
             if ( ! $targets): throw new \DomainException(lang('backend/tasks.messages.foreignStep')); endif;
             if ($stepUuid===null && ! $complete):
@@ -329,6 +336,32 @@ class TasksModel extends BackendModel
             if ( ! $this->db->transStatus()): throw new \RuntimeException('Context task deletion failed.'); endif;
             $this->db->transCommit();
             return ['result' => true, 'uuid' => $uuid, 'message' => lang('backend/tasks.messages.softDeleteSuccess')];
+        } catch (\Throwable $error) { return $this->failTask($error); }
+    }
+
+    /**
+     * Archivia o recupera un task senza alterare stato, passi o note.
+     * @param string $uuid UUID già validato e autorizzato dal controller.
+     * @param bool $archive True per archiviare; false per recuperare il task.
+     * @return array Esito atomico; tutte le selezioni correnti del task archiviato vengono liberate.
+     */
+    public function changeArchive(string $uuid, bool $archive): array
+    {
+        try {
+            $this->db->transBegin();
+            $owner = $this->db->query('select project_uuid,application_uuid,is_studio from tasks where uuid=?', [$uuid])->getRow();
+            if ( ! $owner): throw new \DomainException(lang('backend/tasks.messages.notFound')); endif;
+            [$column, $ownerUuid] = self::ownerContext($owner);
+            $this->lockOwner($column, $ownerUuid);
+            $task = $this->lockTask($uuid, false);
+            if ($task->deleted_at !== null): throw new \DomainException(lang('backend/tasks.messages.contextInactive')); endif;
+            if (($task->archived_at !== null) === $archive): return $this->unchangedTransaction(); endif;
+            $now = date('Y-m-d H:i:s');
+            $this->execute('update tasks set archived_at=?,updated_at=? where uuid=?', [$archive ? $now : null, $now, $uuid]);
+            if ($archive): $this->clearCurrent($uuid); endif;
+            $result = $this->finishTask($uuid);
+            $result['message'] = lang('backend/tasks.archive.' . ($archive ? 'saved' : 'recovered'));
+            return $result;
         } catch (\Throwable $error) { return $this->failTask($error); }
     }
 
@@ -374,7 +407,7 @@ class TasksModel extends BackendModel
      */
     public function getCurrent(string $adminUuid, bool $studio = false): ?object
     {
-        $row=$this->db->query($this->taskSelect().' inner join admin_work_state work on work.task_uuid=tasks.uuid where work.admin_uuid=? and work.work_context=? and tasks.is_studio=? and tasks.deleted_at is null and tasks.status<>\'completed\' and coalesce(app.deleted_at,direct.deleted_at,origin.deleted_at) is null limit 1',[$adminUuid,$studio?'studio':'activities',(int)$studio])->getRow();
+        $row=$this->db->query($this->taskSelect().' inner join admin_work_state work on work.task_uuid=tasks.uuid where work.admin_uuid=? and work.work_context=? and tasks.is_studio=? and tasks.deleted_at is null and tasks.archived_at is null and tasks.status<>\'completed\' and coalesce(app.deleted_at,direct.deleted_at,origin.deleted_at) is null limit 1',[$adminUuid,$studio?'studio':'activities',(int)$studio])->getRow();
         if ( ! $row): return null; endif;
         $row->next_step=$this->db->query('select uuid,title,position from task_steps where task_uuid=? and completed_at is null order by position limit 1',[$row->uuid])->getRow();
         return $row;
@@ -419,11 +452,13 @@ class TasksModel extends BackendModel
     /**
      * @param bool $projects Contesto progetti.
      * @param bool $apps Contesto applicazioni.
+     * @param bool $archived Seleziona i conteggi dell’archivio.
      * @return array Conteggi del cestino nei contesti consentiti.
      */
-    public function getTrashCounts(bool $projects, bool $apps): array
+    public function getTrashCounts(bool $projects, bool $apps, bool $archived = false): array
     {
         $scope=$projects&&$apps?'(project_uuid is not null or application_uuid is not null)':($projects?'project_uuid is not null':($apps?'application_uuid is not null':'1=0'));
+        $scope .= ' and archived_at is ' . ($archived ? 'not null' : 'null');
         $row=$this->db->query('select count(*) total,count(case when deleted_at is not null then 1 end) trashed from tasks where '.$scope)->getRow();
         return ['active'=>(int)$row->total-(int)$row->trashed,'trashed'=>(int)$row->trashed,'all'=>(int)$row->total];
     }
@@ -439,7 +474,7 @@ class TasksModel extends BackendModel
         $scope = $projects && $applications ? '(project_uuid is not null or application_uuid is not null)' : ($projects ? 'project_uuid is not null' : ($applications ? 'application_uuid is not null' : '1=0'));
         $row = $this->db->query("select count(*) total, coalesce(sum(status <> 'completed'),0) open, coalesce(sum(status = 'in_progress'),0) in_progress,
             coalesce(sum((select count(*) from task_steps where task_uuid=tasks.uuid and completed_at is null)),0) remaining_steps
-            from tasks where deleted_at is null and " . $scope)->getRowArray();
+            from tasks where deleted_at is null and archived_at is null and " . $scope)->getRowArray();
         return array_map('intval', $row);
     }
 
@@ -494,7 +529,9 @@ class TasksModel extends BackendModel
     {
         $row=$this->db->query('select count(*) total,count(case when completed_at is not null then 1 end) done from task_steps where task_uuid=?',[$uuid])->getRow();
         $task=$this->db->query('select status,completed_at from tasks where uuid=?',[$uuid])->getRow();
-        $status=(int)$row->total>0&&(int)$row->done===(int)$row->total?'completed':((int)$row->done>0||$started||$task->status==='in_progress'?'in_progress':'todo');
+        $status = (int) $row->total === 0
+            ? ($started && $task->status === 'todo' ? 'in_progress' : $task->status)
+            : ((int) $row->done === (int) $row->total ? 'completed' : ((int) $row->done > 0 || $started || $task->status === 'in_progress' ? 'in_progress' : 'todo'));
         $now=date('Y-m-d H:i:s');
         $this->execute('update tasks set status=?,completed_at=?,updated_at=? where uuid=?',[$status,$status==='completed'?($task->completed_at??$now):null,$now,$uuid]);
         if ($status==='completed'): $this->clearCurrent($uuid); endif;
@@ -555,41 +592,62 @@ class TasksModel extends BackendModel
     public function getByUUID(string $uuid): array
     {
         $result = parent::getByUUID($uuid);
-        if ($result['result']): $result['row']->steps = $this->getSteps($uuid); endif;
+        if ($result['result']):
+            $result['row']->steps = $this->getSteps($uuid);
+            model(\Modules\Backend\Studio\Models\StudioReferencesModel::class)->attach([$result['row']]);
+        endif;
         return $result;
     }
 
     /**
      * Carica i task attivi assegnati direttamente al proprietario. Contesto: progetto.
      * @param string $projectUuid UUID del proprietario controllato dal controller.
+     * @param bool $withNotes Include le note solo dopo controllo del permesso nel controller.
      * @return array Record attivi.
      */
-    public function getForProject(string $projectUuid): array
+    public function getForProject(string $projectUuid, bool $withNotes = false): array
     {
-        return $this->getForContext('project_uuid', $projectUuid);
+        return $this->getForContext('project_uuid', $projectUuid, $withNotes);
     }
 
     /**
      * Carica i task attivi assegnati direttamente al proprietario. Contesto: applicazione.
      * @param string $applicationUuid UUID del proprietario controllato dal controller.
+     * @param bool $withNotes Include le note solo dopo controllo del permesso nel controller.
      * @return array Record attivi.
      */
-    public function getForApplication(string $applicationUuid): array
+    public function getForApplication(string $applicationUuid, bool $withNotes = false): array
     {
-        return $this->getForContext('application_uuid', $applicationUuid);
+        return $this->getForContext('application_uuid', $applicationUuid, $withNotes);
     }
 
     /**
      * Motore condiviso del metodo getForProject per progetto e applicazione.
      * @param string $ownerColumn Colonna interna ammessa dalla whitelist ownerTable.
      * @param string $ownerUuid UUID del proprietario.
+     * @param bool $withNotes Caricamento autorizzato delle note in una sola query.
      * @return array Risultato persistito o errore senza scritture parziali.
      */
-    private function getForContext(string $ownerColumn, string $ownerUuid): array
+    private function getForContext(string $ownerColumn, string $ownerUuid, bool $withNotes): array
     {
         $this->ownerTable($ownerColumn);
-        $rows = $this->db->query("select * from tasks where {$ownerColumn} = ? and deleted_at is null order by id", [$ownerUuid])->getResult();
-        foreach ($rows as $row): $row->steps = $this->getSteps($row->uuid); endforeach;
+        $rows = $this->db->query("select * from tasks where {$ownerColumn} = ? and deleted_at is null and archived_at is null order by id", [$ownerUuid])->getResult();
+        if ($rows === []): return []; endif;
+        $tasks = []; $steps = [];
+        foreach ($rows as $row): $row->steps = []; $row->notes = []; $tasks[$row->uuid] = $row; endforeach;
+        $stepRows = $this->db->query("select s.* from task_steps s join tasks t on t.uuid=s.task_uuid where t.{$ownerColumn}=? and t.deleted_at is null and t.archived_at is null order by s.task_uuid,s.position", [$ownerUuid])->getResult();
+        foreach ($stepRows as $step):
+            if ( ! isset($tasks[$step->task_uuid])): continue; endif;
+            $step->completed = $step->completed_at !== null; $step->notes = [];
+            $tasks[$step->task_uuid]->steps[] = $step; $steps[$step->uuid] = $step;
+        endforeach;
+        if ($withNotes):
+            $notes = $this->db->query("select n.* from notes n left join task_steps s on s.uuid=n.step_uuid join tasks t on t.uuid=coalesce(n.task_uuid,s.task_uuid) where t.{$ownerColumn}=? and t.deleted_at is null and t.archived_at is null and n.deleted_at is null order by n.created_at desc,n.id desc", [$ownerUuid])->getResult();
+            foreach ($notes as $note):
+                if ($note->step_uuid !== null && isset($steps[$note->step_uuid])): $steps[$note->step_uuid]->notes[] = $note;
+                elseif ($note->task_uuid !== null && isset($tasks[$note->task_uuid])): $tasks[$note->task_uuid]->notes[] = $note; endif;
+            endforeach;
+        endif;
         return $rows;
     }
 
@@ -644,8 +702,12 @@ class TasksModel extends BackendModel
         $now = date('Y-m-d H:i:s');
         $completed = $data['status'] === 'completed' ? $now : null;
         $this->execute("insert into tasks (uuid, {$ownerColumn}, title, description, status, created_by_admin_uuid, created_at, completed_at) values (?, ?, ?, ?, ?, ?, ?, ?)", [$uuid, $ownerUuid, $data['title'], $data['description'] !== '' ? $data['description'] : null, $data['status'], $adminUuid, $now, $completed]);
+        $notesModel = model(\Modules\Backend\Notes\Models\NotesModel::class);
+        foreach ($data['notes'] ?? [] as $note): $notesModel->insertForTask($note, $uuid, $adminUuid); endforeach;
         foreach ($data['steps'] as $position => $step):
-            $this->execute('insert into task_steps (uuid, task_uuid, title, position, created_at, completed_at, completed_by_admin_uuid) values (?, ?, ?, ?, ?, ?, ?)', [$this->generateUUID(), $uuid, $step['title'], $position + 1, $now, $completed, $completed !== null ? $adminUuid : null]);
+            $stepUuid = $this->generateUUID();
+            $this->execute('insert into task_steps (uuid, task_uuid, title, position, created_at, completed_at, completed_by_admin_uuid) values (?, ?, ?, ?, ?, ?, ?)', [$stepUuid, $uuid, $step['title'], $position + 1, $now, $completed, $completed !== null ? $adminUuid : null]);
+            foreach ($step['notes'] ?? [] as $note): $notesModel->insertForStep($note, $stepUuid, $adminUuid); endforeach;
         endforeach;
         return $uuid;
     }
@@ -706,12 +768,13 @@ class TasksModel extends BackendModel
      * @param array $posts Payload non attendibile validato prima delle scritture.
      * @param string|null $adminUuid Amministratore autenticato.
      * @param bool $canComplete Autorizzazione server al cambio di completamento.
-     * @param array|null $initialNote Nota già validata da inserire atomicamente soltanto alla creazione.
+     * @param array|null $reference Riferimento Studio validato; null conserva il valore in modifica.
      * @return array Risultato persistito o errore senza scritture parziali.
      */
-    private function saveForContext(array $posts, string $ownerColumn, string $ownerUuid, ?string $adminUuid, bool $canComplete, ?array $initialNote = null): array
+    private function saveForContext(array $posts, string $ownerColumn, string $ownerUuid, ?string $adminUuid, bool $canComplete, ?array $reference = null): array
     {
         $this->ownerTable($ownerColumn);
+        if ($reference !== null && $ownerColumn !== 'is_studio'): throw new \InvalidArgumentException('Reference requires Studio.'); endif;
         if (array_key_exists('uuid', $posts) && ! is_string($posts['uuid'])): return $this->validationFailure(['uuid' => lang('backend/tasks.messages.invalidData')]); endif;
         $editing = is_string($posts['uuid'] ?? null) && $posts['uuid'] !== '';
         if ( ! $editing): unset($posts['uuid']); endif;
@@ -724,10 +787,9 @@ class TasksModel extends BackendModel
             if ( ! $editing):
                 if ($data['status'] === 'completed' && ! $canComplete): throw new \DomainException(lang('backend/tasks.messages.completionForbidden')); endif;
                 $uuid = $this->insertForContext($data, $ownerColumn, $ownerUuid, $adminUuid);
-                if ($initialNote!==null): model(\Modules\Backend\Notes\Models\NotesModel::class)->insertForTask($initialNote,$uuid,$adminUuid); endif;
             else:
                 $uuid = $data['uuid'];
-                $task = $this->db->query("select * from tasks where uuid = ? and {$ownerColumn} = ? and deleted_at is null for update", [$uuid, $ownerUuid])->getRow();
+                $task = $this->db->query("select * from tasks where uuid = ? and {$ownerColumn} = ? and deleted_at is null and archived_at is null for update", [$uuid, $ownerUuid])->getRow();
                 if ( ! $task): throw new \DomainException(lang('backend/tasks.messages.notFound')); endif;
                 $hasNewSteps = count(array_filter($data['steps'], static fn (array $step): bool => $step['uuid'] === '')) > 0;
                 if ( ! $canComplete && (($task->status === 'completed' && $data['status'] !== 'completed') || ($data['status'] === 'completed' && ($task->status !== 'completed' || $hasNewSteps)))): throw new \DomainException(lang('backend/tasks.messages.completionForbidden')); endif;
@@ -740,10 +802,11 @@ class TasksModel extends BackendModel
                     if ($step['uuid'] !== ''): $retained[$step['uuid']] = true; endif;
                 endforeach;
                 // Anche la rimozione dell'ultimo passo incompleto può completare il task.
-                $wouldComplete = ! $hasNewSteps && count(array_filter($data['steps'], static fn(array $step): bool => $byUuid[$step['uuid']]->completed_at !== null)) === count($data['steps']);
+                $wouldComplete = $data['steps'] !== [] && ! $hasNewSteps && count(array_filter($data['steps'], static fn(array $step): bool => $byUuid[$step['uuid']]->completed_at !== null)) === count($data['steps']);
                 if ( ! $canComplete && $task->status !== 'completed' && $wouldComplete): throw new \DomainException(lang('backend/tasks.messages.completionForbidden')); endif;
                 $stepsChanged = $this->haveStepsChanged($data['steps'], $existing);
-                if ( ! $this->hasDataChanged($data, $task) && ! $stepsChanged):
+                $referenceChanged = $reference !== null && model(\Modules\Backend\Studio\Models\StudioReferencesModel::class)->hasChanged($uuid, $reference);
+                if ( ! $this->hasDataChanged($data, $task) && ! $stepsChanged && ! $referenceChanged):
                     $this->db->transCommit();
                     return ['result' => false, 'changed' => false, 'message' => lang('backend/tasks.messages.noDataChanged')];
                 endif;
@@ -771,6 +834,7 @@ class TasksModel extends BackendModel
                 endif;
                 $this->execute("update tasks set title = ?, description = ?, status = ?, completed_at = ?, updated_at = ? where uuid = ? and {$ownerColumn} = ?", [$data['title'], $data['description'] !== '' ? $data['description'] : null, $data['status'], $data['status'] === 'completed' ? ($task->completed_at ?? $now) : null, $now, $uuid, $ownerUuid]);
             endif;
+            if ($reference !== null && (! $editing || $referenceChanged)): model(\Modules\Backend\Studio\Models\StudioReferencesModel::class)->save($uuid, $reference); endif;
             $this->syncProgress($uuid,$data['status']==='in_progress');
             if ( ! $this->db->transStatus()): throw new \RuntimeException('Task transaction failed.'); endif;
             $record = $this->getByUUID($uuid);

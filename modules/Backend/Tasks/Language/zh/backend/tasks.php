@@ -1,11 +1,21 @@
 <?php declare(strict_types = 1);
 
 return [
+    'archive' => [
+        'title' => '任务归档',
+        'studioTitle' => '工作室任务归档',
+        'active' => '活动任务',
+        'action' => '归档',
+        'recover' => '取消归档',
+        'confirmArchive' => '归档此任务？将保留状态、步骤和备注。',
+        'confirmRecover' => '将此任务恢复到活动列表？',
+        'saved' => '任务已归档。',
+        'recovered' => '任务已从归档中恢复。',
+        'readOnly' => '任务已归档：请先恢复再编辑。',
+        'date' => '归档时间',
+    ],
     'modal' => [
-        'stepNotes' => '步骤备注',
-        'noNotes' => '暂无备注。',
         'newNote' => '新备注',
-        'draftNotice' => '备注与任务一起保存。重置或关闭将放弃未保存的更改。',
         'noteChanged' => '此备注已更改或不可用。请关闭并重新打开窗口后重试。',
     ],
     'overview' => [
@@ -49,6 +59,7 @@ return [
         'allRecords' => '全部',
     ],
     'labels' => [
+        'noSteps' => '无步骤',
         'stepsCount' => '%s / %s',
         'step' => '步骤',
         'title' => '标题',
@@ -65,7 +76,6 @@ return [
         'dateToEdit' => '更新结束日期',
         'context' => 'Project / Application',
         'chooseContext' => 'Select where the task belongs',
-        'initialNote' => 'Initial note (optional)',
         'project' => 'Project',
         'application' => 'Application',
         'allProjects' => 'All projects',
@@ -86,7 +96,6 @@ return [
     ],
     'placeholders' => [
         'step' => '描述需要完成的步骤',
-        'initialNote' => '写下初始备注',
         'dateFromAdd' => '按添加开始日期搜索...',
         'dateToAdd' => '按添加结束日期搜索...',
         'dateFromEdit' => '按更新开始日期搜索...',
@@ -125,14 +134,13 @@ return [
         'showSystemDetails' => '显示元数据',
     ],
     'messages' => [
-        'saveStepFirst' => '请先保存任务，然后再为此步骤添加备注。',
         'noteSaveNotice' => '备注将保存到选定的任务或步骤。',
         'confirmDeleteNote' => '永久删除此备注？',
         'noteDeleted' => '备注已永久删除。',
         'noDataChanged' => '未进行任何更改。',
         'completionForbidden' => 'You do not have permission to complete or reopen this task.',
         'invalidData' => 'Check the task data.',
-        'stepsRequired' => 'Enter between 1 and 100 steps.',
+        'invalidSteps' => '最多允许 100 个步骤。',
         'invalidStep' => 'Each step requires valid text up to 255 characters.',
         'foreignStep' => 'A supplied step does not belong to this task.',
         'stepInUse' => '此步骤有关联操作，请先移除这些关联。',

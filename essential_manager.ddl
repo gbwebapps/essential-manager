@@ -493,6 +493,7 @@ create table if not exists `essential_manager`.`applications` (
 -- tasks_delete
 -- tasks_restore
 -- tasks_complete
+-- tasks_archive
 -- tasks_set_current
 -- MODULO Studio
 -- PERMESSI studio
@@ -512,6 +513,7 @@ create table if not exists `essential_manager`.`tasks` (
     `created_at` datetime not null,
     `updated_at` datetime null default null,
     `completed_at` datetime null default null,
+    `archived_at` datetime null default null,
     `deleted_at` datetime null default null,
     `restored_at` datetime null default null,
     primary key (`uuid`),
@@ -524,6 +526,7 @@ create table if not exists `essential_manager`.`tasks` (
     index `idx_tasks_project_status` (`project_uuid`, `status`, `created_at`),
     index `idx_tasks_status_created_at` (`status`, `created_at`),
     index `idx_tasks_updated_at` (`updated_at`),
+    index `idx_tasks_archive_context` (`is_studio`, `archived_at`, `deleted_at`, `created_at`, `id`),
     index `idx_tasks_deleted_at` (`deleted_at`),
     constraint `chk_tasks_studio`
         check (`is_studio` in (0, 1)),
@@ -531,6 +534,19 @@ create table if not exists `essential_manager`.`tasks` (
         check ((`project_uuid` is not null) + (`application_uuid` is not null) + `is_studio` = 1),
     constraint `chk_tasks_completed_at`
         check ((`status` = 'completed' and `completed_at` is not null) or (`status` <> 'completed' and `completed_at` is null))
+) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
+
+-- TABELLA studio_task_references
+-- Un solo riferimento informativo per task Studio; eliminare il riferimento non elimina il task.
+create table if not exists `essential_manager`.`studio_task_references` (
+    `task_uuid` char(36) not null,
+    `project_uuid` char(36) null default null,
+    `application_uuid` char(36) null default null,
+    primary key (`task_uuid`),
+    index (`project_uuid`),
+    index (`application_uuid`),
+    constraint `chk_studio_task_references_context`
+        check ((`project_uuid` is not null) + (`application_uuid` is not null) = 1)
 ) engine = innodb default charset = utf8mb4 collate = utf8mb4_general_ci;
 
 -- TABELLA checklists
@@ -857,3 +873,15 @@ foreign key (`task_uuid`, `step_uuid`) references `essential_manager`.`task_step
 alter table `essential_manager`.`operation_runs`
 add constraint `fk_operation_runs_admin_uuid`
 foreign key (`admin_uuid`) references `essential_manager`.`admins`(`uuid`) on update cascade on delete set null;
+
+alter table `essential_manager`.`studio_task_references`
+add constraint `fk_studio_task_references_task_uuid`
+foreign key (`task_uuid`) references `essential_manager`.`tasks`(`uuid`) on update restrict on delete cascade;
+
+alter table `essential_manager`.`studio_task_references`
+add constraint `fk_studio_task_references_project_uuid`
+foreign key (`project_uuid`) references `essential_manager`.`projects`(`uuid`) on update restrict on delete cascade;
+
+alter table `essential_manager`.`studio_task_references`
+add constraint `fk_studio_task_references_application_uuid`
+foreign key (`application_uuid`) references `essential_manager`.`applications`(`uuid`) on update restrict on delete cascade;

@@ -9,7 +9,7 @@
     <?php if (trim((string) $task->description) !== ''): ?><p class="manager-postit-description"><?= esc($dashboardPresenter->preview($task->description, 140)); ?></p><?php endif; ?>
     <div class="manager-postit-next">
         <?php if ($task->status === 'completed'): ?>
-            <span class="manager-desk-caption"><?= ui_text('backend/managerDashboard.finished', [], false); ?></span><p><?= ui_text('backend/managerDashboard.allStepsDone', [], false); ?></p>
+            <span class="manager-desk-caption"><?= ui_text('backend/managerDashboard.finished', [], false); ?></span><p><?= ui_text((int) $task->step_count > 0 ? 'backend/managerDashboard.allStepsDone' : 'backend/tasks.statuses.completed', [], false); ?></p>
         <?php elseif (trim((string) $task->next_step_title) !== ''): ?>
             <span class="manager-desk-caption"><?= ui_text('backend/tasks.labels.nextStep', [], false); ?></span><p><?= esc($dashboardPresenter->preview($task->next_step_title, 100)); ?></p>
         <?php endif; ?>

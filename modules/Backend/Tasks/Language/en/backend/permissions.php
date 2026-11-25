@@ -10,6 +10,7 @@ return [
         'delete' => 'Delete task',
         'restore' => 'Restore task',
         'complete' => 'Complete task',
+        'archive' => 'Archive and recover tasks',
         'setCurrent' => 'Set current task',
     ],
 ];

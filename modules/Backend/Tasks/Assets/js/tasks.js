@@ -1,5 +1,5 @@
 import { showModalMessages } from './ManagerFeedback.js';
-import { initTaskSteps } from './TaskSteps.js';
+import { TaskModalEditor } from './TaskModalEditor.js';
 import { urlbase, action, apiFetch, markUnsavedClean, showAlert, initOffcanvasAutoClose, initRangeDatePicker, confirmDiscardChanges, askConfirm } from './backend.js';
 import { ListManager, AddManager, EditManager, DeleteManager, GeneralDataManager, MetaDataManager } from './modules/Crud.js';
 
@@ -37,7 +37,8 @@ const actions = {
     showAll: function() {
         const listManager = new ListManager({
             controller: 'tasks',
-            url: taskEndpoint('showAll'),
+            storageKey: document.getElementById('tasks-list')?.dataset.archiveList === 'archived' ? 'tasks-archive' : 'tasks',
+            url: taskEndpoint(document.getElementById('tasks-list')?.dataset.archiveList === 'archived' ? 'archived' : 'showAll'),
             rootId: 'tasks-list',
             containerId: 'showAll-tasks-container',
             searchFields: ['title', 'project_uuid', 'application_uuid', 'status'],
@@ -91,6 +92,7 @@ const actions = {
             resetSelector: '#add-reset',
             containerId: 'add-tasks-container'
         }, {
+            onAddBefore: body => taskFormEditor()?.appendTo(body),
             onResetAfter: data => { initTaskForm(); markUnsavedClean(document.querySelector('#tasks-add')); document.querySelectorAll('[data-navigation-count]').forEach(node => { const count = data.navigationCounts?.[node.dataset.navigationCount]; if (Number.isSafeInteger(count)) node.textContent = String(count); }); }
         }).init();
     },
@@ -102,6 +104,7 @@ const actions = {
             refreshSelector: '#edit-refresh',
             containerId: 'edit-tasks-container'
         }, {
+            onEditBefore: body => taskFormEditor()?.appendTo(body),
             onRefreshAfter: () => { initTaskForm(); markUnsavedClean(document.querySelector('#tasks-edit')); }
         }).init();
         initPanels();
@@ -190,10 +193,21 @@ export async function replaceRelatedPanel(container, output) {
     if (focusId && document.activeElement === document.body) document.getElementById(focusId)?.focus({ preventScroll: true });
 }
 
-/** Inizializza soltanto l'editor del form principale Tasks. */
+let mainTaskEditor = null;
+
+/** Riutilizza l'editor delle bozze e libera il precedente dopo il refresh dei campi. */
 function initTaskForm() {
     const form = document.querySelector('#tasks-add, #tasks-edit');
-    if (form) initTaskSteps(form);
+    const steps = form?.querySelector('[data-task-steps]');
+    if (mainTaskEditor?.steps === steps) return;
+    mainTaskEditor?.destroy();
+    mainTaskEditor = form && steps ? new TaskModalEditor(form) : null;
+}
+
+/** @returns {TaskModalEditor|null} Editor attuale da serializzare prima del submit. */
+function taskFormEditor() {
+    initTaskForm();
+    return mainTaskEditor;
 }
 
 /** @param {FormData} body Payload del form. @returns {unknown} Contesto locale aggiunto dall'eventuale lista incorporata. */
@@ -276,9 +290,10 @@ document.addEventListener('submit', async event => {
         const data = await response.json();
         if (data.result !== true) { if (checkbox) checkbox.checked = !checkbox.checked; showAlert('danger', data.message); return; }
         if (!await consumeTaskResponse(data, context)) {
+            if (data.navigationCounts) document.querySelectorAll('[data-navigation-count]').forEach(badge => { const count=data.navigationCounts[badge.dataset.navigationCount]; if (Number.isSafeInteger(count)) badge.textContent=String(count); });
             if (form.dataset.endpoint === 'deleteNote') {
                 await reloadNotes();
-            } else if (action === 'showAll' && form.dataset.endpoint === 'setCurrent') {
+            } else if (action === 'showAll' && ['setCurrent','archive','unarchive'].includes(form.dataset.endpoint)) {
                 await ListManager.instances['showAll-tasks-container']?.showAll();
                 lockTaskActions();
             } else {
@@ -287,6 +302,13 @@ document.addEventListener('submit', async event => {
                 if (generalForm) await GeneralDataManager.instances.get('#getGeneralData')?.getGeneralData(new FormData(generalForm));
                 lockTaskActions();
                 if (metaForm) await MetaDataManager.instances.get('#getMetaData')?.getMetaData(new FormData(metaForm));
+                if (action === 'show' && typeof data.notesPanelOutput === 'string') {
+                    const template=document.createElement('template'); template.innerHTML=data.notesPanelOutput;
+                    const panel=document.querySelector('[data-task-related-panel="note"]');
+                    const next=template.content.querySelector('[data-task-related-panel="note"]');
+                    if (panel && next) await replaceRelatedPanel(panel,next.innerHTML);
+                }
+                if (action === 'show' && typeof data.linksBarOutput === 'string') await replaceRelatedPanel(document.getElementById('links-bar-view'),data.linksBarOutput);
             }
         }
         if (data.message) showAlert('success', data.message);

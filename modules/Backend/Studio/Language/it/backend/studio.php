@@ -1,6 +1,10 @@
 <?php declare(strict_types = 1);
 
 return [
+    'reference' => 'Riferimento',
+    'noReference' => 'Nessun riferimento',
+    'retainedReference' => 'Riferimento esistente',
+    'invalidReference' => 'Il riferimento scelto non è disponibile.',
     'noTasksFound' => 'Non sono stati trovati task.',
     'noNotesFound' => 'Non sono state trovate note.',
     'clearSearch' => 'Cancella ricerca',

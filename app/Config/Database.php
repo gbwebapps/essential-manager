@@ -29,7 +29,7 @@ class Database extends Config
         'hostname'     => 'localhost',
         'username'     => 'root',
         'password'     => '',
-        'database'     => 'essential',
+        'database'     => 'essential_framework',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
@@ -82,8 +82,8 @@ class Database extends Config
     {
         parent::__construct();
 
-        if (in_array(ENVIRONMENT, ['testing', 'e2e'], true)) {
-            $this->defaultGroup = 'tests';
-        }
+        // if (in_array(ENVIRONMENT, ['testing', 'e2e'], true)) {
+        //     $this->defaultGroup = 'tests';
+        // }
     }
 }

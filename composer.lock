@@ -342,7 +342,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/gbwebapps/essential-framework.git",
-                "reference": "6a0657e6aee9ea3e13636808d4b90e1d986a7430"
+                "reference": "19a723c1281bfac68a4f7b12f573cf5f33abc4e4"
             },
             "require": {
                 "codeigniter4/framework": "^4.7",
@@ -402,7 +402,7 @@
             "support": {
                 "source": "https://github.com/gbwebapps/essential-framework"
             },
-            "time": "2026-11-25T13:52:06+00:00"
+            "time": "2026-11-27T19:29:02+00:00"
         },
         {
             "name": "laminas/laminas-escaper",

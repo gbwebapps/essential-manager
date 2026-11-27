@@ -7,6 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta id="csrf-meta" name="<?= csrf_token(); ?>" content="<?= csrf_hash(); ?>">
 
+    <link rel="icon" type="image/png" sizes="96x96" href="<?= base_url('assets/img/favicon.png'); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/img/apple-touch-icon.png'); ?>">
+
     <!-- Titolo della pagina dinamico -->
     <title <?= ui_value_binding($title, 'text', ' | ' . $siteName); ?>><?= esc($title); ?> | <?= esc($siteName); ?></title>
 
